@@ -22,6 +22,7 @@ public class PathVisualizer extends JFrame {
     new PathVisualizer();
   }
 
+  @Override
   public void paint(Graphics g) {
 
     Graphics2D g2 = (Graphics2D) g;
