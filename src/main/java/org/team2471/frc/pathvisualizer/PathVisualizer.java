@@ -7,6 +7,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
@@ -25,9 +27,11 @@ public class PathVisualizer extends JPanel {
   private JComboBox sideSelection;
   private enum Sides{BLUE, RED}
   Sides sides;
+  private double scale;
 
   public PathVisualizer() {
     setSize(1024, 768);
+    scale = 20;
     ClassLoader classLoader = getClass().getClassLoader();
     try{
       blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
@@ -51,7 +55,44 @@ public class PathVisualizer extends JPanel {
         }
       }
     });
+    JButton decrementButton = new JButton("-");
+    decrementButton.setSize(new Dimension(60, 60));
+    decrementButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        scale--;
+        repaint();
+      }
+    });
+    JButton incrementButton = new JButton("+");
+    incrementButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        scale++;
+        repaint();
+      }
+    });
+    JTextField scaleTextField = new JTextField(Double.toString(scale));
+    scaleTextField.setEditable(true);
+    scaleTextField.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        try {
+          scale = Double.parseDouble(e.getActionCommand());
+          repaint();
+        } catch(NumberFormatException exception){
+          JOptionPane.showMessageDialog(PathVisualizer.this,
+                  "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
+                          " million dollars to the Price of Nigeria or a jail sentence of 20 years of for-profit prison" +
+                          " will be imposed", "Police Alert", JOptionPane.ERROR_MESSAGE);
+        }
+      }
+    });
+    toolBarPanel.add(decrementButton);
+    toolBarPanel.add(scaleTextField);
+    toolBarPanel.add(incrementButton);
     toolBarPanel.add(sideSelection);
+
     add(toolBarPanel, BorderLayout.NORTH);
   }
 
@@ -134,7 +175,8 @@ public class PathVisualizer extends JPanel {
   }
 
   void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
-    final double scale = 20;
+
+
     final double xOffset = 300;
     final double yOffset = 500;
 /*
@@ -146,5 +188,9 @@ public class PathVisualizer extends JPanel {
     //g2.drawLine( (int)(p1.x*-scale+xOffset), (int)(p1.y*scale+yOffset), (int)(p2.x*-scale+xOffset), (int)(p2.y*scale+yOffset) );
     g2.drawLine( (int)(p2.x*scale+xOffset), (int)(p2.y*-scale+yOffset), (int)(p2.x*scale+xOffset), (int)(p2.y*-scale+yOffset) );
   }
+
+
 }
+
+
 
