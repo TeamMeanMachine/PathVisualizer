@@ -28,10 +28,13 @@ public class PathVisualizer extends JPanel {
   private enum Sides{BLUE, RED}
   Sides sides;
   private double scale;
+  final double xOffset = -15;
+  final double yOffset = 460;
 
   public PathVisualizer() {
     setSize(1024, 768);
-    scale = 20;
+    scale = 15;
+
     ClassLoader classLoader = getClass().getClassLoader();
     try{
       blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
@@ -65,6 +68,7 @@ public class PathVisualizer extends JPanel {
       }
     });
     JButton incrementButton = new JButton("+");
+    decrementButton.setSize(new Dimension(60, 60));
     incrementButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -84,7 +88,7 @@ public class PathVisualizer extends JPanel {
           JOptionPane.showMessageDialog(PathVisualizer.this,
                   "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
                           " million dollars to the Price of Nigeria or a jail sentence of 20 years of for-profit prison" +
-                          " will be imposed", "Police Alert", JOptionPane.ERROR_MESSAGE);
+                          " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
         }
       }
     });
@@ -104,23 +108,29 @@ public class PathVisualizer extends JPanel {
     if(sides == Sides.BLUE) g2.drawImage(blueSideImage, 0, 0, null);
     else if(sides == Sides.RED) g2.drawImage(redSideImage, 0, 0, null);
 
-    g2.setStroke(new BasicStroke(6));
+    g2.setStroke(new BasicStroke(3));
     g2.setColor(Color.black);
 
     if (m_path == null) {
       m_path = new Path2D();
 
-      m_path.addPointAndTangent(0.0, 0.0, 0.0, 6.0);
-      m_path.addPointAndTangent(-4.2, 7.0, -6.0, 3.0);
-
-      m_path.addPointAndTangent(-4.2, 7.0, 6.0, -3.0);
-      m_path.addPointAndTangent(-0.0, 0.0, -0.0, -6.0);
-
-      m_path.addPointAndTangent(-0.0, 0.0, 0.0, 6.0);
-      m_path.addPointAndTangent(7.0, 16.0, 8.0, 0.0);
+      m_path.addPointAndTangent(-9.9, 0.0, 0.0, 6.0);
+      m_path.addPointAndTangent(-16.1, 7.9, -9.0, 4.5);
 
       m_path.addEasePoint(0.0, 0.0);
-      m_path.addEasePoint(3.0, 1.0);
+      m_path.addEasePoint(2.45, 1.0);
+
+//      m_path.addPointAndTangent(0.0, 0.0, 0.0, 6.0);
+//      m_path.addPointAndTangent(-4.2, 7.0, -6.0, 3.0);
+//
+//      m_path.addPointAndTangent(-4.2, 7.0, 6.0, -3.0);
+//      m_path.addPointAndTangent(-0.0, 0.0, -0.0, -6.0);
+//
+//      m_path.addPointAndTangent(-0.0, 0.0, 0.0, 6.0);
+//      m_path.addPointAndTangent(7.0, 16.0, 8.0, 0.0);
+//
+//      m_path.addEasePoint(0.0, 0.0);
+//      m_path.addEasePoint(3.0, 1.0);
     }
 
     // get the stuff ready for the path drawing loop
@@ -138,7 +148,7 @@ public class PathVisualizer extends JPanel {
       rightPos = m_path.getRightPosition(t);
 
       // center line
-      g2.setColor(Color.black);
+      g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
 
       // left wheel
@@ -176,19 +186,13 @@ public class PathVisualizer extends JPanel {
 
   void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
 
-
-    final double xOffset = 300;
-    final double yOffset = 500;
-/*
-  final double scale = 40.0;
-  final double xOffset = 500.0;
-  final double yOffset = 400.0;
-*/
-
     //g2.drawLine( (int)(p1.x*-scale+xOffset), (int)(p1.y*scale+yOffset), (int)(p2.x*-scale+xOffset), (int)(p2.y*scale+yOffset) );
-    g2.drawLine( (int)(p2.x*scale+xOffset), (int)(p2.y*-scale+yOffset), (int)(p2.x*scale+xOffset), (int)(p2.y*-scale+yOffset) );
+    double xFlip = 1.0;
+    if(sides == Sides.RED){
+      xFlip = -1.0;
+    }
+    g2.drawLine( (int)(p1.x*xFlip*-scale+xOffset), (int)(p1.y*-scale+yOffset), (int)(p2.x*xFlip*-scale+xOffset), (int)(p2.y*-scale+yOffset) );
   }
-
 
 }
 
