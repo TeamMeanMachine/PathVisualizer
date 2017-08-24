@@ -5,14 +5,11 @@ import org.team2471.frc.lib.motion_profiling.Path2D;
 import org.team2471.frc.lib.vector.Vector2;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.MouseInputAdapter;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.awt.BorderLayout;
@@ -21,12 +18,12 @@ import java.awt.GridLayout;
 
 public class PathVisualizer extends JPanel {
 
-  Path2D m_path;
+  private Path2D m_path = DefaultPath.INSTANCE;
   private BufferedImage blueSideImage;
   private BufferedImage redSideImage;
   private JComboBox sideSelection;
   private enum Sides{BLUE, RED}
-  Sides sides;
+  private Sides sides;
   private double scale;
   final double xOffset = -15;
   final double yOffset = 460;
@@ -111,27 +108,6 @@ public class PathVisualizer extends JPanel {
     g2.setStroke(new BasicStroke(3));
     g2.setColor(Color.black);
 
-    if (m_path == null) {
-      m_path = new Path2D();
-
-      m_path.addPointAndTangent(-9.9, 0.0, 0.0, 6.0);
-      m_path.addPointAndTangent(-16.1, 7.9, -9.0, 4.5);
-
-      m_path.addEasePoint(0.0, 0.0);
-      m_path.addEasePoint(2.45, 1.0);
-
-//      m_path.addPointAndTangent(0.0, 0.0, 0.0, 6.0);
-//      m_path.addPointAndTangent(-4.2, 7.0, -6.0, 3.0);
-//
-//      m_path.addPointAndTangent(-4.2, 7.0, 6.0, -3.0);
-//      m_path.addPointAndTangent(-0.0, 0.0, -0.0, -6.0);
-//
-//      m_path.addPointAndTangent(-0.0, 0.0, 0.0, 6.0);
-//      m_path.addPointAndTangent(7.0, 16.0, 8.0, 0.0);
-//
-//      m_path.addEasePoint(0.0, 0.0);
-//      m_path.addEasePoint(3.0, 1.0);
-    }
 
     // get the stuff ready for the path drawing loop
     double deltaT = m_path.getDuration() / 100.0;
