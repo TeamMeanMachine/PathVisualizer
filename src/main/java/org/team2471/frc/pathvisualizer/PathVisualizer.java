@@ -25,12 +25,12 @@ public class PathVisualizer extends JPanel {
   private enum Sides{BLUE, RED}
   private Sides sides;
   private double scale;
-  final double xOffset = -15;
-  final double yOffset = 460;
+  final double xOffset = 295;
+  final double yOffset = 250;
 
   public PathVisualizer() {
     setSize(1024, 768);
-    scale = 15;
+    scale = 18;
 
     ClassLoader classLoader = getClass().getClassLoader();
     try{
@@ -167,7 +167,7 @@ public class PathVisualizer extends JPanel {
     if(sides == Sides.RED){
       xFlip = -1.0;
     }
-    g2.drawLine( (int)(p1.x*xFlip*-scale+xOffset), (int)(p1.y*-scale+yOffset), (int)(p2.x*xFlip*-scale+xOffset), (int)(p2.y*-scale+yOffset) );
+    g2.drawLine( (int)(p1.x*xFlip*scale+xOffset), (int)(p1.y*-scale+yOffset), (int)(p2.x*xFlip*scale+xOffset), (int)(p2.y*-scale+yOffset) );
   }
 
 }
