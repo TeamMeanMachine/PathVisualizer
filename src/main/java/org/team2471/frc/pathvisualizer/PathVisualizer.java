@@ -106,7 +106,7 @@ public class PathVisualizer extends JPanel {
 
     g2.drawImage(blueSideImage, 0, 0, null);
     if(sides == Sides.BLUE){
-      
+
       g2.drawImage(blueSideImage, 0, 0, (int)(blueSideImage.getWidth(null) * scale / 20),
               (int)(blueSideImage.getHeight(null) * scale / 20), null);
     }
