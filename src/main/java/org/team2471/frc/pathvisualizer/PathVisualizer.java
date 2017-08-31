@@ -22,6 +22,7 @@ public class PathVisualizer extends JPanel {
   private BufferedImage blueSideImage;
   private BufferedImage redSideImage;
   private JComboBox sideSelection;
+  private JTextField scaleTextField;
   private enum Sides{BLUE, RED}
   private Sides sides;
   private double scale;
@@ -62,6 +63,7 @@ public class PathVisualizer extends JPanel {
       public void actionPerformed(ActionEvent e) {
         scale--;
         repaint();
+        scaleTextField.setText(Double.toString(scale));
       }
     });
     JButton incrementButton = new JButton("+");
@@ -71,9 +73,10 @@ public class PathVisualizer extends JPanel {
       public void actionPerformed(ActionEvent e) {
         scale++;
         repaint();
+        scaleTextField.setText(Double.toString(scale));
       }
     });
-    JTextField scaleTextField = new JTextField(Double.toString(scale));
+    scaleTextField = new JTextField(Double.toString(scale));
     scaleTextField.setEditable(true);
     scaleTextField.addActionListener(new ActionListener() {
       @Override
@@ -102,8 +105,15 @@ public class PathVisualizer extends JPanel {
     Graphics2D g2 = (Graphics2D) g;
 
     g2.drawImage(blueSideImage, 0, 0, null);
-    if(sides == Sides.BLUE) g2.drawImage(blueSideImage, 0, 0, null);
-    else if(sides == Sides.RED) g2.drawImage(redSideImage, 0, 0, null);
+    if(sides == Sides.BLUE){
+      
+      g2.drawImage(blueSideImage, 0, 0, (int)(blueSideImage.getWidth(null) * scale / 20),
+              (int)(blueSideImage.getHeight(null) * scale / 20), null);
+    }
+    else if(sides == Sides.RED){
+      g2.drawImage(redSideImage, 0, 0, (int)(redSideImage.getWidth(null) * scale / 20),
+              (int)(redSideImage.getHeight(null) * scale / 20), null);
+    }
 
     g2.setStroke(new BasicStroke(3));
     g2.setColor(Color.black);
