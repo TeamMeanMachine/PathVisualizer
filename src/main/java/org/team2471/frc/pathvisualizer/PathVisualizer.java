@@ -21,43 +21,42 @@ public class PathVisualizer extends JPanel {
   private Path2D m_path = DefaultPath.INSTANCE;
   private BufferedImage blueSideImage;
   private BufferedImage redSideImage;
-  private JComboBox sideSelection;
   private JTextField scaleTextField;
+  private JComboBox<String> sideSelection;
+
   private enum Sides{BLUE, RED}
   private Sides sides;
   private double scale;
-  final double xOffset = -15;
-  final double yOffset = 460;
 
   public PathVisualizer() {
     setSize(1024, 768);
-    scale = 15;
+    scale = 18;
 
-    ClassLoader classLoader = getClass().getClassLoader();
-    try{
-      blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
-    } catch (IOException e){e.printStackTrace();}
     try {
+      ClassLoader classLoader = getClass().getClassLoader();
+      blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
       redSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramRed.png").getFile()));
-    } catch(IOException e){e.printStackTrace();}
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+
     JPanel toolBarPanel = new JPanel(new GridLayout(1, 7));
     String[] comboBoxNames = {"Blue Side", "Red Side"};
-    sideSelection = new JComboBox(comboBoxNames);
-    sideSelection.addItemListener(new ItemListener() {
-      public void itemStateChanged(ItemEvent e) {
-        if(e.getStateChange() == ItemEvent.SELECTED){
-          if (sideSelection.getSelectedIndex() == 0){
-            sides = Sides.BLUE;
-          }
-          else if(sideSelection.getSelectedIndex() == 1){
-            sides = Sides.RED;
-          }
-          repaint();
+    sideSelection = new JComboBox<>(comboBoxNames);
+    sideSelection.addItemListener(e -> {
+      if(e.getStateChange() == ItemEvent.SELECTED){
+        if (sideSelection.getSelectedIndex() == 0){
+          sides = Sides.BLUE;
         }
+        else if(sideSelection.getSelectedIndex() == 1){
+          sides = Sides.RED;
+        }
+        repaint();
       }
     });
     JButton decrementButton = new JButton("-");
-    decrementButton.setSize(new Dimension(60, 60));
+
+
     decrementButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -67,7 +66,6 @@ public class PathVisualizer extends JPanel {
       }
     });
     JButton incrementButton = new JButton("+");
-    decrementButton.setSize(new Dimension(60, 60));
     incrementButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -75,21 +73,20 @@ public class PathVisualizer extends JPanel {
         repaint();
         scaleTextField.setText(Double.toString(scale));
       }
+
     });
+
     scaleTextField = new JTextField(Double.toString(scale));
     scaleTextField.setEditable(true);
-    scaleTextField.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        try {
-          scale = Double.parseDouble(e.getActionCommand());
-          repaint();
-        } catch(NumberFormatException exception){
-          JOptionPane.showMessageDialog(PathVisualizer.this,
-                  "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
-                          " million dollars to the Price of Nigeria or a jail sentence of 20 years of for-profit prison" +
-                          " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
-        }
+    scaleTextField.addActionListener(e -> {
+      try {
+        scale = Double.parseDouble(e.getActionCommand());
+        repaint();
+      } catch(NumberFormatException exception){
+        JOptionPane.showMessageDialog(PathVisualizer.this,
+                "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
+                        " million dollars to the Price of Nigeria or a jail sentence of 20 years of for-profit prison" +
+                        " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
     toolBarPanel.add(decrementButton);
@@ -170,14 +167,16 @@ public class PathVisualizer extends JPanel {
     }
   }
 
-  void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
+  private void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
+    final double xOffset = 295;
+    final double yOffset = 250;
 
     //g2.drawLine( (int)(p1.x*-scale+xOffset), (int)(p1.y*scale+yOffset), (int)(p2.x*-scale+xOffset), (int)(p2.y*scale+yOffset) );
     double xFlip = 1.0;
     if(sides == Sides.RED){
       xFlip = -1.0;
     }
-    g2.drawLine( (int)(p1.x*xFlip*-scale+xOffset), (int)(p1.y*-scale+yOffset), (int)(p2.x*xFlip*-scale+xOffset), (int)(p2.y*-scale+yOffset) );
+    g2.drawLine( (int)(p1.x*xFlip*scale+ xOffset), (int)(p1.y*-scale+ yOffset), (int)(p2.x*xFlip*scale+ xOffset), (int)(p2.y*-scale+ yOffset) );
   }
 
 }
