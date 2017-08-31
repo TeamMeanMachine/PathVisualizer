@@ -100,16 +100,20 @@ public class PathVisualizer extends JPanel {
   @Override
   public void paintComponent(Graphics g) {
     Graphics2D g2 = (Graphics2D) g;
+    super.paintComponent(g2);
 
-    g2.drawImage(blueSideImage, 0, 0, null);
+    sides = Sides.BLUE;
     if(sides == Sides.BLUE){
-
-      g2.drawImage(blueSideImage, 0, 0, (int)(blueSideImage.getWidth(null) * scale / 20),
-              (int)(blueSideImage.getHeight(null) * scale / 20), null);
+      g2.clearRect(0, 0, (int)(blueSideImage.getWidth(null) * scale / 18),
+              (int)(blueSideImage.getHeight(null) * scale / 18));
+      g2.drawImage(blueSideImage, 0, 0, (int)(blueSideImage.getWidth(null) * scale / 18),
+              (int)(blueSideImage.getHeight(null) * scale / 18), null);
     }
     else if(sides == Sides.RED){
-      g2.drawImage(redSideImage, 0, 0, (int)(redSideImage.getWidth(null) * scale / 20),
-              (int)(redSideImage.getHeight(null) * scale / 20), null);
+      g2.clearRect(0, 0, (int)(redSideImage.getWidth(null) * scale / 18),
+              (int)(redSideImage.getHeight(null) * scale / 18));
+      g2.drawImage(redSideImage, 0, 0, (int)(redSideImage.getWidth(null) * scale / 18),
+              (int)(redSideImage.getHeight(null) * scale / 18), null);
     }
 
     g2.setStroke(new BasicStroke(3));
