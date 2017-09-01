@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class PathVisualizer extends JPanel {
@@ -23,6 +25,9 @@ public class PathVisualizer extends JPanel {
   private BufferedImage redSideImage;
   private JTextField scaleTextField;
   private JComboBox<String> sideSelection;
+  private JComboBox pathSelection;
+  private String currentAutonomous;
+  Map<String, Path2D> map;
 
   private enum Sides{BLUE, RED}
   private Sides sides;
@@ -89,10 +94,25 @@ public class PathVisualizer extends JPanel {
                         " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
+    String[] autonomousSelectionNames = {"Placeholder", "Placeholder2", "Placeholder3"};
+    currentAutonomous = autonomousSelectionNames[0];
+    /*Path2D[] path2DS = new Path2D[3];
+    map = new HashMap();
+    for (int i=0; i<autonomousSelectionNames.length; i++){
+      map.put(autonomousSelectionNames[i], path2DS[i]);
+    }*/
+    pathSelection = new JComboBox(autonomousSelectionNames);
+    pathSelection.addItemListener(e -> {
+      if(e.getStateChange() == ItemEvent.SELECTED){
+        currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
+        repaint();
+      }
+    });
     toolBarPanel.add(decrementButton);
     toolBarPanel.add(scaleTextField);
     toolBarPanel.add(incrementButton);
     toolBarPanel.add(sideSelection);
+    toolBarPanel.add(pathSelection);
 
     add(toolBarPanel, BorderLayout.NORTH);
   }
@@ -138,6 +158,8 @@ public class PathVisualizer extends JPanel {
       // center line
       g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
+      //needs to be implemented
+      drawPath2DLine(g2, map.get(currentAutonomous));
 
       // left wheel
       double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
@@ -182,6 +204,9 @@ public class PathVisualizer extends JPanel {
       xFlip = -1.0;
     }
     g2.drawLine( (int)(p1.x*xFlip*scale+ xOffset), (int)(p1.y*-scale+ yOffset), (int)(p2.x*xFlip*scale+ xOffset), (int)(p2.y*-scale+ yOffset) );
+  }
+  private void drawPath2DLine(Graphics2D g2, Path2D path){
+    
   }
 
 }
