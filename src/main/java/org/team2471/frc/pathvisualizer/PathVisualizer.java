@@ -31,7 +31,7 @@ public class PathVisualizer extends JPanel {
   public PathVisualizer() {
     setSize(1024, 768);
     scale = 18;
-
+    sides = Sides.BLUE;
     try {
       ClassLoader classLoader = getClass().getClassLoader();
       blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
@@ -102,22 +102,21 @@ public class PathVisualizer extends JPanel {
     Graphics2D g2 = (Graphics2D) g;
     super.paintComponent(g2);
 
-    sides = Sides.BLUE;
     if(sides == Sides.BLUE){
-      g2.clearRect(0, 0, (int)(blueSideImage.getWidth(null) * scale / 18),
-              (int)(blueSideImage.getHeight(null) * scale / 18));
-      g2.drawImage(blueSideImage, 0, 0, (int)(blueSideImage.getWidth(null) * scale / 18),
-              (int)(blueSideImage.getHeight(null) * scale / 18), null);
+      g2.drawImage(blueSideImage, 0 - (int)((scale-18)/36 * blueSideImage.getWidth()),
+              0 - (int)((scale-18)/18 * blueSideImage.getHeight()) ,
+              blueSideImage.getWidth() + (int)((scale-18)/18 * blueSideImage.getWidth()),
+              (int)(blueSideImage.getHeight() * scale/18), null);
     }
     else if(sides == Sides.RED){
-      g2.clearRect(0, 0, (int)(redSideImage.getWidth(null) * scale / 18),
-              (int)(redSideImage.getHeight(null) * scale / 18));
-      g2.drawImage(redSideImage, 0, 0, (int)(redSideImage.getWidth(null) * scale / 18),
-              (int)(redSideImage.getHeight(null) * scale / 18), null);
+      g2.drawImage(redSideImage, 0, 0, (int)(redSideImage.getWidth() * scale / 18),
+              (int)(redSideImage.getHeight() * scale / 18), null);
     }
-
-    g2.setStroke(new BasicStroke(3));
-    g2.setColor(Color.black);
+    g2.setStroke(new BasicStroke(2));
+    //g2.drawLine((int)(blueSideImage.getWidth(null) * scale / 18) + 15, 0,
+    //      (int)(blueSideImage.getWidth(null) * scale / 18) + 15, (int)(blueSideImage.getHeight(null) * scale / 18) + 15);
+    //g2.drawLine(5);
+    g2.drawLine(0, 300, blueSideImage.getWidth()/2, 300);
 
 
     // get the stuff ready for the path drawing loop
