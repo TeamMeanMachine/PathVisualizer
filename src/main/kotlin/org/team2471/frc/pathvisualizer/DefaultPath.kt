@@ -18,7 +18,7 @@ object DefaultPath : Path2D() {
 //    addPointAndTangent(-0.0, 0.0, 0.0, 6.0)
 //    addPointAndTangent(7.0, 16.0, 8.0, 0.0)
 
-    addEasePoint(0.0, 0.0)
-    addEasePoint(7.0, 1.0)
+//    addEasePoint(0.0, 0.0)
+//    addEasePoint(7.0, 1.0).
   }
 }
