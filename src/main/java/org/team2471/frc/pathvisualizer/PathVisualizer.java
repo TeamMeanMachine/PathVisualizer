@@ -2,6 +2,7 @@ package org.team2471.frc.pathvisualizer;
 
 import java.awt.*;
 import org.team2471.frc.lib.motion_profiling.Path2D;
+import org.team2471.frc.lib.motion_profiling.Path2DPoint;
 import org.team2471.frc.lib.vector.Vector2;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -16,6 +17,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 //import java.util.HashMap;
 //import java.util.Map;
+import java.util.Vector;
 
 
 public class PathVisualizer extends JPanel {
@@ -32,6 +34,8 @@ public class PathVisualizer extends JPanel {
   private enum Sides{BLUE, RED}
   private Sides sides;
   private double scale;
+  private int circleSize = 10;
+
 
   public PathVisualizer() {
     setSize(1024, 768);
@@ -181,29 +185,67 @@ public class PathVisualizer extends JPanel {
       prevRightPos.set(rightPos.x, rightPos.y);
     }
 
+    // circles
+
+    for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
+      g2.setColor(Color.green);
+      Vector2 tPoint = transform(point.getPosition());
+      g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
+      if(point.getPrevPoint() != null) {
+        g2.setColor(Color.blue);
+        Vector2 tanPoint = transform(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
+        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
+        g2.setColor(Color.cyan);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
+      }
+      if(point.getNextPoint() != null) {
+        g2.setColor(Color.blue);
+        Vector2 tanPoint = transform(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
+        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
+        g2.setColor(Color.cyan);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
+      }
+    }
+
+
     g2.setStroke(new BasicStroke(3));
 
-    for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
-      // draw the ease curve too
-      g2.setColor(Color.black);
-      double ease = m_path.getEaseCurve().getValue(t);
-      double prevT = t - deltaT;
-//      g2.drawLine((int) (prevT * 40 + 600), (int) (prevEase * -200 + 700), (int) (t * 40 + 600), (int) (ease * -200 + 700));
-      g2.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
-      prevEase = ease;
-    }
+//    for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
+//      // draw the ease curve too
+//      g2.setColor(Color.black);
+//      double ease = m_path.getEaseCurve().getValue(t);
+//      double prevT = t - deltaT;
+////      g2.drawLine((int) (prevT * 40 + 600), (int) (prevEase * -200 + 700), (int) (t * 40 + 600), (int) (ease * -200 + 700));
+//      g2.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
+//      prevEase = ease;
+//    }
   }
 
   private void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
-    final double xOffset = 295;
-    final double yOffset = 250;
+
 
     //g2.drawLine( (int)(p1.x*-scale+xOffset), (int)(p1.y*scale+yOffset), (int)(p2.x*-scale+xOffset), (int)(p2.y*scale+yOffset) );
+
+
+    Vector2 tp1 = transform(p1);
+    Vector2 tp2 = transform(p2);
+
+    g2.drawLine( (int)(tp1.x), (int)(tp1.y), (int)(tp2.x), (int)(tp2.y) );
+  }
+
+  private Vector2 transform(Vector2 point){
+
+    final double xOffset = 295;
+    final double yOffset = 485;
+
     double xFlip = 1.0;
     if(sides == Sides.RED){
       xFlip = -1.0;
     }
-    g2.drawLine( (int)(p1.x*xFlip*scale+ xOffset), (int)(p1.y*-scale+ yOffset), (int)(p2.x*xFlip*scale+ xOffset), (int)(p2.y*-scale+ yOffset) );
+    Vector2 result = new Vector2 (point.x*xFlip*scale+ xOffset, point.y*-scale+ yOffset);
+    return result;
   }
   //private void drawPath2DLine(Graphics2D g2, Path2D path){
 
