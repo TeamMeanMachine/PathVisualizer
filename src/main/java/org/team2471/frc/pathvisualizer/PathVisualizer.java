@@ -90,7 +90,7 @@ public class PathVisualizer extends JPanel {
       } catch(NumberFormatException exception){
         JOptionPane.showMessageDialog(PathVisualizer.this,
                 "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
-                        " million dollars to the Price of Nigeria or a jail sentence of 20 years of for-profit prison" +
+                        " million dollars to the Prince of Nigeria or a jail sentence of 20 years of for-profit prison" +
                         " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
