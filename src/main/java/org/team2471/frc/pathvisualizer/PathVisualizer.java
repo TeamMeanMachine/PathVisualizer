@@ -9,14 +9,10 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-//import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-//import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-//import java.util.HashMap;
-//import java.util.Map;
 import java.util.Vector;
 
 
@@ -185,7 +181,7 @@ public class PathVisualizer extends JPanel {
       prevRightPos.set(rightPos.x, rightPos.y);
     }
 
-    // circles
+    // circles and lines for handles
 
     for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
       g2.setColor(Color.green);
@@ -209,9 +205,8 @@ public class PathVisualizer extends JPanel {
       }
     }
 
-
-    g2.setStroke(new BasicStroke(3));
-
+// draw the ease curve
+//    g2.setStroke(new BasicStroke(3));
 //    for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
 //      // draw the ease curve too
 //      g2.setColor(Color.black);
@@ -224,10 +219,6 @@ public class PathVisualizer extends JPanel {
   }
 
   private void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
-
-
-    //g2.drawLine( (int)(p1.x*-scale+xOffset), (int)(p1.y*scale+yOffset), (int)(p2.x*-scale+xOffset), (int)(p2.y*scale+yOffset) );
-
 
     Vector2 tp1 = transform(p1);
     Vector2 tp2 = transform(p2);
@@ -247,10 +238,6 @@ public class PathVisualizer extends JPanel {
     Vector2 result = new Vector2 (point.x*xFlip*scale+ xOffset, point.y*-scale+ yOffset);
     return result;
   }
-  //private void drawPath2DLine(Graphics2D g2, Path2D path){
-
-  //}
-
 }
 
 
