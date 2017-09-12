@@ -9,6 +9,10 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.awt.BorderLayout;
@@ -16,7 +20,7 @@ import java.awt.GridLayout;
 import java.util.Vector;
 
 
-public class PathVisualizer extends JPanel {
+public class PathVisualizer extends JPanel{
 
   private Path2D m_path = DefaultPath.INSTANCE;
   private BufferedImage blueSideImage;
@@ -37,6 +41,65 @@ public class PathVisualizer extends JPanel {
     setSize(1024, 768);
     scale = 18;
     sides = Sides.BLUE;
+
+    addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        System.out.println("CLICK");
+        int x,y;
+        x = e.getX();
+        y = e.getY();
+        System.out.println("Click Point:");
+        System.out.println(x);
+        System.out.println(y);
+        double ldist = 10000;
+        //Find closest point
+        for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
+          Vector2 tPoint = transform(point.getPosition());
+          System.out.println(tPoint);
+          if(point.getPrevPoint() != null) {
+            Vector2 tanPoint = transform(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
+          }
+          if(point.getNextPoint() != null) {
+            Vector2 tanPoint = transform(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
+          }
+          // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
+          double dist = Math.sqrt(Math.pow((x-tPoint.x),2) + Math.pow((y-tPoint.y),2));
+          System.out.println("Distance:" + dist);
+          System.out.println("Last Dist:" + ldist);
+          System.out.println();
+            if(dist <= ldist){
+              ldist = dist;
+              Vector2 closestPoint = tPoint;
+              double closeX = closestPoint.x;
+              double closeY = closestPoint.y;
+              System.out.println(">>>Closest Point:<<<");
+              System.out.println(closestPoint);
+              System.out.println(">>><<<");
+            }
+        }
+
+        ldist = 10000;
+      }
+
+
+
+      @Override
+      public void mousePressed(MouseEvent e) {
+        super.mousePressed(e);
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e) {
+        super.mouseReleased(e);
+      }
+
+      @Override
+      public void mouseDragged(MouseEvent e) {
+        super.mouseDragged(e);
+      }
+    });
+
     try {
       ClassLoader classLoader = getClass().getClassLoader();
       blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
