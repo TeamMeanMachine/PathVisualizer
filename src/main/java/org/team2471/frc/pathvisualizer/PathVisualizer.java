@@ -11,13 +11,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.util.Vector;
 
 
 public class PathVisualizer extends JPanel{
@@ -35,16 +32,25 @@ public class PathVisualizer extends JPanel{
   private Sides sides;
   private double scale;
   private int circleSize = 10;
-
+  final double xOffset = 295;
+  final double yOffset = 485;
+  Path2DPoint editPoint = null;
+  Vector2 editVector = null;
+  Path2DPoint selectedPoint = null;
 
   public PathVisualizer() {
     setSize(1024, 768);
     scale = 18;
     sides = Sides.BLUE;
 
+
     addMouseListener(new MouseAdapter() {
+
       @Override
-      public void mouseClicked(MouseEvent e) {
+      public void mouseClicked(MouseEvent e) {}
+
+      @Override
+      public void mousePressed(MouseEvent e) {
         System.out.println("CLICK");
         int x,y;
         x = e.getX();
@@ -52,51 +58,56 @@ public class PathVisualizer extends JPanel{
         System.out.println("Click Point:");
         System.out.println(x);
         System.out.println(y);
-        double ldist = 10000;
+        double shortestDistance = 10000;
+        Path2DPoint closestPoint = null;
+
         //Find closest point
         for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
-          Vector2 tPoint = transform(point.getPosition());
+          Vector2 tPoint = world2Screen(point.getPosition());
           System.out.println(tPoint);
           if(point.getPrevPoint() != null) {
-            Vector2 tanPoint = transform(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
+            Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
           }
           if(point.getNextPoint() != null) {
-            Vector2 tanPoint = transform(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
+            Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
           }
           // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
           double dist = Math.sqrt(Math.pow((x-tPoint.x),2) + Math.pow((y-tPoint.y),2));
           System.out.println("Distance:" + dist);
-          System.out.println("Last Dist:" + ldist);
+          System.out.println("Shortest Dist:" + shortestDistance);
           System.out.println();
-            if(dist <= ldist){
-              ldist = dist;
-              Vector2 closestPoint = tPoint;
-              double closeX = closestPoint.x;
-              double closeY = closestPoint.y;
-              System.out.println(">>>Closest Point:<<<");
-              System.out.println(closestPoint);
-              System.out.println(">>><<<");
-            }
+          if(dist <= shortestDistance){
+            shortestDistance = dist;
+            closestPoint = point;
+          }
         }
+        if(shortestDistance <= circleSize/2 ){
+          editVector = closestPoint.getPosition();
+          selectedPoint = closestPoint;
+          editPoint = closestPoint;
 
-        ldist = 10000;
-      }
-
-
-
-      @Override
-      public void mousePressed(MouseEvent e) {
-        super.mousePressed(e);
+          System.out.println(">>>Closest Point:<<<");
+          System.out.println("world: " + editVector);
+          System.out.println(">>><<<");
+        }
       }
 
       @Override
       public void mouseReleased(MouseEvent e) {
-        super.mouseReleased(e);
+        System.out.println("Mouse UP");
+        editPoint = null;
       }
 
       @Override
       public void mouseDragged(MouseEvent e) {
-        super.mouseDragged(e);
+        System.out.println("dragging");
+        if(editPoint != null) {
+          Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
+          editVector.set(worldPoint.x, worldPoint.y);
+          System.out.println("Dragged: " + editVector);
+          editPoint.onPositionChanged();
+          repaint();
+        }
       }
     });
 
@@ -248,11 +259,11 @@ public class PathVisualizer extends JPanel{
 
     for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
       g2.setColor(Color.green);
-      Vector2 tPoint = transform(point.getPosition());
+      Vector2 tPoint = world2Screen(point.getPosition());
       g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
       if(point.getPrevPoint() != null) {
         g2.setColor(Color.blue);
-        Vector2 tanPoint = transform(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
+        Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
         g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
         g2.setColor(Color.cyan);
         g2.setStroke(new BasicStroke(2));
@@ -260,7 +271,7 @@ public class PathVisualizer extends JPanel{
       }
       if(point.getNextPoint() != null) {
         g2.setColor(Color.blue);
-        Vector2 tanPoint = transform(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
+        Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
         g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
         g2.setColor(Color.cyan);
         g2.setStroke(new BasicStroke(2));
@@ -283,16 +294,21 @@ public class PathVisualizer extends JPanel{
 
   private void drawPathLine( Graphics2D g2, Vector2 p1, Vector2 p2 ) {
 
-    Vector2 tp1 = transform(p1);
-    Vector2 tp2 = transform(p2);
+    Vector2 tp1 = world2Screen(p1);
+    Vector2 tp2 = world2Screen(p2);
 
     g2.drawLine( (int)(tp1.x), (int)(tp1.y), (int)(tp2.x), (int)(tp2.y) );
   }
+  private Vector2 screen2World(Vector2 point){
 
-  private Vector2 transform(Vector2 point){
-
-    final double xOffset = 295;
-    final double yOffset = 485;
+    double xFlip = 1.0;
+    if(sides == Sides.RED){
+      xFlip = -1.0;
+    }
+    Vector2 result = new Vector2 ((point.x-xOffset)/xFlip/scale, (point.y-yOffset)/-scale);
+    return result;
+  }
+  private Vector2 world2Screen(Vector2 point){
 
     double xFlip = 1.0;
     if(sides == Sides.RED){
