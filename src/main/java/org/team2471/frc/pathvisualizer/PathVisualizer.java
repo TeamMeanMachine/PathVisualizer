@@ -34,9 +34,11 @@ public class PathVisualizer extends JPanel{
   private int circleSize = 10;
   final double xOffset = 295;
   final double yOffset = 485;
+  private final double tangentLengthDrawFactor = 3.0;
   Path2DPoint editPoint = null;
   Vector2 editVector = null;
   Path2DPoint selectedPoint = null;
+  int winner = 0;  // need an enum type
 
   public PathVisualizer() {
     setSize(1024, 768);
@@ -50,45 +52,63 @@ public class PathVisualizer extends JPanel{
       }
 
       public void mousePressed(MouseEvent e) {
-        int x,y;
-        x = e.getX();
-        y = e.getY();
-        //System.out.println("Click Point:" + x + y);
+        Vector2 mouseVec = new Vector2(e.getX(), e.getY());
         double shortestDistance = 10000;
         Path2DPoint closestPoint = null;
 
         //Find closest point
         for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
           Vector2 tPoint = world2Screen(point.getPosition());
-          if(point.getPrevPoint() != null) {
-            Vector2 tanPoint1 = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
-          }
-          if(point.getNextPoint() != null) {
-            Vector2 tanPoint2 = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
-          }
-          // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
-          double dist = Math.sqrt(Math.pow((x-tPoint.x),2) + Math.pow((y-tPoint.y),2));
+          double dist = Vector2.length(Vector2.subtract(tPoint, mouseVec));
           if(dist <= shortestDistance){
             shortestDistance = dist;
             closestPoint = point;
+            winner = 1;
           }
+
+          if(point.getPrevPoint() != null) {
+            Vector2 tanPoint1 = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
+            dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec));
+            if(dist <= shortestDistance){
+              shortestDistance = dist;
+              closestPoint = point;
+              winner = 2;
+            }
+          }
+
+          if(point.getNextPoint() != null) {
+            Vector2 tanPoint2 = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
+            dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec));
+            if(dist <= shortestDistance){
+              shortestDistance = dist;
+              closestPoint = point;
+              winner = 3;
+            }
+          }
+          // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
         }
         if(shortestDistance <= circleSize/2 ){
-          editVector = closestPoint.getPosition();
           selectedPoint = closestPoint;
           editPoint = closestPoint;
-
-          //System.out.println(">>>Close Enough - mouseDown:<<<");
-          //System.out.println("world: " + editVector);
         }
+        else
+          editVector = null;
       }
 
       public void mouseDragged(MouseEvent e) {
         if(editPoint != null) {
           Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
-          editVector.set( worldPoint.x, worldPoint.y );
-          editPoint.onPositionChanged();
-          //editPoint.setPosition( worldPoint );
+          switch (winner) {
+            case 1:
+              editPoint.setPosition( worldPoint );
+              break;
+            case 2:
+              editPoint.setPrevTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor/2.0 ));
+              break;
+            case 3:
+              editPoint.setNextTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), tangentLengthDrawFactor ));
+              break;
+          }
           repaint();
         }
       }
@@ -255,7 +275,7 @@ public class PathVisualizer extends JPanel{
       g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
       if(point.getPrevPoint() != null) {
         g2.setColor(Color.blue);
-        Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
+        Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
         g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
         g2.setColor(Color.cyan);
         g2.setStroke(new BasicStroke(2));
@@ -263,7 +283,7 @@ public class PathVisualizer extends JPanel{
       }
       if(point.getNextPoint() != null) {
         g2.setColor(Color.blue);
-        Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
+        Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
         g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
         g2.setColor(Color.cyan);
         g2.setStroke(new BasicStroke(2));
