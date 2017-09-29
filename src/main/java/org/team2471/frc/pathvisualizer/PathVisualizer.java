@@ -45,6 +45,10 @@ public class PathVisualizer extends JPanel{
 
     class MyListener extends MouseInputAdapter {
 
+      public void testPoint( Vector2 point ) {
+
+      }
+
       public void mousePressed(MouseEvent e) {
         int x,y;
         x = e.getX();
@@ -56,12 +60,11 @@ public class PathVisualizer extends JPanel{
         //Find closest point
         for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
           Vector2 tPoint = world2Screen(point.getPosition());
-          //System.out.println(tPoint);
           if(point.getPrevPoint() != null) {
-            Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
+            Vector2 tanPoint1 = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
           }
           if(point.getNextPoint() != null) {
-            Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
+            Vector2 tanPoint2 = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/3.0)));
           }
           // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
           double dist = Math.sqrt(Math.pow((x-tPoint.x),2) + Math.pow((y-tPoint.y),2));
@@ -83,9 +86,9 @@ public class PathVisualizer extends JPanel{
       public void mouseDragged(MouseEvent e) {
         if(editPoint != null) {
           Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
-          editVector.set(worldPoint.x, worldPoint.y);
-          //System.out.println("Dragged: " + editVector);
+          editVector.set( worldPoint.x, worldPoint.y );
           editPoint.onPositionChanged();
+          //editPoint.setPosition( worldPoint );
           repaint();
         }
       }
