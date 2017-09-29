@@ -6,10 +6,10 @@ import org.team2471.frc.lib.motion_profiling.Path2DPoint;
 import org.team2471.frc.lib.vector.Vector2;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -43,28 +43,20 @@ public class PathVisualizer extends JPanel{
     scale = 18;
     sides = Sides.BLUE;
 
+    class MyListener extends MouseInputAdapter {
 
-    addMouseListener(new MouseAdapter() {
-
-      @Override
-      public void mouseClicked(MouseEvent e) {}
-
-      @Override
       public void mousePressed(MouseEvent e) {
-        System.out.println("CLICK");
         int x,y;
         x = e.getX();
         y = e.getY();
-        System.out.println("Click Point:");
-        System.out.println(x);
-        System.out.println(y);
+        //System.out.println("Click Point:" + x + y);
         double shortestDistance = 10000;
         Path2DPoint closestPoint = null;
 
         //Find closest point
         for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
           Vector2 tPoint = world2Screen(point.getPosition());
-          System.out.println(tPoint);
+          //System.out.println(tPoint);
           if(point.getPrevPoint() != null) {
             Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/3.0)));
           }
@@ -73,9 +65,6 @@ public class PathVisualizer extends JPanel{
           }
           // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
           double dist = Math.sqrt(Math.pow((x-tPoint.x),2) + Math.pow((y-tPoint.y),2));
-          System.out.println("Distance:" + dist);
-          System.out.println("Shortest Dist:" + shortestDistance);
-          System.out.println();
           if(dist <= shortestDistance){
             shortestDistance = dist;
             closestPoint = point;
@@ -86,30 +75,30 @@ public class PathVisualizer extends JPanel{
           selectedPoint = closestPoint;
           editPoint = closestPoint;
 
-          System.out.println(">>>Closest Point:<<<");
-          System.out.println("world: " + editVector);
-          System.out.println(">>><<<");
+          //System.out.println(">>>Close Enough - mouseDown:<<<");
+          //System.out.println("world: " + editVector);
         }
       }
 
-      @Override
-      public void mouseReleased(MouseEvent e) {
-        System.out.println("Mouse UP");
-        editPoint = null;
-      }
-
-      @Override
       public void mouseDragged(MouseEvent e) {
-        System.out.println("dragging");
         if(editPoint != null) {
           Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
           editVector.set(worldPoint.x, worldPoint.y);
-          System.out.println("Dragged: " + editVector);
+          //System.out.println("Dragged: " + editVector);
           editPoint.onPositionChanged();
           repaint();
         }
       }
-    });
+
+      public void mouseReleased(MouseEvent e) {
+        //System.out.println("mouseReleased");
+        editPoint = null;
+      }
+    }
+
+    MyListener myListener = new MyListener();
+    addMouseListener(myListener);
+    addMouseMotionListener(myListener);
 
     try {
       ClassLoader classLoader = getClass().getClassLoader();
