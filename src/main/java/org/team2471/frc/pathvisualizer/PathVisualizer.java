@@ -103,7 +103,7 @@ public class PathVisualizer extends JPanel{
               editPoint.setPosition( worldPoint );
               break;
             case 2:
-              editPoint.setPrevTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor/2.0 ));
+              editPoint.setPrevTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor ));
               break;
             case 3:
               editPoint.setNextTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), tangentLengthDrawFactor ));
