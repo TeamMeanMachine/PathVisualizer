@@ -249,16 +249,26 @@ public class PathVisualizer extends JPanel{
 
       // left wheel
       double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
-      //System.out.println("left Speed="+leftSpeed);
       leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
       leftSpeed = Math.min(1.0, leftSpeed);
-      g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
+      double leftDelta = m_path.getLeftPositionDelta(t);
+      if (leftDelta>0)
+        g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
+      else {
+        g2.setColor(new Color(0, 0, 255)); //(int)blue));
+      }
       drawPathLine(g2, prevLeftPos, leftPos);
 
       // right wheel
       double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
       rightSpeed = Math.min(1.0, rightSpeed);
-      g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
+      double rightDelta = m_path.getRightPositionDelta(t);
+      System.out.println("Right: " + rightDelta);
+      if (rightDelta>0)
+        g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
+      else {
+        g2.setColor(new Color(0, 0, 255)); //(int)blue));
+      }
       drawPathLine(g2, prevRightPos, rightPos);
 
       // set the prevs for the next loop
