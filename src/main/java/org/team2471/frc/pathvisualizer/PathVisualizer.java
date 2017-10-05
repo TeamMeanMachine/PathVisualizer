@@ -4,6 +4,8 @@ import java.awt.*;
 import org.team2471.frc.lib.motion_profiling.Path2D;
 import org.team2471.frc.lib.motion_profiling.Path2DPoint;
 import org.team2471.frc.lib.vector.Vector2;
+import org.team2471.frc.motion_profiling.SharedAutonomousConfig;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -13,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 import java.util.Vector;
 
 
@@ -23,6 +26,7 @@ public class PathVisualizer extends JPanel {
   private BufferedImage redSideImage;
   private JTextField scaleTextField;
   private JComboBox<String> sideSelection;
+  private JComboBox<String> autoSelection;
   private JComboBox pathSelection;
   private String currentAutonomous;
   //Map<String, Path2D> map;
@@ -31,9 +35,10 @@ public class PathVisualizer extends JPanel {
   private Sides sides;
   private double scale;
   private int circleSize = 10;
-
+  private ArrayList sharedAutonomousConfigsList;
 
   public PathVisualizer() {
+    sharedAutonomousConfigsList = new ArrayList();
     setSize(1024, 768);
     scale = 18;
     sides = Sides.BLUE;
@@ -59,6 +64,91 @@ public class PathVisualizer extends JPanel {
         repaint();
       }
     });
+
+//    class JDialogExample extends JFrame
+//    {
+//      JDialog d1;
+//
+//      public JDialogExample()
+//      {
+//        createAndShowGUI();
+//      }
+//
+//      private void createAndShowGUI()
+//      {
+//        setTitle("JDialog Example");
+//        setDefaultCloseOperation(EXIT_ON_CLOSE);
+//        setLayout(new FlowLayout());
+//
+//        // Must be called before creating JDialog for
+//        // the desired effect
+//        JDialog.setDefaultLookAndFeelDecorated(true);
+//
+//        // A perfect constructor, mostly used.
+//        // A dialog with current frame as parent
+//        // a given title, and modal
+//        d1=new JDialog(this,"New Autonomous",true);
+//
+//        // Set size
+//        d1.setSize(400,100);
+//
+//        // Set some layout
+//        d1.setLayout(new FlowLayout());
+//
+//        d1.add(new JLabel("Autonomous Name"));
+//        d1.add(new JTextField(20));
+//        d1.add(new JButton("OK"));
+//        d1.add(new JButton("Cancel"));
+//
+//        setSize(400,100);
+//        setVisible(true);
+//
+//        // Like JFrame, JDialog isn't visible, you'll
+//        // have to make it visible
+//        // Remember to show JDialog after its parent is
+//        // shown so that its parent is visible
+//        d1.setVisible(true);
+//      }
+//    }
+
+    String[] autonomousNames;
+    if (sharedAutonomousConfigsList.size() == 0) {
+      String tempNames[] = {"New Auto"};
+      autonomousNames = tempNames;
+    }
+    else {
+      autonomousNames = new String[sharedAutonomousConfigsList.size()+1];
+      for (int i = 0; i<sharedAutonomousConfigsList.size(); i++) {
+        autonomousNames[i] = sharedAutonomousConfigsList.get(i).toString();
+      }
+      autonomousNames[sharedAutonomousConfigsList.size()] = "New Auto";
+    }
+    autoSelection = new JComboBox<>(autonomousNames);
+    autoSelection.setSelectedIndex(-1);
+    autoSelection.addItemListener(e -> {
+      if(e.getStateChange() == ItemEvent.SELECTED){
+        if (autoSelection.getSelectedIndex() == autoSelection.getItemCount()-1) {
+//          new JDialogExample();
+          String s = (String)JOptionPane.showInputDialog(
+              null,
+              "Autonomous Name:",
+              "New Autonomous",
+              JOptionPane.PLAIN_MESSAGE,
+              null,
+              null,
+              "");
+
+//If a string was returned, say so.
+          if ((s != null) && (s.length() > 0)) {
+            sharedAutonomousConfigsList.add(s);
+            autoSelection.insertItemAt(s, autoSelection.getItemCount()-1);
+            autoSelection.setSelectedIndex(autoSelection.getItemCount()-2);
+          }
+        }
+        repaint();
+      }
+    });
+
     JButton decrementButton = new JButton("-");
 
 
@@ -108,6 +198,7 @@ public class PathVisualizer extends JPanel {
         repaint();
       }
     });*/
+    toolBarPanel.add(autoSelection);
     toolBarPanel.add(decrementButton);
     toolBarPanel.add(scaleTextField);
     toolBarPanel.add(incrementButton);
