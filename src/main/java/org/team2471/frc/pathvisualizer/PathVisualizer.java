@@ -29,6 +29,7 @@ public class PathVisualizer extends JPanel{
   private String currentAuto;
   private ArrayList<ArrayList<Path2D>> paths;
   private Path2D selectedPath = DefaultPath.INSTANCE;;
+  private SharedAutonomousConfig selectedAutonomousConfig;
 
   private BufferedImage blueSideImage;
   private BufferedImage redSideImage;
@@ -66,29 +67,29 @@ public class PathVisualizer extends JPanel{
         Path2DPoint closestPoint = null;
 
         //Find closest point
-        for(Path2DPoint point = selectedPath.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
+        for (Path2DPoint point = selectedPath.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
           Vector2 tPoint = world2Screen(point.getPosition());
           double dist = Vector2.length(Vector2.subtract(tPoint, mouseVec));
-          if(dist <= shortestDistance){
+          if (dist <= shortestDistance) {
             shortestDistance = dist;
             closestPoint = point;
             winner = 1;
           }
 
-          if(point.getPrevPoint() != null) {
-            Vector2 tanPoint1 = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
+          if (point.getPrevPoint() != null) {
+            Vector2 tanPoint1 = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(), 1.0 / tangentLengthDrawFactor)));
             dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec));
-            if(dist <= shortestDistance){
+            if (dist <= shortestDistance) {
               shortestDistance = dist;
               closestPoint = point;
               winner = 2;
             }
           }
 
-          if(point.getNextPoint() != null) {
-            Vector2 tanPoint2 = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
+          if (point.getNextPoint() != null) {
+            Vector2 tanPoint2 = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(), 1.0 / tangentLengthDrawFactor)));
             dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec));
-            if(dist <= shortestDistance){
+            if (dist <= shortestDistance) {
               shortestDistance = dist;
               closestPoint = point;
               winner = 3;
@@ -96,26 +97,25 @@ public class PathVisualizer extends JPanel{
           }
           // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
         }
-        if(shortestDistance <= circleSize/2 ){
+        if (shortestDistance <= circleSize / 2) {
           selectedPoint = closestPoint;
           editPoint = closestPoint;
-        }
-        else
+        } else
           editVector = null;
       }
 
       public void mouseDragged(MouseEvent e) {
-        if(editPoint != null) {
+        if (editPoint != null) {
           Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
           switch (winner) {
             case 1:
-              editPoint.setPosition( worldPoint );
+              editPoint.setPosition(worldPoint);
               break;
             case 2:
-              editPoint.setPrevTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor ));
+              editPoint.setPrevTangent(Vector2.multiply(Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor));
               break;
             case 3:
-              editPoint.setNextTangent( Vector2.multiply( Vector2.subtract(worldPoint, editPoint.getPosition()), tangentLengthDrawFactor ));
+              editPoint.setNextTangent(Vector2.multiply(Vector2.subtract(worldPoint, editPoint.getPosition()), tangentLengthDrawFactor));
               break;
           }
           repaint();
@@ -136,7 +136,7 @@ public class PathVisualizer extends JPanel{
       ClassLoader classLoader = getClass().getClassLoader();
       blueSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramBlue.png").getFile()));
       redSideImage = ImageIO.read(new File(classLoader.getResource("assets/HalfFieldDiagramRed.png").getFile()));
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
@@ -144,11 +144,10 @@ public class PathVisualizer extends JPanel{
     String[] comboBoxNames = {"Blue Side", "Red Side"};
     sideSelection = new JComboBox<>(comboBoxNames);
     sideSelection.addItemListener(e -> {
-      if(e.getStateChange() == ItemEvent.SELECTED){
-        if (sideSelection.getSelectedIndex() == 0){
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        if (sideSelection.getSelectedIndex() == 0) {
           sides = Sides.BLUE;
-        }
-        else if(sideSelection.getSelectedIndex() == 1){
+        } else if (sideSelection.getSelectedIndex() == 1) {
           sides = Sides.RED;
         }
         repaint();
@@ -205,10 +204,9 @@ public class PathVisualizer extends JPanel{
     if (sharedAutonomousConfigsList.size() == 0) {
       String tempNames[] = {"New Auto"};
       autonomousNames = tempNames;
-    }
-    else {
-      autonomousNames = new String[sharedAutonomousConfigsList.size()+1];
-      for (int i = 0; i<sharedAutonomousConfigsList.size(); i++) {
+    } else {
+      autonomousNames = new String[sharedAutonomousConfigsList.size() + 1];
+      for (int i = 0; i < sharedAutonomousConfigsList.size(); i++) {
         autonomousNames[i] = sharedAutonomousConfigsList.get(i).toString();
       }
       autonomousNames[sharedAutonomousConfigsList.size()] = "New Auto";
@@ -216,10 +214,10 @@ public class PathVisualizer extends JPanel{
     autoSelection = new JComboBox<>(autonomousNames);
     autoSelection.setSelectedIndex(-1);
     autoSelection.addItemListener(e -> {
-      if(e.getStateChange() == ItemEvent.SELECTED){
-        if (autoSelection.getSelectedIndex() == autoSelection.getItemCount()-1) {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        if (autoSelection.getSelectedIndex() == autoSelection.getItemCount() - 1) {
 //          new JDialogExample();
-          String s = (String)JOptionPane.showInputDialog(
+          String s = (String) JOptionPane.showInputDialog(
               null,
               "Autonomous Name:",
               "New Autonomous",
@@ -231,8 +229,8 @@ public class PathVisualizer extends JPanel{
 //If a string was returned, say so.
           if ((s != null) && (s.length() > 0)) {
             sharedAutonomousConfigsList.add(s);
-            autoSelection.insertItemAt(s, autoSelection.getItemCount()-1);
-            autoSelection.setSelectedIndex(autoSelection.getItemCount()-2);
+            autoSelection.insertItemAt(s, autoSelection.getItemCount() - 1);
+            autoSelection.setSelectedIndex(autoSelection.getItemCount() - 2);
           }
         }
         repaint();
@@ -266,59 +264,81 @@ public class PathVisualizer extends JPanel{
       try {
         scale = Double.parseDouble(e.getActionCommand());
         repaint();
-      } catch(NumberFormatException exception){
+      } catch (NumberFormatException exception) {
         JOptionPane.showMessageDialog(PathVisualizer.this,
-                "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
-                        " million dollars to the Prince of Nigeria or a jail sentence of 20 years of for-profit prison" +
-                        " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
+            "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
+                " million dollars to the Prince of Nigeria or a jail sentence of 20 years of for-profit prison" +
+                " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
-    String[] autonomousSelectionNames = {"manual draw path", "40 kpa forward", "40 kpa backward", "gear"};
-    currentAutonomous = autonomousSelectionNames[0];
-    pathSelection = new JComboBox(autonomousSelectionNames);
+    String[] pathSelectionNames;
+    if (sharedAutonomousConfigsList.size() == 0) {
+      String tempNames[] = {"New Path"};
+      pathSelectionNames = tempNames;
+    } else {
+      pathSelectionNames = new String[sharedAutonomousConfigsList.size() + 1];
+      for (int i = 0; i < sharedAutonomousConfigsList.size(); i++) {
+        pathSelectionNames[i] = sharedAutonomousConfigsList.get(i).toString();
+      }
+      pathSelectionNames[sharedAutonomousConfigsList.size()] = "New Path";
+    }
+    pathSelection = new JComboBox<>(pathSelectionNames);
+    pathSelection.setSelectedIndex(-1);
     pathSelection.addItemListener(e -> {
-          if (e.getStateChange() == ItemEvent.SELECTED) {
-            if (pathSelection.getSelectedIndex() != 0) {
-              manualPath = false;
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        if (pathSelection.getSelectedIndex() == pathSelection.getItemCount() - 1) {
+//          new JDialogExample();
+          String s = (String) JOptionPane.showInputDialog(
+              null,
+              "Path Name:",
+              "New Path",
+              JOptionPane.PLAIN_MESSAGE,
+              null,
+              null,
+              "");
+          if ((s != null) && (s.length() > 0)) {
+            pathSelection.insertItemAt(s, pathSelection.getItemCount() - 1);
+            pathSelection.setSelectedIndex(pathSelection.getItemCount() - 2);
+            if (selectedAutonomousConfig != null) {
+              selectedAutonomousConfig.putPath(s, new Path2D());
             }
           }
-          if (e.getStateChange() == ItemEvent.SELECTED) {
-            currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
-            repaint();
-          }
         }
-    );
+        repaint();
+        }
+      });
 
     toolBarPanel.add(autoSelection);
+    toolBarPanel.add(pathSelection);
     toolBarPanel.add(decrementButton);
     toolBarPanel.add(scaleTextField);
     toolBarPanel.add(incrementButton);
     toolBarPanel.add(sideSelection);
-    toolBarPanel.add(pathSelection);
 
     add(toolBarPanel, BorderLayout.NORTH);
   }
 
+
   @Override
-  public void paintComponent(Graphics g) {
+  public void paintComponent (Graphics g){
     Graphics2D g2 = (Graphics2D) g;
     super.paintComponent(g2);
 
-    if(sides == Sides.BLUE){
-      g2.drawImage(blueSideImage, 0 - (int)((scale-18)/36 * blueSideImage.getWidth()),
-              0 - (int)((scale-18)/18 * (blueSideImage.getHeight() - 29)),
-              blueSideImage.getWidth() + (int)((scale-18)/18 * blueSideImage.getWidth()),
-              (int)((blueSideImage.getHeight() + 29) * scale/18) , null);
-    }
-    else if(sides == Sides.RED){
-      g2.drawImage(redSideImage, 0 - (int)((scale-18)/36 * redSideImage.getWidth()),
-              0 - (int)((scale-18)/18 * (redSideImage.getHeight() - 29)),
-              redSideImage.getWidth() + (int)((scale-18)/18 * redSideImage.getWidth()),
-              (int)((redSideImage.getHeight() + 29) * scale/18) , null);
+    if (sides == Sides.BLUE) {
+      g2.drawImage(blueSideImage, 0 - (int) ((scale - 18) / 36 * blueSideImage.getWidth()),
+          0 - (int) ((scale - 18) / 18 * (blueSideImage.getHeight() - 29)),
+          blueSideImage.getWidth() + (int) ((scale - 18) / 18 * blueSideImage.getWidth()),
+          (int) ((blueSideImage.getHeight() + 29) * scale / 18), null);
+    } else if (sides == Sides.RED) {
+      g2.drawImage(redSideImage, 0 - (int) ((scale - 18) / 36 * redSideImage.getWidth()),
+          0 - (int) ((scale - 18) / 18 * (redSideImage.getHeight() - 29)),
+          redSideImage.getWidth() + (int) ((scale - 18) / 18 * redSideImage.getWidth()),
+          (int) ((redSideImage.getHeight() + 29) * scale / 18), null);
     }
 
     DrawSelectedPath(g2, selectedPath);
   }
+
   
   private void DrawSelectedPath(Graphics2D g2, Path2D path2D) {
     double deltaT = path2D.getDuration() / 100.0;
