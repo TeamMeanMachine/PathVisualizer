@@ -304,6 +304,19 @@ public class PathVisualizer extends JPanel{
     Graphics2D g2 = (Graphics2D) g;
     super.paintComponent(g2);
 
+    if(sides == Sides.BLUE){
+      g2.drawImage(blueSideImage, 0 - (int)((scale-18)/36 * blueSideImage.getWidth()),
+              0 - (int)((scale-18)/18 * (blueSideImage.getHeight() - 29)),
+              blueSideImage.getWidth() + (int)((scale-18)/18 * blueSideImage.getWidth()),
+              (int)((blueSideImage.getHeight() + 29) * scale/18) , null);
+    }
+    else if(sides == Sides.RED){
+      g2.drawImage(redSideImage, 0 - (int)((scale-18)/36 * redSideImage.getWidth()),
+              0 - (int)((scale-18)/18 * (redSideImage.getHeight() - 29)),
+              redSideImage.getWidth() + (int)((scale-18)/18 * redSideImage.getWidth()),
+              (int)((redSideImage.getHeight() + 29) * scale/18) , null);
+    }
+
     DrawSelectedPath(g2, selectedPath);
   }
   
@@ -340,7 +353,6 @@ public class PathVisualizer extends JPanel{
       double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
       rightSpeed = Math.min(1.0, rightSpeed);
       double rightDelta = path2D.getRightPositionDelta(t);
-      System.out.println("Right: " + rightDelta);
       if (rightDelta>0)
         g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
       else {
