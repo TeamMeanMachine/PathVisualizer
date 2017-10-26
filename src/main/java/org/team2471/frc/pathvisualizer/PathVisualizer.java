@@ -30,14 +30,12 @@ public class PathVisualizer extends JPanel{
   private ArrayList<ArrayList<Path2D>> paths;
   private Path2D selectedPath = DefaultPath.INSTANCE;;
 
-  private JComboBox autoSelection;
-  private JComboBox pathSelection;
   private BufferedImage blueSideImage;
   private BufferedImage redSideImage;
   private JTextField scaleTextField;
   private JComboBox<String> sideSelection;
   private JComboBox<String> autoSelection;
-  private JComboBox pathSelection;
+  private JComboBox<String> pathSelection;
   private String currentAutonomous;
   boolean manualPath = true;//if manual path is false, then we are loading a premade Path2D path
 
@@ -306,17 +304,9 @@ public class PathVisualizer extends JPanel{
     Graphics2D g2 = (Graphics2D) g;
     super.paintComponent(g2);
 
-    if(sides == Sides.BLUE){
-
-
-    // get the stuff ready for the path drawing loop
-    double deltaT = m_path.getDuration() / 100.0;
-    Vector2 prevPos = m_path.getPosition(0.0);
-    Vector2 prevLeftPos = m_path.getLeftPosition(0.0);
-    Vector2 prevRightPos = m_path.getRightPosition(0.0);
-    Vector2 pos, leftPos, rightPos;
-    double prevEase = 0.0;
-    final double MAX_SPEED = 8.0;
+    DrawSelectedPath(g2, selectedPath);
+  }
+  
   private void DrawSelectedPath(Graphics2D g2, Path2D path2D) {
     double deltaT = path2D.getDuration() / 100.0;
     Vector2 prevPos = path2D.getPosition(0.0);
@@ -325,43 +315,15 @@ public class PathVisualizer extends JPanel{
     Vector2 pos, leftPos, rightPos;
     double prevEase = 0.0;
     final double MAX_SPEED = 8.0;
-        for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
-          pos = m_path.getPosition(t);
-          leftPos = m_path.getLeftPosition(t);
-          rightPos = m_path.getRightPosition(t);
-
+    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
+      pos = path2D.getPosition(t);
+      leftPos = path2D.getLeftPosition(t);
+      rightPos = path2D.getRightPosition(t);
 
       // center line
       g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
-      //needs to be implemented
-      //drawPath2DLine(g2, map.get(currentAutonomous));
-      // center line
-      g2.setColor(Color.white);
-      drawPathLine(g2, prevPos, pos);
-          // left wheel
-          double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
-          leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
-          leftSpeed = Math.min(1.0, leftSpeed);
-          double leftDelta = m_path.getLeftPositionDelta(t);
-          if (leftDelta>0)
-            g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
-          else {
-            g2.setColor(new Color(0, 0, 255)); //(int)blue));
-          }
-          drawPathLine(g2, prevLeftPos, leftPos);
 
-      // left wheel
-      double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
-      leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
-      leftSpeed = Math.min(1.0, leftSpeed);
-      double leftDelta = m_path.getLeftPositionDelta(t);
-      if (leftDelta>0)
-        g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
-      else {
-        g2.setColor(new Color(0, 0, 255)); //(int)blue));
-      }
-      drawPathLine(g2, prevLeftPos, leftPos);
       // left wheel
       double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
       leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
@@ -373,22 +335,11 @@ public class PathVisualizer extends JPanel{
         g2.setColor(new Color(0, 0, 255)); //(int)blue));
       }
       drawPathLine(g2, prevLeftPos, leftPos);
-          // right wheel
-          double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
-          rightSpeed = Math.min(1.0, rightSpeed);
-          double rightDelta = m_path.getRightPositionDelta(t);
-          System.out.println("Right: " + rightDelta);
-          if (rightDelta>0)
-            g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
-          else {
-            g2.setColor(new Color(0, 0, 255)); //(int)blue));
-          }
-          drawPathLine(g2, prevRightPos, rightPos);
 
       // right wheel
       double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
       rightSpeed = Math.min(1.0, rightSpeed);
-      double rightDelta = m_path.getRightPositionDelta(t);
+      double rightDelta = path2D.getRightPositionDelta(t);
       System.out.println("Right: " + rightDelta);
       if (rightDelta>0)
         g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
@@ -396,46 +347,13 @@ public class PathVisualizer extends JPanel{
         g2.setColor(new Color(0, 0, 255)); //(int)blue));
       }
       drawPathLine(g2, prevRightPos, rightPos);
-      // right wheel
-      double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
-      rightSpeed = Math.min(1.0, rightSpeed);
-      double rightDelta = path2D.getRightPositionDelta(t);
-      if (rightDelta>0)
-        g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
-      else {
-        g2.setColor(new Color(0, 0, 255)); //(int)blue));
-      }
-      drawPathLine(g2, prevRightPos, rightPos);
-          // set the prevs for the next loop
-          prevPos.set(pos.x, pos.y);
-          prevLeftPos.set(leftPos.x, leftPos.y);
-          prevRightPos.set(rightPos.x, rightPos.y);
-        }
 
-        // circles and lines for handles
+      // set the prevs for the next loop
+      prevPos.set(pos.x, pos.y);
+      prevLeftPos.set(leftPos.x, leftPos.y);
+      prevRightPos.set(rightPos.x, rightPos.y);
+    }
 
-    // circles and lines for handles
-
-    for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
-      g2.setColor(Color.green);
-      Vector2 tPoint = world2Screen(point.getPosition());
-      g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
-      if(point.getPrevPoint() != null) {
-        g2.setColor(Color.blue);
-        Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
-        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
-        g2.setColor(Color.cyan);
-        g2.setStroke(new BasicStroke(2));
-        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
-      }
-      if(point.getNextPoint() != null) {
-        g2.setColor(Color.blue);
-        Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
-        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
-        g2.setColor(Color.cyan);
-        g2.setStroke(new BasicStroke(2));
-        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
-      }
     // circles and lines for handles
     for(Path2DPoint point = path2D.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
       g2.setColor(Color.green);
@@ -457,34 +375,13 @@ public class PathVisualizer extends JPanel{
         g2.setStroke(new BasicStroke(2));
         g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
       }
-        for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
-          g2.setColor(Color.green);
-          Vector2 tPoint = world2Screen(point.getPosition());
-          g2.drawOval(((int) tPoint.x - circleSize / 2), ((int) tPoint.y - circleSize / 2), circleSize, circleSize);
-          if (point.getPrevPoint() != null) {
-            g2.setColor(Color.blue);
-            Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(), 1.0 / tangentLengthDrawFactor)));
-            g2.drawOval(((int) tanPoint.x - circleSize / 2), ((int) tanPoint.y - circleSize / 2), circleSize, circleSize);
-            g2.setColor(Color.cyan);
-            g2.setStroke(new BasicStroke(2));
-            g2.drawLine((int) tPoint.x, (int) tPoint.y, (int) tanPoint.x, (int) tanPoint.y);
-          }
-          if (point.getNextPoint() != null) {
-            g2.setColor(Color.blue);
-            Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(), 1.0 / tangentLengthDrawFactor)));
-            g2.drawOval(((int) tanPoint.x - circleSize / 2), ((int) tanPoint.y - circleSize / 2), circleSize, circleSize);
-            g2.setColor(Color.cyan);
-            g2.setStroke(new BasicStroke(2));
-            g2.drawLine((int) tPoint.x, (int) tPoint.y, (int) tanPoint.x, (int) tanPoint.y);
-          }
-        }
     }
 // draw the ease curve
 //    g2.setStroke(new BasicStroke(3));
-//    for (double t = deltaT; t <= selectedPath.getDuration(); t += deltaT) {
+//    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
 //      // draw the ease curve too
 //      g2.setColor(Color.black);
-//      double ease = selectedPath.getEaseCurve().getValue(t);
+//      double ease = path2D.getEaseCurve().getValue(t);
 //      double prevT = t - deltaT;
 //      g2.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
 //      prevEase = ease;
@@ -533,9 +430,6 @@ public class PathVisualizer extends JPanel{
     }
     Vector2 result = new Vector2 (point.x*xFlip*scale+ xOffset, point.y*-scale+ yOffset);
     return result;
-  }
-  private void drawPathBasedOnPath2D(Path2D path2D, Graphics2D graphics2D){
-
   }
 }
 
