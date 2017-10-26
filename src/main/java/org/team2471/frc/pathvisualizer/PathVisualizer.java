@@ -272,23 +272,23 @@ public class PathVisualizer extends JPanel{
                         " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
-    //
+
     String[] autonomousSelectionNames = {"manual draw path", "40 kpa forward", "40 kpa backward", "gear"};
-    //currentAutonomous = autonomousSelectionNames[0];
+    currentAutonomous = autonomousSelectionNames[0];
     pathSelection = new JComboBox(autonomousSelectionNames);
     pathSelection.addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED){
-        if (pathSelection.getSelectedIndex() != 0){
-          manualPath = false;
+          if (e.getStateChange() == ItemEvent.SELECTED) {
+            if (pathSelection.getSelectedIndex() != 0) {
+              manualPath = false;
+            }
+          }
+          if (e.getStateChange() == ItemEvent.SELECTED) {
+            currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
+            repaint();
+          }
         }
-      }
-      if(e.getStateChange() == ItemEvent.SELECTED){
-        //currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
-        repaint();
-      }
-    });
-    //
-    });*/
+    );
+
     toolBarPanel.add(autoSelection);
     toolBarPanel.add(decrementButton);
     toolBarPanel.add(scaleTextField);
