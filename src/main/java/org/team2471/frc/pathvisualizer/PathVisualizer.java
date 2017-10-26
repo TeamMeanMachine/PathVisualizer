@@ -4,6 +4,8 @@ import java.awt.*;
 import org.team2471.frc.lib.motion_profiling.Path2D;
 import org.team2471.frc.lib.motion_profiling.Path2DPoint;
 import org.team2471.frc.lib.vector.Vector2;
+import org.team2471.frc.motion_profiling.SharedAutonomousConfig;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -17,6 +19,8 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.ArrayList;
+import java.util.Vector;
 
 
 public class PathVisualizer extends JPanel{
@@ -32,11 +36,16 @@ public class PathVisualizer extends JPanel{
   private BufferedImage redSideImage;
   private JTextField scaleTextField;
   private JComboBox<String> sideSelection;
+  private JComboBox<String> autoSelection;
+  private JComboBox pathSelection;
+  private String currentAutonomous;
+  boolean manualPath = true;//if manual path is false, then we are loading a premade Path2D path
 
   private enum Sides{BLUE, RED}
   private Sides sides;
   private int circleSize = 10;
   private double scale;
+  private ArrayList sharedAutonomousConfigsList;
   final double xOffset = 295;
   final double yOffset = 485;
   private final double tangentLengthDrawFactor = 3.0;
@@ -46,6 +55,7 @@ public class PathVisualizer extends JPanel{
   int winner = 0;  // need an enum type
 
   public PathVisualizer() {
+    sharedAutonomousConfigsList = new ArrayList();
     setSize(1024, 768);
     scale = 18;
     sides = Sides.BLUE;
@@ -146,6 +156,91 @@ public class PathVisualizer extends JPanel{
         repaint();
       }
     });
+
+//    class JDialogExample extends JFrame
+//    {
+//      JDialog d1;
+//
+//      public JDialogExample()
+//      {
+//        createAndShowGUI();
+//      }
+//
+//      private void createAndShowGUI()
+//      {
+//        setTitle("JDialog Example");
+//        setDefaultCloseOperation(EXIT_ON_CLOSE);
+//        setLayout(new FlowLayout());
+//
+//        // Must be called before creating JDialog for
+//        // the desired effect
+//        JDialog.setDefaultLookAndFeelDecorated(true);
+//
+//        // A perfect constructor, mostly used.
+//        // A dialog with current frame as parent
+//        // a given title, and modal
+//        d1=new JDialog(this,"New Autonomous",true);
+//
+//        // Set size
+//        d1.setSize(400,100);
+//
+//        // Set some layout
+//        d1.setLayout(new FlowLayout());
+//
+//        d1.add(new JLabel("Autonomous Name"));
+//        d1.add(new JTextField(20));
+//        d1.add(new JButton("OK"));
+//        d1.add(new JButton("Cancel"));
+//
+//        setSize(400,100);
+//        setVisible(true);
+//
+//        // Like JFrame, JDialog isn't visible, you'll
+//        // have to make it visible
+//        // Remember to show JDialog after its parent is
+//        // shown so that its parent is visible
+//        d1.setVisible(true);
+//      }
+//    }
+
+    String[] autonomousNames;
+    if (sharedAutonomousConfigsList.size() == 0) {
+      String tempNames[] = {"New Auto"};
+      autonomousNames = tempNames;
+    }
+    else {
+      autonomousNames = new String[sharedAutonomousConfigsList.size()+1];
+      for (int i = 0; i<sharedAutonomousConfigsList.size(); i++) {
+        autonomousNames[i] = sharedAutonomousConfigsList.get(i).toString();
+      }
+      autonomousNames[sharedAutonomousConfigsList.size()] = "New Auto";
+    }
+    autoSelection = new JComboBox<>(autonomousNames);
+    autoSelection.setSelectedIndex(-1);
+    autoSelection.addItemListener(e -> {
+      if(e.getStateChange() == ItemEvent.SELECTED){
+        if (autoSelection.getSelectedIndex() == autoSelection.getItemCount()-1) {
+//          new JDialogExample();
+          String s = (String)JOptionPane.showInputDialog(
+              null,
+              "Autonomous Name:",
+              "New Autonomous",
+              JOptionPane.PLAIN_MESSAGE,
+              null,
+              null,
+              "");
+
+//If a string was returned, say so.
+          if ((s != null) && (s.length() > 0)) {
+            sharedAutonomousConfigsList.add(s);
+            autoSelection.insertItemAt(s, autoSelection.getItemCount()-1);
+            autoSelection.setSelectedIndex(autoSelection.getItemCount()-2);
+          }
+        }
+        repaint();
+      }
+    });
+
     JButton decrementButton = new JButton("-");
 
     decrementButton.addActionListener(new ActionListener() {
@@ -176,28 +271,32 @@ public class PathVisualizer extends JPanel{
       } catch(NumberFormatException exception){
         JOptionPane.showMessageDialog(PathVisualizer.this,
                 "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
-                        " million dollars to the Price of Nigeria or a jail sentence of 20 years of for-profit prison" +
+                        " million dollars to the Prince of Nigeria or a jail sentence of 20 years of for-profit prison" +
                         " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
-/*
-    if (!autonomousSelectionNames.isEmpty())
-      currentAutonomous = autonomousSelectionNames.get(0);
-
+    String[] autonomousSelectionNames = {"manual draw path", "40 kpa forward", "40 kpa backward", "gear"};
+    currentAutonomous = autonomousSelectionNames[0];
     pathSelection = new JComboBox(autonomousSelectionNames);
     pathSelection.addItemListener(e -> {
-      if(e.getStateChange() == ItemEvent.SELECTED){
-        currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
-        repaint();
-      }
-    });
-*/
-//    toolBarPanel.add(autoSelection);
-//    toolBarPanel.add(pathSelection);
+          if (e.getStateChange() == ItemEvent.SELECTED) {
+            if (pathSelection.getSelectedIndex() != 0) {
+              manualPath = false;
+            }
+          }
+          if (e.getStateChange() == ItemEvent.SELECTED) {
+            currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
+            repaint();
+          }
+        }
+    );
+
+    toolBarPanel.add(autoSelection);
     toolBarPanel.add(decrementButton);
     toolBarPanel.add(scaleTextField);
     toolBarPanel.add(incrementButton);
     toolBarPanel.add(sideSelection);
+    toolBarPanel.add(pathSelection);
 
     add(toolBarPanel, BorderLayout.NORTH);
   }
@@ -208,29 +307,16 @@ public class PathVisualizer extends JPanel{
     super.paintComponent(g2);
 
     if(sides == Sides.BLUE){
-      g2.drawImage(blueSideImage, 0 - (int)((scale-18)/36 * blueSideImage.getWidth()),
-              0 - (int)((scale-18)/18 * (blueSideImage.getHeight() - 29)),
-              blueSideImage.getWidth() + (int)((scale-18)/18 * blueSideImage.getWidth()),
-              (int)((blueSideImage.getHeight() + 29) * scale/18) , null);
-    }
-    else if(sides == Sides.RED){
-      g2.drawImage(redSideImage, 0 - (int)((scale-18)/36 * redSideImage.getWidth()),
-              0 - (int)((scale-18)/18 * (redSideImage.getHeight() - 29)),
-              redSideImage.getWidth() + (int)((scale-18)/18 * redSideImage.getWidth()),
-              (int)((redSideImage.getHeight() + 29) * scale/18) , null);
-    }
-    g2.setStroke(new BasicStroke(2));
 
-    DrawSelectedPath(g2, selectedPath);
-    // loop through the paths and draw all the non-selected paths
-    // for (Path2D path : paths) {
-    //   if (path==selectedPath)
-    //     DrawSelectedPath(g2, selectedPath);
-    //   else
-    //     DrawPath(g2, path);
-    // }
-  }
 
+    // get the stuff ready for the path drawing loop
+    double deltaT = m_path.getDuration() / 100.0;
+    Vector2 prevPos = m_path.getPosition(0.0);
+    Vector2 prevLeftPos = m_path.getLeftPosition(0.0);
+    Vector2 prevRightPos = m_path.getRightPosition(0.0);
+    Vector2 pos, leftPos, rightPos;
+    double prevEase = 0.0;
+    final double MAX_SPEED = 8.0;
   private void DrawSelectedPath(Graphics2D g2, Path2D path2D) {
     double deltaT = path2D.getDuration() / 100.0;
     Vector2 prevPos = path2D.getPosition(0.0);
@@ -239,16 +325,43 @@ public class PathVisualizer extends JPanel{
     Vector2 pos, leftPos, rightPos;
     double prevEase = 0.0;
     final double MAX_SPEED = 8.0;
+        for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
+          pos = m_path.getPosition(t);
+          leftPos = m_path.getLeftPosition(t);
+          rightPos = m_path.getRightPosition(t);
 
-    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
-      pos = path2D.getPosition(t);
-      leftPos = path2D.getLeftPosition(t);
-      rightPos = path2D.getRightPosition(t);
 
       // center line
       g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
+      //needs to be implemented
+      //drawPath2DLine(g2, map.get(currentAutonomous));
+      // center line
+      g2.setColor(Color.white);
+      drawPathLine(g2, prevPos, pos);
+          // left wheel
+          double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
+          leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
+          leftSpeed = Math.min(1.0, leftSpeed);
+          double leftDelta = m_path.getLeftPositionDelta(t);
+          if (leftDelta>0)
+            g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
+          else {
+            g2.setColor(new Color(0, 0, 255)); //(int)blue));
+          }
+          drawPathLine(g2, prevLeftPos, leftPos);
 
+      // left wheel
+      double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
+      leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
+      leftSpeed = Math.min(1.0, leftSpeed);
+      double leftDelta = m_path.getLeftPositionDelta(t);
+      if (leftDelta>0)
+        g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
+      else {
+        g2.setColor(new Color(0, 0, 255)); //(int)blue));
+      }
+      drawPathLine(g2, prevLeftPos, leftPos);
       // left wheel
       double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
       leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
@@ -260,7 +373,29 @@ public class PathVisualizer extends JPanel{
         g2.setColor(new Color(0, 0, 255)); //(int)blue));
       }
       drawPathLine(g2, prevLeftPos, leftPos);
+          // right wheel
+          double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
+          rightSpeed = Math.min(1.0, rightSpeed);
+          double rightDelta = m_path.getRightPositionDelta(t);
+          System.out.println("Right: " + rightDelta);
+          if (rightDelta>0)
+            g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
+          else {
+            g2.setColor(new Color(0, 0, 255)); //(int)blue));
+          }
+          drawPathLine(g2, prevRightPos, rightPos);
 
+      // right wheel
+      double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
+      rightSpeed = Math.min(1.0, rightSpeed);
+      double rightDelta = m_path.getRightPositionDelta(t);
+      System.out.println("Right: " + rightDelta);
+      if (rightDelta>0)
+        g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
+      else {
+        g2.setColor(new Color(0, 0, 255)); //(int)blue));
+      }
+      drawPathLine(g2, prevRightPos, rightPos);
       // right wheel
       double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
       rightSpeed = Math.min(1.0, rightSpeed);
@@ -271,13 +406,36 @@ public class PathVisualizer extends JPanel{
         g2.setColor(new Color(0, 0, 255)); //(int)blue));
       }
       drawPathLine(g2, prevRightPos, rightPos);
+          // set the prevs for the next loop
+          prevPos.set(pos.x, pos.y);
+          prevLeftPos.set(leftPos.x, leftPos.y);
+          prevRightPos.set(rightPos.x, rightPos.y);
+        }
 
-      // set the prevs for the next loop
-      prevPos.set(pos.x, pos.y);
-      prevLeftPos.set(leftPos.x, leftPos.y);
-      prevRightPos.set(rightPos.x, rightPos.y);
-    }
+        // circles and lines for handles
 
+    // circles and lines for handles
+
+    for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
+      g2.setColor(Color.green);
+      Vector2 tPoint = world2Screen(point.getPosition());
+      g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
+      if(point.getPrevPoint() != null) {
+        g2.setColor(Color.blue);
+        Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
+        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
+        g2.setColor(Color.cyan);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
+      }
+      if(point.getNextPoint() != null) {
+        g2.setColor(Color.blue);
+        Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
+        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
+        g2.setColor(Color.cyan);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
+      }
     // circles and lines for handles
     for(Path2DPoint point = path2D.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
       g2.setColor(Color.green);
@@ -299,6 +457,27 @@ public class PathVisualizer extends JPanel{
         g2.setStroke(new BasicStroke(2));
         g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
       }
+        for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
+          g2.setColor(Color.green);
+          Vector2 tPoint = world2Screen(point.getPosition());
+          g2.drawOval(((int) tPoint.x - circleSize / 2), ((int) tPoint.y - circleSize / 2), circleSize, circleSize);
+          if (point.getPrevPoint() != null) {
+            g2.setColor(Color.blue);
+            Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(), 1.0 / tangentLengthDrawFactor)));
+            g2.drawOval(((int) tanPoint.x - circleSize / 2), ((int) tanPoint.y - circleSize / 2), circleSize, circleSize);
+            g2.setColor(Color.cyan);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawLine((int) tPoint.x, (int) tPoint.y, (int) tanPoint.x, (int) tanPoint.y);
+          }
+          if (point.getNextPoint() != null) {
+            g2.setColor(Color.blue);
+            Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(), 1.0 / tangentLengthDrawFactor)));
+            g2.drawOval(((int) tanPoint.x - circleSize / 2), ((int) tanPoint.y - circleSize / 2), circleSize, circleSize);
+            g2.setColor(Color.cyan);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawLine((int) tPoint.x, (int) tPoint.y, (int) tanPoint.x, (int) tanPoint.y);
+          }
+        }
     }
 // draw the ease curve
 //    g2.setStroke(new BasicStroke(3));
@@ -354,6 +533,9 @@ public class PathVisualizer extends JPanel{
     }
     Vector2 result = new Vector2 (point.x*xFlip*scale+ xOffset, point.y*-scale+ yOffset);
     return result;
+  }
+  private void drawPathBasedOnPath2D(Path2D path2D, Graphics2D graphics2D){
+
   }
 }
 
