@@ -31,7 +31,7 @@ public class PathVisualizer extends JPanel{
   private JComboBox<String> autoSelection;
   private JComboBox pathSelection;
   private String currentAutonomous;
-  //Map<String, Path2D> map;
+  boolean manualPath = true;//if manual path is false, then we are loading a premade Path2D path
 
   private enum Sides{BLUE, RED}
   private Sides sides;
@@ -272,26 +272,29 @@ public class PathVisualizer extends JPanel{
                         " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
-    /*String[] autonomousSelectionNames = {"Placeholder", "Placeholder2", "Placeholder3"};
-    currentAutonomous = autonomousSelectionNames[0];
-    Path2D[] path2DS = new Path2D[3];
-    map = new HashMap();
-    for (int i=0; i<autonomousSelectionNames.length; i++){
-      map.put(autonomousSelectionNames[i], path2DS[i]);
-    }
+    //
+    String[] autonomousSelectionNames = {"manual draw path", "40 kpa forward", "40 kpa backward", "gear"};
+    //currentAutonomous = autonomousSelectionNames[0];
     pathSelection = new JComboBox(autonomousSelectionNames);
     pathSelection.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED){
+        if (pathSelection.getSelectedIndex() != 0){
+          manualPath = false;
+        }
+      }
       if(e.getStateChange() == ItemEvent.SELECTED){
-        currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
+        //currentAutonomous = autonomousSelectionNames[pathSelection.getSelectedIndex()];
         repaint();
       }
+    });
+    //
     });*/
     toolBarPanel.add(autoSelection);
     toolBarPanel.add(decrementButton);
     toolBarPanel.add(scaleTextField);
     toolBarPanel.add(incrementButton);
     toolBarPanel.add(sideSelection);
-    //toolBarPanel.add(pathSelection);
+    toolBarPanel.add(pathSelection);
 
     add(toolBarPanel, BorderLayout.NORTH);
   }
@@ -302,96 +305,97 @@ public class PathVisualizer extends JPanel{
     super.paintComponent(g2);
 
     if(sides == Sides.BLUE){
-      g2.drawImage(blueSideImage, 0 - (int)((scale-18)/36 * blueSideImage.getWidth()),
-              0 - (int)((scale-18)/18 * (blueSideImage.getHeight() - 29)),
-              blueSideImage.getWidth() + (int)((scale-18)/18 * blueSideImage.getWidth()),
-              (int)((blueSideImage.getHeight() + 29) * scale/18) , null);
-    }
-    else if(sides == Sides.RED){
-      g2.drawImage(redSideImage, 0 - (int)((scale-18)/36 * redSideImage.getWidth()),
-              0 - (int)((scale-18)/18 * (redSideImage.getHeight() - 29)),
-              redSideImage.getWidth() + (int)((scale-18)/18 * redSideImage.getWidth()),
-              (int)((redSideImage.getHeight() + 29) * scale/18) , null);
-    }
-    g2.setStroke(new BasicStroke(2));
-    //g2.drawLine((int)(blueSideImage.getWidth(null) * scale / 18) + 15, 0,
-    //      (int)(blueSideImage.getWidth(null) * scale / 18) + 15, (int)(blueSideImage.getHeight(null) * scale / 18) + 15);
-    //g2.drawLine(5);
-    g2.drawLine(0, blueSideImage.getHeight()-29, blueSideImage.getWidth()/2, blueSideImage.getHeight()-29);
-
-
-    // get the stuff ready for the path drawing loop
-    double deltaT = m_path.getDuration() / 100.0;
-    Vector2 prevPos = m_path.getPosition(0.0);
-    Vector2 prevLeftPos = m_path.getLeftPosition(0.0);
-    Vector2 prevRightPos = m_path.getRightPosition(0.0);
-    Vector2 pos, leftPos, rightPos;
-    double prevEase = 0.0;
-    final double MAX_SPEED = 8.0;
-
-    for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
-      pos = m_path.getPosition(t);
-      leftPos = m_path.getLeftPosition(t);
-      rightPos = m_path.getRightPosition(t);
-
-      // center line
-      g2.setColor(Color.white);
-      drawPathLine(g2, prevPos, pos);
-      //needs to be implemented
-      //drawPath2DLine(g2, map.get(currentAutonomous));
-
-      // left wheel
-      double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
-      leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
-      leftSpeed = Math.min(1.0, leftSpeed);
-      double leftDelta = m_path.getLeftPositionDelta(t);
-      if (leftDelta>0)
-        g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
-      else {
-        g2.setColor(new Color(0, 0, 255)); //(int)blue));
+        g2.drawImage(blueSideImage, 0 - (int)((scale-18)/36 * blueSideImage.getWidth()),
+                0 - (int)((scale-18)/18 * (blueSideImage.getHeight() - 29)),
+                blueSideImage.getWidth() + (int)((scale-18)/18 * blueSideImage.getWidth()),
+                (int)((blueSideImage.getHeight() + 29) * scale/18) , null);
       }
-      drawPathLine(g2, prevLeftPos, leftPos);
-
-      // right wheel
-      double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
-      rightSpeed = Math.min(1.0, rightSpeed);
-      double rightDelta = m_path.getRightPositionDelta(t);
-      System.out.println("Right: " + rightDelta);
-      if (rightDelta>0)
-        g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
-      else {
-        g2.setColor(new Color(0, 0, 255)); //(int)blue));
+      else if(sides == Sides.RED){
+        g2.drawImage(redSideImage, 0 - (int)((scale-18)/36 * redSideImage.getWidth()),
+                0 - (int)((scale-18)/18 * (redSideImage.getHeight() - 29)),
+                redSideImage.getWidth() + (int)((scale-18)/18 * redSideImage.getWidth()),
+                (int)((redSideImage.getHeight() + 29) * scale/18) , null);
       }
-      drawPathLine(g2, prevRightPos, rightPos);
+      g2.setStroke(new BasicStroke(2));
+      //g2.drawLine((int)(blueSideImage.getWidth(null) * scale / 18) + 15, 0,
+      //      (int)(blueSideImage.getWidth(null) * scale / 18) + 15, (int)(blueSideImage.getHeight(null) * scale / 18) + 15);
+      //g2.drawLine(5);
+      g2.drawLine(0, blueSideImage.getHeight()-29, blueSideImage.getWidth()/2, blueSideImage.getHeight()-29);
 
-      // set the prevs for the next loop
-      prevPos.set(pos.x, pos.y);
-      prevLeftPos.set(leftPos.x, leftPos.y);
-      prevRightPos.set(rightPos.x, rightPos.y);
-    }
+    if(manualPath == true){
+      // get the stuff ready for the path drawing loop
+        double deltaT = m_path.getDuration() / 100.0;
+        Vector2 prevPos = m_path.getPosition(0.0);
+        Vector2 prevLeftPos = m_path.getLeftPosition(0.0);
+        Vector2 prevRightPos = m_path.getRightPosition(0.0);
+        Vector2 pos, leftPos, rightPos;
+        double prevEase = 0.0;
+        final double MAX_SPEED = 8.0;
 
-    // circles and lines for handles
+        for (double t = deltaT; t <= m_path.getDuration(); t += deltaT) {
+          pos = m_path.getPosition(t);
+          leftPos = m_path.getLeftPosition(t);
+          rightPos = m_path.getRightPosition(t);
 
-    for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
-      g2.setColor(Color.green);
-      Vector2 tPoint = world2Screen(point.getPosition());
-      g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
-      if(point.getPrevPoint() != null) {
-        g2.setColor(Color.blue);
-        Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
-        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
-        g2.setColor(Color.cyan);
-        g2.setStroke(new BasicStroke(2));
-        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
-      }
-      if(point.getNextPoint() != null) {
-        g2.setColor(Color.blue);
-        Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
-        g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
-        g2.setColor(Color.cyan);
-        g2.setStroke(new BasicStroke(2));
-        g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
-      }
+          // center line
+          g2.setColor(Color.white);
+          drawPathLine(g2, prevPos, pos);
+          //needs to be implemented
+          //drawPath2DLine(g2, map.get(currentAutonomous));
+
+          // left wheel
+          double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
+          leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
+          leftSpeed = Math.min(1.0, leftSpeed);
+          double leftDelta = m_path.getLeftPositionDelta(t);
+          if (leftDelta>0)
+            g2.setColor(new Color((int) ((1.0 - leftSpeed) * 255), (int) (leftSpeed * 255), 0));
+          else {
+            g2.setColor(new Color(0, 0, 255)); //(int)blue));
+          }
+          drawPathLine(g2, prevLeftPos, leftPos);
+
+          // right wheel
+          double rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED;
+          rightSpeed = Math.min(1.0, rightSpeed);
+          double rightDelta = m_path.getRightPositionDelta(t);
+          System.out.println("Right: " + rightDelta);
+          if (rightDelta>0)
+            g2.setColor(new Color((int) ((1.0 - rightSpeed) * 255), (int) (rightSpeed * 255), 0));
+          else {
+            g2.setColor(new Color(0, 0, 255)); //(int)blue));
+          }
+          drawPathLine(g2, prevRightPos, rightPos);
+
+          // set the prevs for the next loop
+          prevPos.set(pos.x, pos.y);
+          prevLeftPos.set(leftPos.x, leftPos.y);
+          prevRightPos.set(rightPos.x, rightPos.y);
+        }
+
+        // circles and lines for handles
+
+        for(Path2DPoint point = m_path.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
+          g2.setColor(Color.green);
+          Vector2 tPoint = world2Screen(point.getPosition());
+          g2.drawOval(((int) tPoint.x - circleSize / 2), ((int) tPoint.y - circleSize / 2), circleSize, circleSize);
+          if (point.getPrevPoint() != null) {
+            g2.setColor(Color.blue);
+            Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(), 1.0 / tangentLengthDrawFactor)));
+            g2.drawOval(((int) tanPoint.x - circleSize / 2), ((int) tanPoint.y - circleSize / 2), circleSize, circleSize);
+            g2.setColor(Color.cyan);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawLine((int) tPoint.x, (int) tPoint.y, (int) tanPoint.x, (int) tanPoint.y);
+          }
+          if (point.getNextPoint() != null) {
+            g2.setColor(Color.blue);
+            Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(), 1.0 / tangentLengthDrawFactor)));
+            g2.drawOval(((int) tanPoint.x - circleSize / 2), ((int) tanPoint.y - circleSize / 2), circleSize, circleSize);
+            g2.setColor(Color.cyan);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawLine((int) tPoint.x, (int) tPoint.y, (int) tanPoint.x, (int) tanPoint.y);
+          }
+        }
     }
 
 // draw the ease curve
@@ -431,6 +435,9 @@ public class PathVisualizer extends JPanel{
     }
     Vector2 result = new Vector2 (point.x*xFlip*scale+ xOffset, point.y*-scale+ yOffset);
     return result;
+  }
+  private void drawPathBasedOnPath2D(Path2D path2D, Graphics2D graphics2D){
+
   }
 }
 
