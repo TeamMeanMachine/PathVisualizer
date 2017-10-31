@@ -4,7 +4,7 @@ import java.awt.*;
 import org.team2471.frc.lib.motion_profiling.Path2D;
 import org.team2471.frc.lib.motion_profiling.Path2DPoint;
 import org.team2471.frc.lib.vector.Vector2;
-import org.team2471.frc.motion_profiling.SharedAutonomousConfig;
+import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -20,13 +20,13 @@ import java.awt.GridLayout;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Vector;
 
 
 public class PathVisualizer extends JPanel{
 
   private ArrayList<String> autoNames;
-  private String currentAuto;
   private ArrayList<ArrayList<Path2D>> paths;
   private Path2D selectedPath = DefaultPath.INSTANCE;;
   private SharedAutonomousConfig selectedAutonomousConfig;
@@ -44,7 +44,6 @@ public class PathVisualizer extends JPanel{
   private Sides sides;
   private int circleSize = 10;
   private double scale;
-  private ArrayList sharedAutonomousConfigsList;
   final double xOffset = 295;
   final double yOffset = 485;
   private final double tangentLengthDrawFactor = 3.0;
@@ -54,7 +53,6 @@ public class PathVisualizer extends JPanel{
   int winner = 0;  // need an enum type
 
   public PathVisualizer() {
-    sharedAutonomousConfigsList = new ArrayList();
     setSize(1024, 768);
     scale = 18;
     sides = Sides.BLUE;
@@ -154,89 +152,6 @@ public class PathVisualizer extends JPanel{
       }
     });
 
-//    class JDialogExample extends JFrame
-//    {
-//      JDialog d1;
-//
-//      public JDialogExample()
-//      {
-//        createAndShowGUI();
-//      }
-//
-//      private void createAndShowGUI()
-//      {
-//        setTitle("JDialog Example");
-//        setDefaultCloseOperation(EXIT_ON_CLOSE);
-//        setLayout(new FlowLayout());
-//
-//        // Must be called before creating JDialog for
-//        // the desired effect
-//        JDialog.setDefaultLookAndFeelDecorated(true);
-//
-//        // A perfect constructor, mostly used.
-//        // A dialog with current frame as parent
-//        // a given title, and modal
-//        d1=new JDialog(this,"New Autonomous",true);
-//
-//        // Set size
-//        d1.setSize(400,100);
-//
-//        // Set some layout
-//        d1.setLayout(new FlowLayout());
-//
-//        d1.add(new JLabel("Autonomous Name"));
-//        d1.add(new JTextField(20));
-//        d1.add(new JButton("OK"));
-//        d1.add(new JButton("Cancel"));
-//
-//        setSize(400,100);
-//        setVisible(true);
-//
-//        // Like JFrame, JDialog isn't visible, you'll
-//        // have to make it visible
-//        // Remember to show JDialog after its parent is
-//        // shown so that its parent is visible
-//        d1.setVisible(true);
-//      }
-//    }
-
-    String[] autonomousNames;
-    if (sharedAutonomousConfigsList.size() == 0) {
-      String tempNames[] = {"New Auto"};
-      autonomousNames = tempNames;
-    } else {
-      autonomousNames = new String[sharedAutonomousConfigsList.size() + 1];
-      for (int i = 0; i < sharedAutonomousConfigsList.size(); i++) {
-        autonomousNames[i] = sharedAutonomousConfigsList.get(i).toString();
-      }
-      autonomousNames[sharedAutonomousConfigsList.size()] = "New Auto";
-    }
-    autoSelection = new JComboBox<>(autonomousNames);
-    autoSelection.setSelectedIndex(-1);
-    autoSelection.addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED) {
-        if (autoSelection.getSelectedIndex() == autoSelection.getItemCount() - 1) {
-//          new JDialogExample();
-          String s = (String) JOptionPane.showInputDialog(
-              null,
-              "Autonomous Name:",
-              "New Autonomous",
-              JOptionPane.PLAIN_MESSAGE,
-              null,
-              null,
-              "");
-
-//If a string was returned, say so.
-          if ((s != null) && (s.length() > 0)) {
-            sharedAutonomousConfigsList.add(s);
-            autoSelection.insertItemAt(s, autoSelection.getItemCount() - 1);
-            autoSelection.setSelectedIndex(autoSelection.getItemCount() - 2);
-          }
-        }
-        repaint();
-      }
-    });
-
     JButton decrementButton = new JButton("-");
 
     decrementButton.addActionListener(new ActionListener() {
@@ -271,23 +186,57 @@ public class PathVisualizer extends JPanel{
                 " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE);
       }
     });
-    String[] pathSelectionNames;
-    if (sharedAutonomousConfigsList.size() == 0) {
-      String tempNames[] = {"New Path"};
-      pathSelectionNames = tempNames;
-    } else {
-      pathSelectionNames = new String[sharedAutonomousConfigsList.size() + 1];
-      for (int i = 0; i < sharedAutonomousConfigsList.size(); i++) {
-        pathSelectionNames[i] = sharedAutonomousConfigsList.get(i).toString();
-      }
-      pathSelectionNames[sharedAutonomousConfigsList.size()] = "New Path";
+
+    // Autonomi
+    String[] autonomousNames;
+    int numConfigs = SharedAutonomousConfig.Companion.getConfigNames().length;
+    autonomousNames = new String[numConfigs + 1];
+    for (int i = 0; i<numConfigs; i++) {
+      autonomousNames[i] = SharedAutonomousConfig.Companion.getConfigNames()[i];
     }
+    autonomousNames[numConfigs] = "New Auto";
+    autoSelection = new JComboBox<>(autonomousNames);
+    autoSelection.setSelectedIndex(-1);
+    autoSelection.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        if (autoSelection.getSelectedIndex() == autoSelection.getItemCount() - 1) {
+//          new JDialogExample();
+          String s = (String) JOptionPane.showInputDialog(
+              null,
+              "Autonomous Name:",
+              "New Autonomous",
+              JOptionPane.PLAIN_MESSAGE,
+              null,
+              null,
+              "");
+
+//If a string was returned, say so.
+          if ((s != null) && (s.length() > 0)) {
+            selectedAutonomousConfig = new SharedAutonomousConfig(s);
+            autoSelection.insertItemAt(s, autoSelection.getItemCount() - 1);
+            autoSelection.setSelectedIndex(autoSelection.getItemCount() - 2);
+          }
+        }
+        else {
+          selectedAutonomousConfig = new SharedAutonomousConfig(autoSelection.getSelectedItem().toString());
+        }
+        repaint();
+      }
+    });
+
+    // paths
+    String[] pathSelectionNames;
+    int numPaths = selectedAutonomousConfig != null ? selectedAutonomousConfig.getPathNames().length : 0;
+    pathSelectionNames = new String[numPaths + 1];
+    for (int i = 0; i<numPaths; i++) {
+      pathSelectionNames[i] = selectedAutonomousConfig.getPathNames()[i];
+    }
+    pathSelectionNames[numPaths] = "New Path";
     pathSelection = new JComboBox<>(pathSelectionNames);
     pathSelection.setSelectedIndex(-1);
     pathSelection.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.SELECTED) {
         if (pathSelection.getSelectedIndex() == pathSelection.getItemCount() - 1) {
-//          new JDialogExample();
           String s = (String) JOptionPane.showInputDialog(
               null,
               "Path Name:",
