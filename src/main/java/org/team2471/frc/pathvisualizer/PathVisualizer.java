@@ -17,17 +17,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Vector;
-
 
 public class PathVisualizer extends JPanel{
 
-  private ArrayList<String> autoNames;
-  private ArrayList<ArrayList<Path2D>> paths;
   private Path2D selectedPath = DefaultPath.INSTANCE;;
   private SharedAutonomousConfig selectedAutonomousConfig;
 
@@ -37,8 +29,6 @@ public class PathVisualizer extends JPanel{
   private JComboBox<String> sideSelection;
   private JComboBox<String> autoSelection;
   private JComboBox<String> pathSelection;
-  private String currentAutonomous;
-  boolean manualPath = true;//if manual path is false, then we are loading a premade Path2D path
 
   private enum Sides{BLUE, RED}
   private Sides sides;
@@ -50,7 +40,7 @@ public class PathVisualizer extends JPanel{
   Path2DPoint editPoint = null;
   Vector2 editVector = null;
   Path2DPoint selectedPoint = null;
-  int winner = 0;  // need an enum type
+  int pointType = 0;  // need an enum type
 
   public PathVisualizer() {
     setSize(1024, 768);
@@ -71,7 +61,7 @@ public class PathVisualizer extends JPanel{
           if (dist <= shortestDistance) {
             shortestDistance = dist;
             closestPoint = point;
-            winner = 1;
+            pointType = 0;
           }
 
           if (point.getPrevPoint() != null) {
@@ -80,7 +70,7 @@ public class PathVisualizer extends JPanel{
             if (dist <= shortestDistance) {
               shortestDistance = dist;
               closestPoint = point;
-              winner = 2;
+              pointType = 1;
             }
           }
 
@@ -90,7 +80,7 @@ public class PathVisualizer extends JPanel{
             if (dist <= shortestDistance) {
               shortestDistance = dist;
               closestPoint = point;
-              winner = 3;
+              pointType = 2;
             }
           }
           // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
@@ -105,14 +95,14 @@ public class PathVisualizer extends JPanel{
       public void mouseDragged(MouseEvent e) {
         if (editPoint != null) {
           Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
-          switch (winner) {
-            case 1:
+          switch (pointType) {
+            case 0:
               editPoint.setPosition(worldPoint);
               break;
-            case 2:
+            case 1:
               editPoint.setPrevTangent(Vector2.multiply(Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor));
               break;
-            case 3:
+            case 2:
               editPoint.setNextTangent(Vector2.multiply(Vector2.subtract(worldPoint, editPoint.getPosition()), tangentLengthDrawFactor));
               break;
           }
@@ -121,8 +111,7 @@ public class PathVisualizer extends JPanel{
       }
 
       public void mouseReleased(MouseEvent e) {
-        //System.out.println("mouseReleased");
-        editPoint = null;
+        editPoint = null;  // no longer editing
       }
     }
 
@@ -152,8 +141,8 @@ public class PathVisualizer extends JPanel{
       }
     });
 
+    // zoom out
     JButton decrementButton = new JButton("-");
-
     decrementButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -162,6 +151,8 @@ public class PathVisualizer extends JPanel{
         scaleTextField.setText(Double.toString(scale));
       }
     });
+
+    // zoom in
     JButton incrementButton = new JButton("+");
     incrementButton.addActionListener(new ActionListener() {
       @Override
@@ -173,6 +164,7 @@ public class PathVisualizer extends JPanel{
 
     });
 
+    // zoom
     scaleTextField = new JTextField(Double.toString(scale));
     scaleTextField.setEditable(true);
     scaleTextField.addActionListener(e -> {
@@ -200,7 +192,6 @@ public class PathVisualizer extends JPanel{
     autoSelection.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.SELECTED) {
         if (autoSelection.getSelectedIndex() == autoSelection.getItemCount() - 1) {
-//          new JDialogExample();
           String s = (String) JOptionPane.showInputDialog(
               null,
               "Autonomous Name:",
@@ -210,14 +201,13 @@ public class PathVisualizer extends JPanel{
               null,
               "");
 
-//If a string was returned, say so.
           if ((s != null) && (s.length() > 0)) {
             selectedAutonomousConfig = new SharedAutonomousConfig(s);
             autoSelection.insertItemAt(s, autoSelection.getItemCount() - 1);
             autoSelection.setSelectedIndex(autoSelection.getItemCount() - 2);
           }
         }
-        else {
+        else {  // any autonomous chosen
           selectedAutonomousConfig = new SharedAutonomousConfig(autoSelection.getSelectedItem().toString());
         }
         repaint();
@@ -238,13 +228,13 @@ public class PathVisualizer extends JPanel{
       if (e.getStateChange() == ItemEvent.SELECTED) {
         if (pathSelection.getSelectedIndex() == pathSelection.getItemCount() - 1) {
           String s = (String) JOptionPane.showInputDialog(
-              null,
-              "Path Name:",
-              "New Path",
-              JOptionPane.PLAIN_MESSAGE,
-              null,
-              null,
-              "");
+                  null,
+                  "Path Name:",
+                  "New Path",
+                  JOptionPane.PLAIN_MESSAGE,
+                  null,
+                  null,
+                  "");
           if ((s != null) && (s.length() > 0)) {
             pathSelection.insertItemAt(s, pathSelection.getItemCount() - 1);
             pathSelection.setSelectedIndex(pathSelection.getItemCount() - 2);
@@ -252,11 +242,14 @@ public class PathVisualizer extends JPanel{
               selectedAutonomousConfig.putPath(s, new Path2D());
             }
           }
+        } else if (selectedAutonomousConfig != null) {  // any path chosen
+          selectedPath = selectedAutonomousConfig.getPath(pathSelection.getSelectedItem().toString());
         }
         repaint();
-        }
-      });
+      }
+    });
 
+    // add the tool bar items
     toolBarPanel.add(autoSelection);
     toolBarPanel.add(pathSelection);
     toolBarPanel.add(decrementButton);
@@ -295,7 +288,6 @@ public class PathVisualizer extends JPanel{
     Vector2 prevLeftPos = path2D.getLeftPosition(0.0);
     Vector2 prevRightPos = path2D.getRightPosition(0.0);
     Vector2 pos, leftPos, rightPos;
-    double prevEase = 0.0;
     final double MAX_SPEED = 8.0;
     for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
       pos = path2D.getPosition(t);
@@ -337,27 +329,36 @@ public class PathVisualizer extends JPanel{
 
     // circles and lines for handles
     for(Path2DPoint point = path2D.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
-      g2.setColor(Color.green);
+      if (point==selectedPoint && pointType==0)
+        g2.setColor(Color.green);
+      else
+        g2.setColor(Color.white);
+
       Vector2 tPoint = world2Screen(point.getPosition());
       g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
       if(point.getPrevPoint() != null) {
-        g2.setColor(Color.blue);
+        if (point==selectedPoint && pointType==1)
+          g2.setColor(Color.green);
+        else
+          g2.setColor(Color.white);
         Vector2 tanPoint = world2Screen(Vector2.subtract(point.getPosition(), Vector2.multiply(point.getPrevTangent(),1.0/tangentLengthDrawFactor)));
         g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
-        g2.setColor(Color.cyan);
         g2.setStroke(new BasicStroke(2));
         g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
       }
       if(point.getNextPoint() != null) {
-        g2.setColor(Color.blue);
+        if (point==selectedPoint && pointType==2)
+          g2.setColor(Color.green);
+        else
+          g2.setColor(Color.white);
         Vector2 tanPoint = world2Screen(Vector2.add(point.getPosition(), Vector2.multiply(point.getNextTangent(),1.0/tangentLengthDrawFactor)));
         g2.drawOval(((int)tanPoint.x - circleSize/2),((int)tanPoint.y - circleSize/2), circleSize,circleSize);
-        g2.setColor(Color.cyan);
         g2.setStroke(new BasicStroke(2));
         g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
       }
     }
 // draw the ease curve
+//    double prevEase = 0.0;
 //    g2.setStroke(new BasicStroke(3));
 //    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
 //      // draw the ease curve too
