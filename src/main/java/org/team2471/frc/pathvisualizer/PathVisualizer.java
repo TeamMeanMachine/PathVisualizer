@@ -43,10 +43,12 @@ public class PathVisualizer extends JPanel {
     zoom = 18;
     sides = Sides.BLUE;
 
+/*
     JFrame frame = new JFrame();
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.add(this);
     frame.setVisible(true);
+*/
 /*
     frame.addWindowListener(new WindowAdapter()
     {
