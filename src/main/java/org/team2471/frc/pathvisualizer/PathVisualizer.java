@@ -9,23 +9,20 @@ import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 
-public class PathVisualizer extends JPanel{
+public class PathVisualizer extends JPanel {
 
   private Path2D selectedPath = DefaultPath.INSTANCE;;
   private SharedAutonomousConfig selectedAutonomousConfig;
 
   private BufferedImage blueSideImage;
   private BufferedImage redSideImage;
-  private JTextField scaleTextField;
+  private JTextField zoomTextField;
   private JComboBox<String> sideSelection;
   private JComboBox<String> autoSelection;
   private JComboBox<String> pathSelection;
@@ -33,9 +30,8 @@ public class PathVisualizer extends JPanel{
   private enum Sides{BLUE, RED}
   private Sides sides;
   private int circleSize = 10;
-  private double scale;
-  final double xOffset = 295;
-  final double yOffset = 485;
+  private double zoom;
+  final Vector2 offset = new Vector2( 295, 485);
   private final double tangentLengthDrawFactor = 3.0;
   Path2DPoint editPoint = null;
   Vector2 editVector = null;
@@ -44,11 +40,24 @@ public class PathVisualizer extends JPanel{
 
   public PathVisualizer() {
     setSize(1024, 768);
-    scale = 18;
+    zoom = 18;
     sides = Sides.BLUE;
 
-    class MyListener extends MouseInputAdapter {
+    JFrame frame = new JFrame();
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.add(this);
+    frame.setVisible(true);
+/*
+    frame.addWindowListener(new WindowAdapter()
+    {
+      public void windowClosed(WindowEvent e)
+      {
+        System.exit(0); //calling the method is a must
+      }
+    });
+*/
 
+    class MyListener extends MouseInputAdapter {
       public void mousePressed(MouseEvent e) {
         Vector2 mouseVec = new Vector2(e.getX(), e.getY());
         double shortestDistance = 10000;
@@ -146,9 +155,9 @@ public class PathVisualizer extends JPanel{
     decrementButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        scale--;
+        zoom--;
         repaint();
-        scaleTextField.setText(Double.toString(scale));
+        zoomTextField.setText(Double.toString(zoom));
       }
     });
 
@@ -157,19 +166,19 @@ public class PathVisualizer extends JPanel{
     incrementButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        scale++;
+        zoom++;
         repaint();
-        scaleTextField.setText(Double.toString(scale));
+        zoomTextField.setText(Double.toString(zoom));
       }
 
     });
 
     // zoom
-    scaleTextField = new JTextField(Double.toString(scale));
-    scaleTextField.setEditable(true);
-    scaleTextField.addActionListener(e -> {
+    zoomTextField = new JTextField(Double.toString(zoom));
+    zoomTextField.setEditable(true);
+    zoomTextField.addActionListener(e -> {
       try {
-        scale = Double.parseDouble(e.getActionCommand());
+        zoom = Double.parseDouble(e.getActionCommand());
         repaint();
       } catch (NumberFormatException exception) {
         JOptionPane.showMessageDialog(PathVisualizer.this,
@@ -253,13 +262,12 @@ public class PathVisualizer extends JPanel{
     toolBarPanel.add(autoSelection);
     toolBarPanel.add(pathSelection);
     toolBarPanel.add(decrementButton);
-    toolBarPanel.add(scaleTextField);
+    toolBarPanel.add(zoomTextField);
     toolBarPanel.add(incrementButton);
     toolBarPanel.add(sideSelection);
 
     add(toolBarPanel, BorderLayout.NORTH);
   }
-
 
   @Override
   public void paintComponent (Graphics g){
@@ -267,17 +275,24 @@ public class PathVisualizer extends JPanel{
     super.paintComponent(g2);
 
     if (sides == Sides.BLUE) {
-      g2.drawImage(blueSideImage, 0 - (int) ((scale - 18) / 36 * blueSideImage.getWidth()),
-          0 - (int) ((scale - 18) / 18 * (blueSideImage.getHeight() - 29)),
-          blueSideImage.getWidth() + (int) ((scale - 18) / 18 * blueSideImage.getWidth()),
-          (int) ((blueSideImage.getHeight() + 29) * scale / 18), null);
+      g2.drawImage(blueSideImage, 0 - (int) ((zoom - 18) / 36 * blueSideImage.getWidth()),
+          0 - (int) ((zoom - 18) / 18 * (blueSideImage.getHeight() - 29)),
+          blueSideImage.getWidth() + (int) ((zoom - 18) / 18 * blueSideImage.getWidth()),
+          (int) ((blueSideImage.getHeight() + 29) * zoom / 18), null);
     } else if (sides == Sides.RED) {
-      g2.drawImage(redSideImage, 0 - (int) ((scale - 18) / 36 * redSideImage.getWidth()),
-          0 - (int) ((scale - 18) / 18 * (redSideImage.getHeight() - 29)),
-          redSideImage.getWidth() + (int) ((scale - 18) / 18 * redSideImage.getWidth()),
-          (int) ((redSideImage.getHeight() + 29) * scale / 18), null);
+      g2.drawImage(redSideImage, 0 - (int) ((zoom - 18) / 36 * redSideImage.getWidth()),
+          0 - (int) ((zoom - 18) / 18 * (redSideImage.getHeight() - 29)),
+          redSideImage.getWidth() + (int) ((zoom - 18) / 18 * redSideImage.getWidth()),
+          (int) ((redSideImage.getHeight() + 29) * zoom / 18), null);
     }
 
+    if (selectedAutonomousConfig!=null) {
+      int numPaths = selectedAutonomousConfig.getPathNames().length;
+      for (int i = 0; i < numPaths; i++) {
+        Path2D path2D = selectedAutonomousConfig.getPath(selectedAutonomousConfig.getPathNames()[i]);
+        DrawPath(g2, path2D);
+      }
+    }
     DrawSelectedPath(g2, selectedPath);
   }
 
@@ -293,11 +308,11 @@ public class PathVisualizer extends JPanel{
       pos = path2D.getPosition(t);
       leftPos = path2D.getLeftPosition(t);
       rightPos = path2D.getRightPosition(t);
-
+/*
       // center line
       g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
-
+*/
       // left wheel
       double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
       leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
@@ -375,13 +390,12 @@ public class PathVisualizer extends JPanel{
     Vector2 prevPos = path2D.getPosition(0.0);
     Vector2 pos;
 
+    g2.setColor(Color.white);
     for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
       pos = path2D.getPosition(t);
 
       // center line
-      g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
-
       prevPos.set(pos.x, pos.y);
     }
   }
@@ -400,7 +414,7 @@ public class PathVisualizer extends JPanel{
     if(sides == Sides.RED){
       xFlip = -1.0;
     }
-    Vector2 result = new Vector2 ((point.x-xOffset)/xFlip/scale, (point.y-yOffset)/-scale);
+    Vector2 result = new Vector2 ((point.x-offset.x)/xFlip/zoom, (point.y-offset.y)/-zoom);
     return result;
   }
 
@@ -410,7 +424,7 @@ public class PathVisualizer extends JPanel{
     if(sides == Sides.RED){
       xFlip = -1.0;
     }
-    Vector2 result = new Vector2 (point.x*xFlip*scale+ xOffset, point.y*-scale+ yOffset);
+    Vector2 result = new Vector2 (point.x*xFlip*zoom + offset.x, point.y*-zoom + offset.y);
     return result;
   }
 }
