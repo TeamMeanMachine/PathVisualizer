@@ -310,11 +310,11 @@ public class PathVisualizer extends JPanel {
       pos = path2D.getPosition(t);
       leftPos = path2D.getLeftPosition(t);
       rightPos = path2D.getRightPosition(t);
-/*
+
       // center line
       g2.setColor(Color.white);
       drawPathLine(g2, prevPos, pos);
-*/
+
       // left wheel
       double leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT;
       leftSpeed /= MAX_SPEED;  // MAX_SPEED is full green, 0 is full red.
