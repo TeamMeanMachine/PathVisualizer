@@ -43,22 +43,6 @@ public class PathVisualizer extends JPanel {
     zoom = 18;
     sides = Sides.BLUE;
 
-/*
-    JFrame frame = new JFrame();
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.add(this);
-    frame.setVisible(true);
-*/
-/*
-    frame.addWindowListener(new WindowAdapter()
-    {
-      public void windowClosed(WindowEvent e)
-      {
-        System.exit(0); //calling the method is a must
-      }
-    });
-*/
-
     class MyListener extends MouseInputAdapter {
       public void mousePressed(MouseEvent e) {
         Vector2 mouseVec = new Vector2(e.getX(), e.getY());

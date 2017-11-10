@@ -5,6 +5,7 @@ import javax.swing.JFrame
 fun main(args: Array<String>) {
   val application = JFrame("Path Visualizer")
   application.setSize(1024, 768)
+  application.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
   val pvPanel = PathVisualizer()
   application.add(pvPanel)
