@@ -36,7 +36,8 @@ public class PathVisualizer extends JPanel {
   Path2DPoint editPoint = null;
   Vector2 editVector = null;
   Path2DPoint selectedPoint = null;
-  int pointType = 0;  // need an enum type
+  enum PointType { NONE, POINT, PREVTANGENT, NEXTTANGENT };
+  PointType pointType = PointType.NONE;
 
   public PathVisualizer() {
     setSize(1024, 768);
@@ -56,7 +57,7 @@ public class PathVisualizer extends JPanel {
           if (dist <= shortestDistance) {
             shortestDistance = dist;
             closestPoint = point;
-            pointType = 0;
+            pointType = PointType.POINT;
           }
 
           if (point.getPrevPoint() != null) {
@@ -65,7 +66,7 @@ public class PathVisualizer extends JPanel {
             if (dist <= shortestDistance) {
               shortestDistance = dist;
               closestPoint = point;
-              pointType = 1;
+              pointType = PointType.PREVTANGENT;
             }
           }
 
@@ -75,7 +76,7 @@ public class PathVisualizer extends JPanel {
             if (dist <= shortestDistance) {
               shortestDistance = dist;
               closestPoint = point;
-              pointType = 2;
+              pointType = PointType.NEXTTANGENT;
             }
           }
           // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
@@ -91,13 +92,13 @@ public class PathVisualizer extends JPanel {
         if (editPoint != null) {
           Vector2 worldPoint = screen2World(new Vector2(e.getX(), e.getY()));
           switch (pointType) {
-            case 0:
+            case POINT:
               editPoint.setPosition(worldPoint);
               break;
-            case 1:
+            case PREVTANGENT:
               editPoint.setPrevTangent(Vector2.multiply(Vector2.subtract(worldPoint, editPoint.getPosition()), -tangentLengthDrawFactor));
               break;
-            case 2:
+            case NEXTTANGENT:
               editPoint.setNextTangent(Vector2.multiply(Vector2.subtract(worldPoint, editPoint.getPosition()), tangentLengthDrawFactor));
               break;
           }
@@ -330,7 +331,7 @@ public class PathVisualizer extends JPanel {
 
     // circles and lines for handles
     for(Path2DPoint point = path2D.getXYCurve().getHeadPoint(); point != null; point = point.getNextPoint()) {
-      if (point==selectedPoint && pointType==0)
+      if (point==selectedPoint && pointType== PointType.POINT)
         g2.setColor(Color.green);
       else
         g2.setColor(Color.white);
@@ -338,7 +339,7 @@ public class PathVisualizer extends JPanel {
       Vector2 tPoint = world2Screen(point.getPosition());
       g2.drawOval(((int)tPoint.x - circleSize/2),((int)tPoint.y - circleSize/2), circleSize,circleSize);
       if(point.getPrevPoint() != null) {
-        if (point==selectedPoint && pointType==1)
+        if (point==selectedPoint && pointType==PointType.PREVTANGENT)
           g2.setColor(Color.green);
         else
           g2.setColor(Color.white);
@@ -348,7 +349,7 @@ public class PathVisualizer extends JPanel {
         g2.drawLine((int)tPoint.x,(int)tPoint.y,(int)tanPoint.x,(int)tanPoint.y);
       }
       if(point.getNextPoint() != null) {
-        if (point==selectedPoint && pointType==2)
+        if (point==selectedPoint && pointType==PointType.NEXTTANGENT)
           g2.setColor(Color.green);
         else
           g2.setColor(Color.white);
