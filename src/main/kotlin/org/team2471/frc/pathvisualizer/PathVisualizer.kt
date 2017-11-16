@@ -17,7 +17,7 @@ import java.awt.GridLayout
 
 class PathVisualizer : JPanel() {
 
-    private var selectedPath: Path2D? = DefaultPath
+    private var selectedPath: Path2D? = null
     private var selectedAutonomousConfig: SharedAutonomousConfig? = null
 
     private var blueSideImage: BufferedImage? = null
@@ -93,8 +93,10 @@ class PathVisualizer : JPanel() {
                 if (shortestDistance <= circleSize / 2) {
                     selectedPoint = closestPoint
                     editPoint = closestPoint
-                } else
-                    editVector = null
+                } else {
+                    //editVector = null
+                    selectedPath?.addVector2(mouseVec)
+                }
             }
 
             override fun mouseDragged(e: MouseEvent?) {
@@ -231,9 +233,8 @@ class PathVisualizer : JPanel() {
                         pathSelection.selectedIndex = pathSelection.itemCount - 2
                         selectedAutonomousConfig!!.putPath(s, Path2D())
                     }
-                } else {  // any path chosen
-                    selectedPath = selectedAutonomousConfig!!.getPath(pathSelection.selectedItem.toString())
-                }
+                }   // any path chosen
+                selectedPath = selectedAutonomousConfig!!.getPath(pathSelection.selectedItem.toString())
                 repaint()
             }
         }
