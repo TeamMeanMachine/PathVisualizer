@@ -224,14 +224,15 @@ public class PathVisualizer extends JPanel{
       }
     });
 
-    // paths
+    // paths -- make this a function called refreshPaths
     String[] pathSelectionNames;
     int numPaths = selectedAutonomousConfig != null ? selectedAutonomousConfig.getPathNames().length : 0;
     pathSelectionNames = new String[numPaths + 1];
     for (int i = 0; i<numPaths; i++) {
       pathSelectionNames[i] = selectedAutonomousConfig.getPathNames()[i];
     }
-    pathSelectionNames[numPaths] = "New Path";
+    if (selectedAutonomousConfig != null)
+      pathSelectionNames[numPaths] = "New Path";
     pathSelection = new JComboBox<>(pathSelectionNames);
     pathSelection.setSelectedIndex(-1);
     pathSelection.addItemListener(e -> {
