@@ -17,8 +17,8 @@ import java.awt.GridLayout
 
 class PathVisualizer : JPanel() {
 
-    private var selectedPath: Path2D? = null
-    private var selectedAutonomousConfig: SharedAutonomousConfig? = null
+    private var selectedPath: Path2D? = Path2D("Path1")
+    private var selectedAutonomousConfig: SharedAutonomousConfig? = SharedAutonomousConfig("Auto1")
 
     private var blueSideImage: BufferedImage? = null
     private var redSideImage: BufferedImage? = null
@@ -122,8 +122,10 @@ class PathVisualizer : JPanel() {
 
         try {
             val classLoader = javaClass.classLoader
-            blueSideImage = ImageIO.read(File(classLoader.getResource("assets/HalfFieldDiagramBlue.png")!!.file))
-            redSideImage = ImageIO.read(File(classLoader.getResource("assets/HalfFieldDiagramRed.png")!!.file))
+            val blueSideFile = File(classLoader.getResource("assets/HalfFieldDiagramBlue.png")!!.file)
+            val redSideFile = File(classLoader.getResource("assets/HalfFieldDiagramRed.png")!!.file)
+            blueSideImage = ImageIO.read(blueSideFile)
+            redSideImage = ImageIO.read(redSideFile)
         } catch (e: Exception) {
             e.printStackTrace()
         }

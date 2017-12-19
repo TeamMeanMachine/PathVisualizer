@@ -26,6 +26,14 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.team2471.frc.pathvisualizer.MainKt'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
