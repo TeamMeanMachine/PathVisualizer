@@ -36,9 +36,9 @@ class PathVisualizer : JPanel() {
     private var timeInSeconds: Double = 1.0
         set(value) {
             timeInSeconds = value
-            selectedPath?.removeAllEasePoints()
-            selectedPath?.addEasePoint(0.0, 0.0)
-            selectedPath?.addEasePoint(timeInSeconds, 1.0)
+            selectedPath.removeAllEasePoints()
+            selectedPath.addEasePoint(0.0, 0.0)
+            selectedPath.addEasePoint(timeInSeconds, 1.0)
         }
     private var sides: Sides? = null
     private val circleSize = 10
@@ -72,7 +72,7 @@ class PathVisualizer : JPanel() {
                 var closestPoint: Path2DPoint? = null
 
                 //Find closest point
-                var point: Path2DPoint? = selectedPath!!.xyCurve.headPoint
+                var point: Path2DPoint? = selectedPath.xyCurve.headPoint
                 while (point != null) {
                     val tPoint = world2Screen(point.position)
                     var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
@@ -108,10 +108,10 @@ class PathVisualizer : JPanel() {
                     selectedPoint = closestPoint
                 } else {
                     if (closestPoint!=null) {
-                        selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+                        selectedPoint = selectedPath.addVector2After(screen2World(mouseVec), closestPoint)
                     }
                     else {
-                        selectedPoint = selectedPath?.addVector2(screen2World(mouseVec))
+                        selectedPoint = selectedPath.addVector2(screen2World(mouseVec))
                     }
                 }
                 editPoint = selectedPoint
@@ -122,7 +122,7 @@ class PathVisualizer : JPanel() {
                 if (editPoint != null) {
                     val worldPoint = screen2World(Vector2(e!!.x.toDouble(), e.y.toDouble()))
                     when (pointType) {
-                        PathVisualizer.PointType.POINT -> editPoint!!.position = worldPoint
+                        PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
                         PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
                         PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), tangentLengthDrawFactor)
                     }
@@ -402,7 +402,7 @@ class PathVisualizer : JPanel() {
             }
             point = point.nextPoint
         }
-        // draw the ease curve
+        // draw the ease curve  // be nice to draw this beneath the map
         //    double prevEase = 0.0;
         //    g2.setStroke(new BasicStroke(3));
         //    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
