@@ -1,5 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.wpilibj.networktables.NetworkTable
 import java.awt.*
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -17,8 +18,8 @@ import java.awt.GridLayout
 
 class PathVisualizer : JPanel() {
 
-    private var selectedPath: Path2D? = Path2D("Path1")
-    private var selectedAutonomousConfig: SharedAutonomousConfig? = SharedAutonomousConfig("Auto1")
+    private var selectedAutonomousConfig = SharedAutonomousConfig("Auto1")
+    private var selectedPath: Path2D = Path2D("Path1")  // DefaultPath
 
     private var blueSideImage: BufferedImage? = null
     private var redSideImage: BufferedImage? = null
@@ -26,11 +27,19 @@ class PathVisualizer : JPanel() {
     private val sideSelection: JComboBox<String>
     private val autoSelection: JComboBox<String>
     private val pathSelection: JComboBox<String>
+    private val timeTextField: JTextField
 
     private enum class Sides {
         BLUE, RED
     }
 
+    private var timeInSeconds: Double = 1.0
+        set(value) {
+            timeInSeconds = value
+            selectedPath?.removeAllEasePoints()
+            selectedPath?.addEasePoint(0.0, 0.0)
+            selectedPath?.addEasePoint(timeInSeconds, 1.0)
+        }
     private var sides: Sides? = null
     private val circleSize = 10
     private var zoom: Double = 0.toDouble()
@@ -47,9 +56,14 @@ class PathVisualizer : JPanel() {
     internal var pointType = PointType.NONE
 
     init {
+        NetworkTable.setServerMode()
+
         setSize(1024, 768)
         zoom = 18.0
         sides = Sides.BLUE
+        selectedAutonomousConfig.putPath(selectedPath.getName(), selectedPath!!)
+        selectedPath.addEasePoint(0.0, 0.0)
+        selectedPath.addEasePoint(1.0, 1.0)
 
         class MyListener : MouseInputAdapter() {
             override fun mousePressed(e: MouseEvent?) {
@@ -92,11 +106,16 @@ class PathVisualizer : JPanel() {
                 }
                 if (shortestDistance <= circleSize / 2) {
                     selectedPoint = closestPoint
-                    editPoint = closestPoint
                 } else {
-                    //editVector = null
-                    selectedPath?.addVector2(mouseVec)
+                    if (closestPoint!=null) {
+                        selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+                    }
+                    else {
+                        selectedPoint = selectedPath?.addVector2(screen2World(mouseVec))
+                    }
                 }
+                editPoint = selectedPoint
+                repaint()
             }
 
             override fun mouseDragged(e: MouseEvent?) {
@@ -175,16 +194,34 @@ class PathVisualizer : JPanel() {
             zoomTextField.text = java.lang.Double.toString(zoom)
         }
 
+        // time in seconds
+        timeTextField = JTextField(java.lang.Double.toString(timeInSeconds))
+        zoomTextField.isEditable = true
+        zoomTextField.addActionListener { e ->
+            try {
+                timeInSeconds = java.lang.Double.parseDouble(e.actionCommand)
+                repaint()
+            } catch (exception: NumberFormatException) {
+                JOptionPane.showMessageDialog(this@PathVisualizer,
+                        "The P.M.P. Section III Act 111.16.11, which you have violated, dictates that you must send one" +
+                                " million dollars to the Prince of Nigeria or a jail sentence of 20 years of for-profit prison" +
+                                " will be imposed.", "Police Alert", JOptionPane.ERROR_MESSAGE)
+            }
+        }
+
         // Autonomi
         val autonomousNames: Array<String?>
         val numConfigs = SharedAutonomousConfig.configNames.size
         autonomousNames = arrayOfNulls<String>(numConfigs + 1)
+        var currentIndex = -1
         for (i in 0..numConfigs - 1) {
             autonomousNames[i] = SharedAutonomousConfig.configNames[i]
+            if (SharedAutonomousConfig(autonomousNames[i]!!)==selectedAutonomousConfig)
+                currentIndex = i
         }
         autonomousNames[numConfigs] = "New Auto"
         autoSelection = JComboBox<String>(autonomousNames)
-        autoSelection.selectedIndex = -1
+        autoSelection.selectedIndex = currentIndex
         autoSelection.addItemListener { e ->
             if (e.stateChange == ItemEvent.SELECTED) {
                 if (autoSelection.selectedIndex == autoSelection.itemCount - 1) {
@@ -236,7 +273,7 @@ class PathVisualizer : JPanel() {
                         selectedAutonomousConfig!!.putPath(s, Path2D())
                     }
                 }   // any path chosen
-                selectedPath = selectedAutonomousConfig!!.getPath(pathSelection.selectedItem.toString())
+                selectedPath = selectedAutonomousConfig.getPath(pathSelection.selectedItem.toString()) ?: selectedPath
                 repaint()
             }
         }
@@ -244,6 +281,7 @@ class PathVisualizer : JPanel() {
         // add the tool bar items
         toolBarPanel.add(autoSelection)
         toolBarPanel.add(pathSelection)
+        toolBarPanel.add(timeTextField)
         toolBarPanel.add(decrementButton)
         toolBarPanel.add(zoomTextField)
         toolBarPanel.add(incrementButton)
@@ -280,54 +318,56 @@ class PathVisualizer : JPanel() {
 
 
     private fun DrawSelectedPath(g2: Graphics2D, path2D: Path2D?) {
-        if (path2D==null)
+        if (path2D==null || !path2D.hasPoints())
             return
-        val deltaT = path2D.duration / 100.0
-        val prevPos = path2D.getPosition(0.0)
-        val prevLeftPos = path2D.getLeftPosition(0.0)
-        val prevRightPos = path2D.getRightPosition(0.0)
-        var pos: Vector2
-        var leftPos: Vector2
-        var rightPos: Vector2
-        val MAX_SPEED = 8.0
-        var t = deltaT
-        while (t <= path2D.duration) {
-            pos = path2D.getPosition(t)
-            leftPos = path2D.getLeftPosition(t)
-            rightPos = path2D.getRightPosition(t)
+        if (path2D.duration>0.0) {
+            val deltaT = path2D.duration / 100.0
+            val prevPos = path2D.getPosition(0.0)
+            val prevLeftPos = path2D.getLeftPosition(0.0)
+            val prevRightPos = path2D.getRightPosition(0.0)
+            var pos: Vector2
+            var leftPos: Vector2
+            var rightPos: Vector2
+            val MAX_SPEED = 8.0
+            var t = deltaT
+            while (t <= path2D.duration) {
+                pos = path2D.getPosition(t)
+                leftPos = path2D.getLeftPosition(t)
+                rightPos = path2D.getRightPosition(t)
 
-            // center line
-            g2.color = Color.white
-            drawPathLine(g2, prevPos, pos)
+                // center line
+                g2.color = Color.white
+                drawPathLine(g2, prevPos, pos)
 
-            // left wheel
-            var leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT
-            leftSpeed /= MAX_SPEED  // MAX_SPEED is full green, 0 is full red.
-            leftSpeed = Math.min(1.0, leftSpeed)
-            val leftDelta = path2D.getLeftPositionDelta(t)
-            if (leftDelta > 0)
-                g2.color = Color(((1.0 - leftSpeed) * 255).toInt(), (leftSpeed * 255).toInt(), 0)
-            else {
-                g2.color = Color(0, 0, 255) //(int)blue));
+                // left wheel
+                var leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT
+                leftSpeed /= MAX_SPEED  // MAX_SPEED is full green, 0 is full red.
+                leftSpeed = Math.min(1.0, leftSpeed)
+                val leftDelta = path2D.getLeftPositionDelta(t)
+                if (leftDelta > 0)
+                    g2.color = Color(((1.0 - leftSpeed) * 255).toInt(), (leftSpeed * 255).toInt(), 0)
+                else {
+                    g2.color = Color(0, 0, 255) //(int)blue));
+                }
+                drawPathLine(g2, prevLeftPos, leftPos)
+
+                // right wheel
+                var rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED
+                rightSpeed = Math.min(1.0, rightSpeed)
+                val rightDelta = path2D.getRightPositionDelta(t)
+                if (rightDelta > 0)
+                    g2.color = Color(((1.0 - rightSpeed) * 255).toInt(), (rightSpeed * 255).toInt(), 0)
+                else {
+                    g2.color = Color(0, 0, 255) //(int)blue));
+                }
+                drawPathLine(g2, prevRightPos, rightPos)
+
+                // set the prevs for the next loop
+                prevPos.set(pos.x, pos.y)
+                prevLeftPos.set(leftPos.x, leftPos.y)
+                prevRightPos.set(rightPos.x, rightPos.y)
+                t += deltaT
             }
-            drawPathLine(g2, prevLeftPos, leftPos)
-
-            // right wheel
-            var rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED
-            rightSpeed = Math.min(1.0, rightSpeed)
-            val rightDelta = path2D.getRightPositionDelta(t)
-            if (rightDelta > 0)
-                g2.color = Color(((1.0 - rightSpeed) * 255).toInt(), (rightSpeed * 255).toInt(), 0)
-            else {
-                g2.color = Color(0, 0, 255) //(int)blue));
-            }
-            drawPathLine(g2, prevRightPos, rightPos)
-
-            // set the prevs for the next loop
-            prevPos.set(pos.x, pos.y)
-            prevLeftPos.set(leftPos.x, leftPos.y)
-            prevRightPos.set(rightPos.x, rightPos.y)
-            t += deltaT
         }
 
         // circles and lines for handles
