@@ -43,7 +43,7 @@ class PathVisualizer : JPanel() {
     private var sides: Sides? = null
     private val circleSize = 10
     private var zoom: Double = 0.toDouble()
-    internal val offset = Vector2(295.0, 485.0)
+    internal val offset = Vector2(915.0, 560.0)
     private val tangentLengthDrawFactor = 3.0
     internal var editPoint: Path2DPoint? = null
     internal var editVector: Vector2? = null
@@ -59,7 +59,7 @@ class PathVisualizer : JPanel() {
         NetworkTable.setServerMode()
 
         setSize(1024, 768)
-        zoom = 18.0
+        zoom = 20.0
         sides = Sides.BLUE
         selectedAutonomousConfig.putPath(selectedPath.getName(), selectedPath!!)
         selectedPath.addEasePoint(0.0, 0.0)
@@ -178,6 +178,15 @@ class PathVisualizer : JPanel() {
             }
         }
 
+        // delete point button
+        val deleteButton = JButton("Delete Point")
+        deleteButton.addActionListener {
+            if (selectedPoint != null) {
+                ;  // delete point here
+                repaint()
+            }
+        }
+
         // zoom out button
         val decrementButton = JButton("-")
         decrementButton.addActionListener {
@@ -209,7 +218,7 @@ class PathVisualizer : JPanel() {
             }
         }
 
-        // Autonomi
+        // Autonomi (or autonopodes?)
         val autonomousNames: Array<String?>
         val numConfigs = SharedAutonomousConfig.configNames.size
         autonomousNames = arrayOfNulls<String>(numConfigs + 1)
@@ -286,6 +295,7 @@ class PathVisualizer : JPanel() {
         toolBarPanel.add(zoomTextField)
         toolBarPanel.add(incrementButton)
         toolBarPanel.add(sideSelection)
+        toolBarPanel.add(deleteButton)
 
         add(toolBarPanel, BorderLayout.NORTH)
     }
@@ -295,13 +305,13 @@ class PathVisualizer : JPanel() {
         super.paintComponent(g2)
 
         if (sides == Sides.BLUE) {
-            g2.drawImage(blueSideImage, 0 - ((zoom - 18) / 36 * blueSideImage!!.width).toInt(),
-                    0 - ((zoom - 18) / 18 * (blueSideImage!!.height - 29)).toInt(),
+            g2.drawImage(blueSideImage, 670 - ((zoom - 18) / 36 * blueSideImage!!.width).toInt(),
+                    165 - ((zoom - 18) / 30 * (blueSideImage!!.height - 29)).toInt(),
                     blueSideImage!!.width + ((zoom - 18) / 18 * blueSideImage!!.width).toInt(),
                     ((blueSideImage!!.height + 29) * zoom / 18).toInt(), null)
         } else if (sides == Sides.RED) {
-            g2.drawImage(redSideImage, 0 - ((zoom - 18) / 36 * redSideImage!!.width).toInt(),
-                    0 - ((zoom - 18) / 18 * (redSideImage!!.height - 29)).toInt(),
+            g2.drawImage(redSideImage, 670 - ((zoom - 18) / 36 * redSideImage!!.width).toInt(),
+                    165 - ((zoom - 18) / 30 * (redSideImage!!.height - 29)).toInt(),
                     redSideImage!!.width + ((zoom - 18) / 18 * redSideImage!!.width).toInt(),
                     ((redSideImage!!.height + 29) * zoom / 18).toInt(), null)
         }
