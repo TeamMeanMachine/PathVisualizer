@@ -19,7 +19,7 @@ import java.awt.GridLayout
 class PathVisualizer : JPanel() {
 
     private var selectedAutonomousConfig = SharedAutonomousConfig("Auto1")
-    private var selectedPath: Path2D = Path2D("Path1")  // DefaultPath
+    private var selectedPath: Path2D = DefaultPath //Path2D("Path1")  // DefaultPath
 
     private var blueSideImage: BufferedImage? = null
     private var redSideImage: BufferedImage? = null
@@ -182,7 +182,7 @@ class PathVisualizer : JPanel() {
         val deleteButton = JButton("Delete Point")
         deleteButton.addActionListener {
             if (selectedPoint != null) {
-                ;  // delete point here
+                // delete point here
                 repaint()
             }
         }
