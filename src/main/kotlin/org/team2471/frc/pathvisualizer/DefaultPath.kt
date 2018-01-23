@@ -7,12 +7,13 @@ object DefaultPath : Path2D() {
     name = "Circle"
     travelDirection = 1.0
     robotWidth = 36.5 / 12
+    val tangentLength = 6.0
 
-    addPointAndTangent(0.0, 0.0, 0.0, 4.5)
-    addPointAndTangent(4.0, 4.0, 4.5, 0.0)
-    addPointAndTangent(8.0, 0.0, 0.0, -4.5)
-    addPointAndTangent(4.0, -4.0, -4.5, 0.0)
-    addPointAndTangent(0.0, 0.0, 0.0, 4.5)
+    addPointAndTangent(0.0, 0.0, 0.0, tangentLength)
+    addPointAndTangent(4.0, 4.0, tangentLength, 0.0)
+    addPointAndTangent(8.0, 0.0, 0.0, -tangentLength)
+    addPointAndTangent(4.0, -4.0, -tangentLength, 0.0)
+    addPointAndTangent(0.0, 0.0, 0.0, tangentLength)
 
     addEasePoint(0.0, 0.0)
     addEasePoint(16.0, 1.0)

@@ -33,16 +33,17 @@ class PathVisualizer : JPanel() {
         BLUE, RED
     }
 
-    private var timeInSeconds: Double = 1.0
+    private var timeInSeconds: Double = 5.0
         set(value) {
             timeInSeconds = value
             selectedPath.removeAllEasePoints()
             selectedPath.addEasePoint(0.0, 0.0)
             selectedPath.addEasePoint(timeInSeconds, 1.0)
         }
-    private var sides: Sides? = null
+
+    private var sides: Sides = Sides.BLUE
     private val circleSize = 10
-    private var zoom: Double = 0.toDouble()
+    private var zoom: Double = 20.0
     internal val offset = Vector2(915.0, 560.0)
     private val tangentLengthDrawFactor = 3.0
     internal var editPoint: Path2DPoint? = null
@@ -57,13 +58,8 @@ class PathVisualizer : JPanel() {
 
     init {
         NetworkTable.setServerMode()
-
         setSize(1024, 768)
-        zoom = 20.0
-        sides = Sides.BLUE
         selectedAutonomousConfig.putPath(selectedPath.getName(), selectedPath!!)
-        selectedPath.addEasePoint(0.0, 0.0)
-        selectedPath.addEasePoint(1.0, 1.0)
 
         class MyListener : MouseInputAdapter() {
             override fun mousePressed(e: MouseEvent?) {
@@ -108,7 +104,10 @@ class PathVisualizer : JPanel() {
                     selectedPoint = closestPoint
                 } else {
                     if (closestPoint!=null) {
-                        selectedPoint = selectedPath.addVector2After(screen2World(mouseVec), closestPoint)
+                        if (shortestDistance>50) // trying to deselect
+                            selectedPoint = null
+                        else
+                            selectedPoint = selectedPath.addVector2After(screen2World(mouseVec), closestPoint)
                     }
                     else {
                         selectedPoint = selectedPath.addVector2(screen2World(mouseVec))
@@ -181,8 +180,9 @@ class PathVisualizer : JPanel() {
         // delete point button
         val deleteButton = JButton("Delete Point")
         deleteButton.addActionListener {
-            if (selectedPoint != null) {
-                // delete point here
+            if (selectedPoint != null && selectedPath != null) {
+                selectedPath.removePoint(selectedPoint)
+                selectedPoint = null
                 repaint()
             }
         }
@@ -243,7 +243,7 @@ class PathVisualizer : JPanel() {
                             null,
                             "") as String
 
-                    if (s != null && s.length > 0) {
+                    if (s.length > 0) {
                         selectedAutonomousConfig = SharedAutonomousConfig(s)
                         autoSelection.insertItemAt(s, autoSelection.itemCount - 1)
                         autoSelection.selectedIndex = autoSelection.itemCount - 2
@@ -332,9 +332,9 @@ class PathVisualizer : JPanel() {
             return
         if (path2D.duration>0.0) {
             val deltaT = path2D.duration / 100.0
-            val prevPos = path2D.getPosition(0.0)
-            val prevLeftPos = path2D.getLeftPosition(0.0)
-            val prevRightPos = path2D.getRightPosition(0.0)
+            var prevPos = path2D.getPosition(0.0)
+            var prevLeftPos = path2D.getLeftPosition(0.0)
+            var prevRightPos = path2D.getRightPosition(0.0)
             var pos: Vector2
             var leftPos: Vector2
             var rightPos: Vector2
