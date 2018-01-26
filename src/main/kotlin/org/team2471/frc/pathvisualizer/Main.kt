@@ -6,8 +6,10 @@ import javafx.stage.Stage
 import com.sun.javafx.robot.impl.FXRobotHelper.getChildren
 import javafx.geometry.Rectangle2D
 import javafx.scene.Group
+import javafx.scene.control.ComboBox
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 
 
@@ -31,7 +33,21 @@ class PathVisualizer : Application() {
         iv1.image = image
         // iv1.viewport = Rectangle2D(40.0, 35.0, 110.0, 110.0)
 
+        val buttonsBox = VBox()
+
+        val autoChooserBox = ComboBox<String>()
+        autoChooserBox.items.addAll(
+                "asfd",
+                "dothething",
+                "woooowee")
+
+
         box.children.add(iv1)
+        box.children.add(buttonsBox)
+
+        buttonsBox.children.add(autoChooserBox)
+
+
 
         stage.title = "Path Visualizer"
         stage.sizeToScene()
