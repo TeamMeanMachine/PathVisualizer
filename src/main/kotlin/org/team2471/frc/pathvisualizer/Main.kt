@@ -1,13 +1,40 @@
-package org.team2471.frc.pathvisualizer
+import javafx.application.Application
+import javafx.scene.Scene
+import javafx.scene.layout.HBox
+import javafx.scene.shape.Line
+import javafx.stage.Stage
+import com.sun.javafx.robot.impl.FXRobotHelper.getChildren
+import javafx.geometry.Rectangle2D
+import javafx.scene.Group
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
+import javafx.scene.paint.Color
 
-import javax.swing.JFrame
 
-fun main(args: Array<String>) {
-  val application = JFrame("Path Visualizer")
-  application.setSize(1924, 1020)
-  application.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+class PathVisualizer : Application() {
 
-  val pvPanel = PathVisualizer()
-  application.add(pvPanel)
-  application.isVisible = true
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) = launch(PathVisualizer::class.java,*args)
+    }
+
+    override fun start(stage: Stage) {
+        val box = HBox()
+        val scene = Scene(box, 1600.0, 900.0)
+        stage.scene = scene
+
+        // load the image
+        val image = Image("assets/HalfFieldDiagramBlue.png")
+
+        // simple displays ImageView the image as is
+        val iv1 = ImageView()
+        iv1.image = image
+        // iv1.viewport = Rectangle2D(40.0, 35.0, 110.0, 110.0)
+
+        box.children.add(iv1)
+
+        stage.title = "Path Visualizer"
+        stage.sizeToScene()
+        stage.show()
+    }
 }
