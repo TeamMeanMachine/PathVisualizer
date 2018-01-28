@@ -299,7 +299,7 @@ class PathVisualizer : Application() {
                 leftSpeed = Math.min(1.0, leftSpeed)
                 val leftDelta = path2D.getLeftPositionDelta(t)
                 if (leftDelta > 0)
-                    gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 1.0, 1.0)
+                    gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)
                 else {
                     gc.stroke = Color.BLUE
                 }

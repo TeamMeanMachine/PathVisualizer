@@ -16,7 +16,7 @@ object DefaultPath : Path2D() {
     addPointAndTangent(0.0, 0.0, 0.0, tangentLength)
 
     addEasePoint(0.0, 0.0)
-    addEasePoint(16.0, 1.0)
+    addEasePoint(8.0, 1.0)
   }
         //Path2D() {
 //  init {
