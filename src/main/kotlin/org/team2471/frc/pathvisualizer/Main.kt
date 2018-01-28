@@ -2,16 +2,22 @@ import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
+import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
+import javafx.scene.control.ComboBox
 import javafx.scene.control.ScrollPane
+import javafx.scene.control.TextField
 import javafx.scene.image.Image
 import javafx.scene.layout.Pane
+import javafx.scene.image.ImageView
+import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.vector.Vector2
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.shape.ArcType
+import javafx.scene.text.Text
 
 
 class PathVisualizer : Application() {
@@ -59,6 +65,7 @@ class PathVisualizer : Application() {
         val outerHBox = HBox()
         val scene = Scene(outerHBox, 1600.0, 900.0)
         stage.scene = scene
+        val rightVBox = VBox()
 
         // load the image
         val image = Image("assets/HalfFieldDiagramBlue.png")
@@ -93,6 +100,70 @@ class PathVisualizer : Application() {
 //        // center the scroll contents.
 //        scroll.setHvalue(scroll.getHmin() + (scroll.getHmax() - scroll.getHmin()) / 2)
 //        scroll.setVvalue(scroll.getVmin() + (scroll.getVmax() - scroll.getVmin()) / 2)
+
+        val autoChooserHBox = HBox()
+        val autoChooserName = Text("Auto Chooser  ")
+        val autoChooserBox = ComboBox<String>()
+        autoChooserBox.items.addAll(
+                "hitler",
+                "asdf",
+                "dothething",
+                "wooowee")
+        autoChooserBox.value = "hitler"
+        autoChooserHBox.children.addAll(autoChooserName, autoChooserBox)
+
+        val pathChooserHBox = HBox()
+        val pathChooserName = Text("Path Chooser  ")
+        val pathChooserBox = ComboBox<String>()
+        pathChooserBox.items.addAll(
+                "sliiide to the left",
+                "sliiiide to the right",
+                "two hops this time!",
+                "reverse, reverse!"
+        )
+        pathChooserBox.value = "sliiiide to the right"
+        pathChooserHBox.children.addAll(pathChooserName, pathChooserBox)
+
+        val zoomHBox = HBox()
+        val zoomName = Text("Zoom  ")
+        val zoomAdjust = TextField(zoom.toString())
+        val zoomMinus = Button("-")
+        zoomMinus.setOnAction{ _ : ActionEvent -> //set what you want the buttons to do here
+            zoom-- // so the zoom code or calls to a zoom function or whatever go here
+            zoomAdjust.text = zoom.toString()
+        }
+        val zoomPlus = Button("+")
+        zoomPlus.setOnAction { _: ActionEvent ->// same as above
+            zoom++
+            zoomAdjust.text = zoom.toString()
+        }
+        zoomHBox.children.addAll(
+                zoomName,
+                zoomMinus,
+                zoomAdjust,
+                zoomPlus)
+
+        val panHBox = HBox()
+        val panName = Text("Pan  ")
+        val panXName = Text("X = ")
+        val panYName = Text("Y = ")
+        val panXAdjust = TextField("0")
+        val panYAdjust = TextField( "0")
+        panHBox.children.addAll(
+                panName,
+                panXName,
+                panXAdjust,
+                panYName,
+                panYAdjust)
+
+        val buttonsBox = VBox()
+        buttonsBox.children.addAll(
+                autoChooserHBox,
+                pathChooserHBox,
+                zoomHBox,
+                panHBox)
+        buttonsBox.spacing = 10.0
+        outerHBox.children.add(buttonsBox)
 
         stage.title = "Path Visualizer"
         stage.sizeToScene()
