@@ -18,7 +18,7 @@ import java.awt.GridLayout
 
 class PathVisualizer : JPanel() {
 
-    private var selectedAutonomousConfig = SharedAutonomousConfig("Auto1")
+    private var selectedAutonomous = SharedAutonomousConfig("Auto1")
     private var selectedPath: Path2D = DefaultPath //Path2D("Path1")  // DefaultPath
 
     private var blueSideImage: BufferedImage? = null
@@ -59,7 +59,7 @@ class PathVisualizer : JPanel() {
     init {
         NetworkTable.setServerMode()
         setSize(1024, 768)
-        selectedAutonomousConfig.putPath(selectedPath.getName(), selectedPath!!)
+        selectedAutonomous.putPath(selectedPath.getName(), selectedPath!!)
 
         class MyListener : MouseInputAdapter() {
             override fun mousePressed(e: MouseEvent?) {
@@ -225,7 +225,7 @@ class PathVisualizer : JPanel() {
         var currentIndex = -1
         for (i in 0..numConfigs - 1) {
             autonomousNames[i] = SharedAutonomousConfig.configNames[i]
-            if (SharedAutonomousConfig(autonomousNames[i]!!)==selectedAutonomousConfig)
+            if (SharedAutonomousConfig(autonomousNames[i]!!)== selectedAutonomous)
                 currentIndex = i
         }
         autonomousNames[numConfigs] = "New Auto"
@@ -244,12 +244,12 @@ class PathVisualizer : JPanel() {
                             "") as String
 
                     if (s.length > 0) {
-                        selectedAutonomousConfig = SharedAutonomousConfig(s)
+                        selectedAutonomous = SharedAutonomousConfig(s)
                         autoSelection.insertItemAt(s, autoSelection.itemCount - 1)
                         autoSelection.selectedIndex = autoSelection.itemCount - 2
                     }
                 } else {  // any autonomous chosen
-                    selectedAutonomousConfig = SharedAutonomousConfig(autoSelection.selectedItem.toString())
+                    selectedAutonomous = SharedAutonomousConfig(autoSelection.selectedItem.toString())
                 }
                 repaint()
             }
@@ -257,10 +257,10 @@ class PathVisualizer : JPanel() {
 
         // paths
         val pathSelectionNames: Array<String?>
-        val numPaths = if (selectedAutonomousConfig != null) selectedAutonomousConfig!!.pathNames.size else 0
+        val numPaths = if (selectedAutonomous != null) selectedAutonomous!!.pathNames.size else 0
         pathSelectionNames = arrayOfNulls<String>(numPaths + 1)
         for (i in 0..numPaths - 1) {
-            pathSelectionNames[i] = selectedAutonomousConfig!!.pathNames[i]
+            pathSelectionNames[i] = selectedAutonomous!!.pathNames[i]
         }
         pathSelectionNames[numPaths] = "New Path"
         pathSelection = JComboBox<String>(pathSelectionNames)
@@ -279,10 +279,10 @@ class PathVisualizer : JPanel() {
                     if (s.isNotEmpty()) {
                         pathSelection.insertItemAt(s, pathSelection.itemCount - 1)
                         pathSelection.selectedIndex = pathSelection.itemCount - 2
-                        selectedAutonomousConfig!!.putPath(s, Path2D())
+                        selectedAutonomous!!.putPath(s, Path2D())
                     }
                 }   // any path chosen
-                selectedPath = selectedAutonomousConfig.getPath(pathSelection.selectedItem.toString()) ?: selectedPath
+                selectedPath = selectedAutonomous.getPath(pathSelection.selectedItem.toString()) ?: selectedPath
                 repaint()
             }
         }
@@ -316,18 +316,18 @@ class PathVisualizer : JPanel() {
                     ((redSideImage!!.height + 29) * zoom / 18).toInt(), null)
         }
 
-        if (selectedAutonomousConfig != null) {
-            val numPaths = selectedAutonomousConfig!!.pathNames.size
+        if (selectedAutonomous != null) {
+            val numPaths = selectedAutonomous!!.pathNames.size
             for (i in 0..numPaths - 1) {
-                val path2D = selectedAutonomousConfig!!.getPath(selectedAutonomousConfig!!.pathNames[i])
+                val path2D = selectedAutonomous!!.getPath(selectedAutonomous!!.pathNames[i])
                 DrawPath(g2, path2D)
             }
         }
-        DrawSelectedPath(g2, selectedPath)
+        drawSelectedPath(g2, selectedPath)
     }
 
 
-    private fun DrawSelectedPath(g2: Graphics2D, path2D: Path2D?) {
+    private fun drawSelectedPath(g2: Graphics2D, path2D: Path2D?) {
         if (path2D==null || !path2D.hasPoints())
             return
         if (path2D.duration>0.0) {
