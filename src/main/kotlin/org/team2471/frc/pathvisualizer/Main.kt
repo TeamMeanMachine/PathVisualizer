@@ -37,14 +37,15 @@ class PathVisualizer : Application() {
     var ourStage: Stage? = null
 
     // image stuff
-    private val imageWidthPixels = 562.0
-    private val imageHeightPixels = 684.0
-    private val imageWidthFeet = 27.0
+    private val imageWidthPixels = 726.0
+    private val fieldWidthPixels = imageWidthPixels-74
+    private val fieldWidthFeet = 27.0
+    private val pixelsToBackWall = 650.0
 
     // view settings
     private var zoom: Double = feetToPixels(1.0)  // initially draw at 1:1
     var offset: Vector2 = Vector2(0.0, 0.0)
-    val zoomPivot: Vector2 = Vector2(imageWidthPixels / 2.0, 534.0)  // the location in the image where the zoom origin will originate
+    val zoomPivot: Vector2 = Vector2(fieldWidthPixels / 2.0, pixelsToBackWall)  // the location in the image where the zoom origin will originate
 
     // drawing
     private val circleSize = 10.0
@@ -61,8 +62,8 @@ class PathVisualizer : Application() {
     private var pointType = PointType.NONE
 
     // helper functions
-    fun feetToPixels(feet: Double): Double = feet * imageWidthPixels / imageWidthFeet
-    fun pixelsToFeet(pixels: Double): Double = pixels * imageWidthFeet / imageWidthPixels
+    fun feetToPixels(feet: Double): Double = feet * fieldWidthPixels / fieldWidthFeet
+    fun pixelsToFeet(pixels: Double): Double = pixels * fieldWidthFeet / fieldWidthPixels
 
     private fun world2Screen(vector2: Vector2): Vector2 {
         val temp = vector2 * zoom
@@ -99,7 +100,7 @@ class PathVisualizer : Application() {
         val dimensions = lowerRight - upperLeft
 
         // create the canvas
-        val canvas = Canvas(800.0, 600.0)
+        val canvas = Canvas(800.0, 900.0)
         val gc = canvas.graphicsContext2D
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeft.x, upperLeft.y, dimensions.x, dimensions.y)
         drawPaths(gc)
@@ -119,7 +120,7 @@ class PathVisualizer : Application() {
         val autoChooserBox = ComboBox<String>()
         autoChooserBox.items.addAll(
                 "hitler",
-                "asdf",
+                "communism",
                 "dothething",
                 "wooowee")
         autoChooserBox.value = "hitler"
@@ -184,18 +185,6 @@ class PathVisualizer : Application() {
         ourStage?.show()
     }
 
-    private fun createKillButton(): Button {
-        val killButton = Button("Kill the evil witch")
-        killButton.style = "-fx-base: firebrick;"
-        killButton.translateX = 15.0
-        killButton.translateY = -13.0
-        killButton.onAction = EventHandler {
-            killButton.style = "-fx-base: forestGREEN;"
-            killButton.text = "Ding-Dong! The Witch is Dead"
-        }
-        return killButton
-    }
-
     private fun createScrollPane(stackPane: Pane): ScrollPane {
         val scroll = ScrollPane()
         scroll.hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
@@ -214,11 +203,6 @@ class PathVisualizer : Application() {
         }
         drawSelectedPath(gc, selectedPath)
 
-        gc.stroke = Color.GREEN
-        //val tanPoint = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
-        gc.lineWidth = 2.0
-        gc.strokeOval(32.0, 334.0, 1.0, 1.0)
-        gc.strokeOval(imageWidthPixels/2.0, 447.0, 1.0, 1.0)
     }
 
     private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
