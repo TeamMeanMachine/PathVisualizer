@@ -29,15 +29,6 @@ class PathVisualizer : Application() {
         @JvmStatic
         fun main(args: Array<String>) {
             launch(PathVisualizer::class.java, *args)
-/*
-          // use this to run the old Swing Visualizer
-            val application = JFrame("Path Visualizer")
-            application.setSize(1924, 1020)
-            application.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-            val pvPanel = PathVisualizer()
-            application.add(pvPanel)
-            application.isVisible = true
-*/
         }
     }
 
@@ -217,26 +208,6 @@ class PathVisualizer : Application() {
         return scroll
     }
 
-    private fun drawShapes(gc: GraphicsContext) {
-        gc.setFill(Color.GREEN);
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(5.0);
-        gc.strokeLine(40.0, 10.0, 10.0, 40.0);
-        gc.fillOval(10.0, 60.0, 30.0, 30.0);
-        gc.strokeOval(60.0, 60.0, 30.0, 30.0);
-        gc.fillRoundRect(110.0, 60.0, 30.0, 30.0, 10.0, 10.0);
-        gc.strokeRoundRect(160.0, 60.0, 30.0, 30.0, 10.0, 10.0);
-        gc.fillArc(10.0, 110.0, 30.0, 30.0, 45.0, 240.0, ArcType.OPEN);
-        gc.fillArc(60.0, 110.0, 30.0, 30.0, 45.0, 240.0, ArcType.CHORD);
-        gc.fillArc(110.0, 110.0, 30.0, 30.0, 45.0, 240.0, ArcType.ROUND);
-        gc.strokeArc(10.0, 160.0, 30.0, 30.0, 45.0, 240.0, ArcType.OPEN);
-        gc.strokeArc(60.0, 160.0, 30.0, 30.0, 45.0, 240.0, ArcType.CHORD);
-        gc.strokeArc(110.0, 160.0, 30.0, 30.0, 45.0, 240.0, ArcType.ROUND);
-        gc.fillPolygon(doubleArrayOf(10.0, 40.0, 10.0, 40.0), doubleArrayOf(210.0, 210.0, 240.0, 240.0), 4);
-        gc.strokePolygon(doubleArrayOf(60.0, 90.0, 60.0, 90.0), doubleArrayOf(210.0, 210.0, 240.0, 240.0), 4);
-        gc.strokePolyline(doubleArrayOf(110.0, 140.0, 110.0, 140.0), doubleArrayOf(210.0, 210.0, 240.0, 240.0), 4);
-    }
-
     private fun drawPaths(gc: GraphicsContext) {
         if (selectedAutonomous != null) {
             for (path2D in selectedAutonomous!!.paths) {
@@ -244,6 +215,11 @@ class PathVisualizer : Application() {
             }
         }
         drawSelectedPath(gc, selectedPath)
+
+        gc.stroke = Color.GREEN
+        //val tanPoint = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
+        gc.lineWidth = 2.0
+        gc.strokeOval(20.0, 200.0, circleSize, circleSize)
     }
 
     private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
