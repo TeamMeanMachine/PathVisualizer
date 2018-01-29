@@ -3,14 +3,11 @@ import javafx.scene.Scene
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
 import javafx.event.ActionEvent
-import javafx.event.EventHandler
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
 import javafx.scene.control.ComboBox
-import javafx.scene.control.ScrollPane
 import javafx.scene.control.TextField
 import javafx.scene.image.Image
-import javafx.scene.layout.Pane
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.vector.Vector2
@@ -23,6 +20,7 @@ import org.team2471.frc.pathvisualizer.DefaultPath
 
 class PathVisualizer : Application() {
 
+    // the companion object which starts this class
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
@@ -30,22 +28,30 @@ class PathVisualizer : Application() {
         }
     }
 
+    // javaFX state which needs saved around
+    val canvas = Canvas(800.0, 900.0)
+    val gc = canvas.graphicsContext2D
+    val image = Image("assets/2018Field.png")
+
     // class state variables
     var mapAutonomous: MutableMap<String, SharedAutonomousConfig> = mutableMapOf()
     var selectedAutonomous: SharedAutonomousConfig? = null
     var selectedPath: Path2D? = null
-    var ourStage: Stage? = null
 
-    // image stuff
-    private val imageWidthPixels = 726.0
-    private val fieldWidthPixels = imageWidthPixels-74
-    private val fieldWidthFeet = 27.0
-    private val pixelsToBackWall = 650.0
+    // image stuff - measure your image with paint and enter these first 3
+    private val upperLeftOfFieldPixels = Vector2(39.0, 58.0)
+    private val lowerRightOfFieldPixels = Vector2(624.0, 701.0)
+    private val zoomPivot = Vector2(366.0, 701.0)  // the location in the image where the zoom origin will originate
+    private val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
+    private val fieldDimensionFeet = Vector2(27.0, 27.0)
 
     // view settings
     private var zoom: Double = feetToPixels(1.0)  // initially draw at 1:1
     var offset: Vector2 = Vector2(0.0, 0.0)
-    val zoomPivot: Vector2 = Vector2(fieldWidthPixels / 2.0, pixelsToBackWall)  // the location in the image where the zoom origin will originate
+
+    // location of image extremes in world units
+    private val upperLeftFeet = screen2World(Vector2(0.0, 0.0))  // calculate when zoom is 1:1, and offset is 0,0
+    private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
 
     // drawing
     private val circleSize = 10.0
@@ -56,14 +62,23 @@ class PathVisualizer : Application() {
     private var editVector: Vector2? = null
     private var selectedPoint: Path2DPoint? = null
 
+    // custom types
     private enum class PointType {
         NONE, POINT, PREV_TANGENT, NEXT_TANGENT
     }
+
     private var pointType = PointType.NONE
 
+    private enum class MouseMode {
+        EDIT, PAN
+    }
+
+    private var mouseMode = MouseMode.EDIT
+
     // helper functions
-    fun feetToPixels(feet: Double): Double = feet * fieldWidthPixels / fieldWidthFeet
-    fun pixelsToFeet(pixels: Double): Double = pixels * fieldWidthFeet / fieldWidthPixels
+    fun feetToPixels(feet: Double): Double = feet * fieldDimensionPixels.x / fieldDimensionFeet.x
+
+    fun pixelsToFeet(pixels: Double): Double = pixels * fieldDimensionFeet.x / fieldDimensionPixels.x
 
     private fun world2Screen(vector2: Vector2): Vector2 {
         val temp = vector2 * zoom
@@ -77,43 +92,31 @@ class PathVisualizer : Application() {
         return temp / zoom
     }
 
-    // get started
+    // get started - essentially the initialization function
     override fun start(stage: Stage) {
-        ourStage = stage
         stage.title = "Path Visualizer"
         val outerHBox = HBox()
         stage.scene = Scene(outerHBox, 1600.0, 900.0)
         stage.sizeToScene()
 
+        // set up the paths and autos
         selectedAutonomous = SharedAutonomousConfig("Auto1")
-        mapAutonomous.put( selectedAutonomous!!.name, selectedAutonomous!!)
+        mapAutonomous.put(selectedAutonomous!!.name, selectedAutonomous!!)
         selectedPath = DefaultPath
         selectedAutonomous!!.paths.put(selectedPath!!.name, selectedPath!!)
 
-        // load the image
-        val image = Image("assets/2018Field.png")
-        println("Width: ${image.width}, Height: ${image.height}")
-
-        // calculate ImageView corners
-        val upperLeft = world2Screen(Vector2(-13.5, 27.0))
-        val lowerRight = world2Screen(Vector2(13.5, -5.0))
-        val dimensions = lowerRight - upperLeft
-
-        // create the canvas
-        val canvas = Canvas(800.0, 900.0)
-        val gc = canvas.graphicsContext2D
-        gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeft.x, upperLeft.y, dimensions.x, dimensions.y)
-        drawPaths(gc)
-
+        // setup the layout
         outerHBox.children.add(canvas)
         val buttonsBox = VBox()
         buttonsBox.spacing = 10.0
         outerHBox.children.add(buttonsBox)
         addControlsToButtonsBox(buttonsBox)
 
+        refreshScreen()
         stage.show()
     }
 
+    // add all of the javaFX UI controls
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
         val autoChooserHBox = HBox()
         val autoChooserName = Text("Auto Chooser  ")
@@ -146,14 +149,14 @@ class PathVisualizer : Application() {
             //set what you want the buttons to do here
             zoom-- // so the zoom code or calls to a zoom function or whatever go here
             zoomAdjust.text = zoom.toString()
-            refreshStage()
+            refreshScreen()
         }
         val zoomPlus = Button("+")
         zoomPlus.setOnAction { _: ActionEvent ->
             // same as above
             zoom++
             zoomAdjust.text = zoom.toString()
-            refreshStage()
+            refreshScreen()
         }
         zoomHBox.children.addAll(
                 zoomName,
@@ -181,18 +184,15 @@ class PathVisualizer : Application() {
                 panHBox)
     }
 
-    private fun refreshStage() {
-        ourStage?.show()
-    }
-
-    private fun createScrollPane(stackPane: Pane): ScrollPane {
-        val scroll = ScrollPane()
-        scroll.hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-        scroll.vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-        scroll.isPannable = true
-        scroll.setPrefSize(800.0, 600.0)
-        scroll.content = stackPane
-        return scroll
+    private fun refreshScreen() {
+        gc.fill = Color.WHITE
+        gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
+        // calculate ImageView corners
+        val upperLeftPixels = world2Screen(upperLeftFeet)
+        val lowerRightPixels = world2Screen(lowerRightFeet)
+        val dimensions = lowerRightPixels - upperLeftPixels
+        gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
+        drawPaths(gc)
     }
 
     private fun drawPaths(gc: GraphicsContext) {
@@ -202,7 +202,6 @@ class PathVisualizer : Application() {
             }
         }
         drawSelectedPath(gc, selectedPath)
-
     }
 
     private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
@@ -231,9 +230,9 @@ class PathVisualizer : Application() {
     }
 
     private fun drawSelectedPath(gc: GraphicsContext, path2D: Path2D?) {
-        if (path2D==null || !path2D.hasPoints())
+        if (path2D == null || !path2D.hasPoints())
             return
-        if (path2D.duration>0.0) {
+        if (path2D.duration > 0.0) {
             val deltaT = path2D.duration / 100.0
             var prevPos = path2D.getPosition(0.0)
             var prevLeftPos = path2D.getLeftPosition(0.0)
@@ -318,16 +317,28 @@ class PathVisualizer : Application() {
     }
 
     fun drawEaseCurve() {
-    // draw the ease curve  // be nice to draw this beneath the map
-    //    double prevEase = 0.0;
-    //    gc.setStroke(new BasicStroke(3));
-    //    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
-    //      // draw the ease curve too
-    //      gc.setColor(Color.black);
-    //      double ease = path2D.getEaseCurve().getValue(t);
-    //      double prevT = t - deltaT;
-    //      gc.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
-    //      prevEase = ease;
-    //    }
+        // draw the ease curve  // be nice to draw this beneath the map
+        //    double prevEase = 0.0;
+        //    gc.setStroke(new BasicStroke(3));
+        //    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
+        //      // draw the ease curve too
+        //      gc.setColor(Color.black);
+        //      double ease = path2D.getEaseCurve().getValue(t);
+        //      double prevT = t - deltaT;
+        //      gc.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
+        //      prevEase = ease;
+        //    }
     }
 }
+
+// todo: edit boxes respond - zoom, and pan
+// todo: mouse routines - down, move, up
+// todo: try layoutpanel for making buttons follow size of window on right
+// todo: autonomous and path combos working
+// todo: delete point button
+// todo: add path properties - robot width, height, speed, direction, mirrored
+// todo: save to file, load from file
+// todo: save to network tables for pathvisualizer
+// todo: load from network tables for robot
+// todo: draw ease curve in bottom panel
+// todo: edit boxes for position and tangents of selected point
