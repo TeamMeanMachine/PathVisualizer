@@ -331,6 +331,7 @@ class PathVisualizer : Application() {
     }
 }
 
+// todo: investigate why mirrored is not working
 // todo: edit boxes respond - zoom, and pan
 // todo: mouse routines - down, move, up
 // todo: try layoutpanel for making buttons follow size of window on right
@@ -342,3 +343,5 @@ class PathVisualizer : Application() {
 // todo: load from network tables for robot
 // todo: draw ease curve in bottom panel
 // todo: edit boxes for position and tangents of selected point
+// todo: editing of ease curve
+// todo: playback of robot travel
