@@ -15,13 +15,11 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.vector.Vector2
 import javafx.scene.canvas.GraphicsContext
-import javafx.scene.shape.ArcType
 import javafx.scene.text.Text
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig
 import org.team2471.frc.pathvisualizer.DefaultPath
-import java.awt.Graphics2D
 
 class PathVisualizer : Application() {
 
@@ -219,7 +217,8 @@ class PathVisualizer : Application() {
         gc.stroke = Color.GREEN
         //val tanPoint = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
         gc.lineWidth = 2.0
-        gc.strokeOval(20.0, 200.0, circleSize, circleSize)
+        gc.strokeOval(32.0, 334.0, 1.0, 1.0)
+        gc.strokeOval(imageWidthPixels/2.0, 447.0, 1.0, 1.0)
     }
 
     private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
