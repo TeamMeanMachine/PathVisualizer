@@ -92,7 +92,7 @@ class PathVisualizer : Application() {
         selectedAutonomous!!.paths.put(selectedPath!!.name, selectedPath!!)
 
         // load the image
-        val image = Image("assets/HalfFieldDiagramBlue.png")
+        val image = Image("assets/2018Field.png")
         println("Width: ${image.width}, Height: ${image.height}")
 
         // calculate ImageView corners
@@ -303,7 +303,7 @@ class PathVisualizer : Application() {
         // circles and lines for handles
         var point: Path2DPoint? = path2D.xyCurve.headPoint
         while (point != null) {
-            if (point === selectedPoint && pointType == org.team2471.frc.pathvisualizer.PathVisualizer.PointType.POINT)
+            if (point === selectedPoint && pointType == PointType.POINT)
                 gc.stroke = Color.GREEN
             else
                 gc.stroke = Color.WHITE
@@ -311,7 +311,7 @@ class PathVisualizer : Application() {
             val tPoint = world2Screen(point.position)
             gc.strokeOval(tPoint.x - circleSize / 2, tPoint.y - circleSize / 2, circleSize, circleSize)
             if (point.prevPoint != null) {
-                if (point === selectedPoint && pointType == org.team2471.frc.pathvisualizer.PathVisualizer.PointType.PREV_TANGENT)
+                if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
                     gc.stroke = Color.GREEN
                 else
                     gc.stroke = Color.WHITE
@@ -321,7 +321,7 @@ class PathVisualizer : Application() {
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
             }
             if (point.nextPoint != null) {
-                if (point === selectedPoint && pointType == org.team2471.frc.pathvisualizer.PathVisualizer.PointType.NEXT_TANGENT)
+                if (point === selectedPoint && pointType == PointType.NEXT_TANGENT)
                     gc.stroke = Color.GREEN
                 else
                     gc.stroke = Color.WHITE

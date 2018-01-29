@@ -140,10 +140,7 @@ class PathVisualizer : JPanel() {
 
         try {
             val classLoader = javaClass.classLoader
-            val blueSideFile = File(classLoader.getResource("assets/HalfFieldDiagramBlue.png")!!.file)
-            val redSideFile = File(classLoader.getResource("assets/HalfFieldDiagramRed.png")!!.file)
-            blueSideImage = ImageIO.read(blueSideFile)
-            redSideImage = ImageIO.read(redSideFile)
+            val blueSideFile = File(classLoader.getResource("assets/2018Field.png")!!.file)
         } catch (e: Exception) {
             e.printStackTrace()
         }
