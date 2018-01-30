@@ -17,6 +17,7 @@ import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig
 import org.team2471.frc.pathvisualizer.DefaultPath
+import kotlin.math.round
 
 class PathVisualizer : Application() {
 
@@ -46,7 +47,7 @@ class PathVisualizer : Application() {
     private val fieldDimensionFeet = Vector2(27.0, 27.0)
 
     // view settings
-    private var zoom: Double = feetToPixels(1.0)  // initially draw at 1:1
+    private var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1
     var offset: Vector2 = Vector2(0.0, 0.0)
 
     // location of image extremes in world units
