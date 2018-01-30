@@ -20,6 +20,8 @@ import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig
 import org.team2471.frc.pathvisualizer.DefaultPath
 import kotlin.math.round
+import javafx.scene.control.SplitPane
+import javafx.scene.layout.StackPane
 
 class PathVisualizer : Application() {
 
@@ -32,14 +34,14 @@ class PathVisualizer : Application() {
     }
 
     // javaFX state which needs saved around
-    val canvas = Canvas(800.0, 900.0)
-    val gc = canvas.graphicsContext2D
-    val image = Image("assets/2018Field.png")
+    private val canvas = ResizableCanvas(this)
+    private val gc = canvas.graphicsContext2D
+    private val image = Image("assets/2018Field.png")
 
     // class state variables
-    var mapAutonomous: MutableMap<String, SharedAutonomousConfig> = mutableMapOf()
-    var selectedAutonomous: SharedAutonomousConfig? = null
-    var selectedPath: Path2D? = null
+    private var mapAutonomous: MutableMap<String, SharedAutonomousConfig> = mutableMapOf()
+    private var selectedAutonomous: SharedAutonomousConfig? = null
+    private var selectedPath: Path2D? = null
 
     // image stuff - measure your image with paint and enter these first 3
     private val upperLeftOfFieldPixels = Vector2(39.0, 58.0)
@@ -98,9 +100,6 @@ class PathVisualizer : Application() {
     // get started - essentially the initialization function
     override fun start(stage: Stage) {
         stage.title = "Path Visualizer"
-        val outerHBox = HBox()
-        stage.scene = Scene(outerHBox, 1600.0, 900.0)
-        stage.sizeToScene()
 
         // set up the paths and autos
         selectedAutonomous = SharedAutonomousConfig("Auto1")
@@ -109,11 +108,19 @@ class PathVisualizer : Application() {
         selectedAutonomous!!.paths.put(selectedPath!!.name, selectedPath!!)
 
         // setup the layout
-        outerHBox.children.add(canvas)
         val buttonsBox = VBox()
         buttonsBox.spacing = 10.0
-        outerHBox.children.add(buttonsBox)
         addControlsToButtonsBox(buttonsBox)
+
+        val stackPane = StackPane(canvas)
+        val splitPane = SplitPane(stackPane, buttonsBox)
+        splitPane.setDividerPositions(0.7)
+
+        stage.scene = Scene(splitPane, 1600.0, 900.0)
+        stage.sizeToScene()
+
+        //val easeCanvas = Canvas()
+        //anchorPane.bottomAnchor = easeCanvas
 
         repaint()
         stage.show()
@@ -179,13 +186,13 @@ class PathVisualizer : Application() {
         val panName = Text("Pan  ")
         val panXName = Text("X = ")
         val panYName = Text("Y = ")
-        val panXAdjust = TextField("0")
+        val panXAdjust = TextField(offset.x.toString())
         panXAdjust.textProperty().addListener({ _, _, newText ->
             offset.x = newText.toDouble()
             repaint()
         })
-        val panYAdjust = TextField("0")
-        panXAdjust.textProperty().addListener({ _, _, newText ->
+        val panYAdjust = TextField(offset.y.toString())
+        panYAdjust.textProperty().addListener({ _, _, newText ->
             offset.y = newText.toDouble()
             repaint()
         })
@@ -203,7 +210,7 @@ class PathVisualizer : Application() {
                 panHBox)
     }
 
-    private fun repaint() {
+    fun repaint() {
         gc.fill = Color.WHITE
         gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
 
@@ -396,13 +403,12 @@ class PathVisualizer : Application() {
         if (shortestDistance <= circleSize / 2) {
             selectedPoint = closestPoint
         } else {
-            if (closestPoint!=null) {
-                if (shortestDistance>50) // trying to deselect
+            if (closestPoint != null) {
+                if (shortestDistance > 50) // trying to deselect
                     selectedPoint = null
                 else
                     selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
-            }
-            else {
+            } else {
                 selectedPoint = selectedPath?.addVector2(screen2World(mouseVec))
             }
         }
@@ -427,10 +433,43 @@ class PathVisualizer : Application() {
     }
 }
 
+class ResizableCanvas(pv: PathVisualizer) : Canvas() {
+
+    private var pathVisualizer = pv
+
+    override fun isResizable() = true
+
+    override fun prefWidth(height: Double) = width
+
+    override fun prefHeight(width: Double) = height
+
+    override fun minHeight(width: Double): Double {
+        return 64.0
+    }
+
+    override fun maxHeight(width: Double): Double {
+        return 1000.0
+    }
+
+    override fun minWidth(height: Double): Double {
+        return 0.0
+    }
+
+    override fun maxWidth(height: Double): Double {
+        return 10000.0
+    }
+
+    override fun resize(_width: Double, _height: Double) {
+        width = _width
+        height = _height
+        pathVisualizer.repaint()
+    }
+}
+
 // : mouse routines - down, move, up
 // : edit boxes respond - zoom, and pan
-// todo: investigate why mirrored is not working
-// todo: try layoutpanel for making buttons follow size of window on right
+// : investigate why mirrored is not working
+// : try layoutpanel for making buttons follow size of window on right - used splitpane and resizable
 // todo: autonomous and path combos working
 // todo: delete point button
 // todo: add path properties - robot width, height, speed, direction, mirrored
