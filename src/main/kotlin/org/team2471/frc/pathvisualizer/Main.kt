@@ -3,6 +3,7 @@ import javafx.scene.Scene
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
 import javafx.event.ActionEvent
+import javafx.event.EventHandler
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
 import javafx.scene.control.ComboBox
@@ -12,6 +13,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.vector.Vector2
 import javafx.scene.canvas.GraphicsContext
+import javafx.scene.input.MouseEvent
 import javafx.scene.text.Text
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -114,6 +116,8 @@ class PathVisualizer : Application() {
 
         refreshScreen()
         stage.show()
+
+        canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
     }
 
     // add all of the javaFX UI controls
@@ -328,6 +332,18 @@ class PathVisualizer : Application() {
         //      gc.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
         //      prevEase = ease;
         //    }
+    }
+
+    fun onMousePressed(me: MouseEvent) {
+
+    }
+
+    fun onMouseMoved(me: MouseEvent) {
+
+    }
+
+    fun onMouseReleased(me: MouseEvent) {
+
     }
 }
 
