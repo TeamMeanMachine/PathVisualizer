@@ -115,10 +115,12 @@ class PathVisualizer : Application() {
         outerHBox.children.add(buttonsBox)
         addControlsToButtonsBox(buttonsBox)
 
-        refreshScreen()
+        repaint()
         stage.show()
 
         canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
+        canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
+        canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased(it) }
     }
 
     // add all of the javaFX UI controls
@@ -149,19 +151,23 @@ class PathVisualizer : Application() {
         val zoomHBox = HBox()
         val zoomName = Text("Zoom  ")
         val zoomAdjust = TextField(zoom.toString())
+        zoomAdjust.textProperty().addListener({ obs, oldText, newText ->
+            zoom = newText.toDouble()
+            repaint()
+        })
         val zoomMinus = Button("-")
         zoomMinus.setOnAction { _: ActionEvent ->
             //set what you want the buttons to do here
             zoom-- // so the zoom code or calls to a zoom function or whatever go here
             zoomAdjust.text = zoom.toString()
-            refreshScreen()
+            repaint()
         }
         val zoomPlus = Button("+")
         zoomPlus.setOnAction { _: ActionEvent ->
             // same as above
             zoom++
             zoomAdjust.text = zoom.toString()
-            refreshScreen()
+            repaint()
         }
         zoomHBox.children.addAll(
                 zoomName,
@@ -174,7 +180,15 @@ class PathVisualizer : Application() {
         val panXName = Text("X = ")
         val panYName = Text("Y = ")
         val panXAdjust = TextField("0")
+        panXAdjust.textProperty().addListener({ obs, oldText, newText ->
+            offset.x = newText.toDouble()
+            repaint()
+        })
         val panYAdjust = TextField("0")
+        panXAdjust.textProperty().addListener({ obs, oldText, newText ->
+            offset.y = newText.toDouble()
+            repaint()
+        })
         panHBox.children.addAll(
                 panName,
                 panXName,
@@ -189,14 +203,16 @@ class PathVisualizer : Application() {
                 panHBox)
     }
 
-    private fun refreshScreen() {
+    private fun repaint() {
         gc.fill = Color.WHITE
         gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
+
         // calculate ImageView corners
         val upperLeftPixels = world2Screen(upperLeftFeet)
         val lowerRightPixels = world2Screen(lowerRightFeet)
         val dimensions = lowerRightPixels - upperLeftPixels
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
+
         drawPaths(gc)
     }
 
@@ -291,7 +307,7 @@ class PathVisualizer : Application() {
         var point: Path2DPoint? = path2D.xyCurve.headPoint
         while (point != null) {
             if (point === selectedPoint && pointType == PointType.POINT)
-                gc.stroke = Color.GREEN
+                gc.stroke = Color.LIMEGREEN
             else
                 gc.stroke = Color.WHITE
 
@@ -299,7 +315,7 @@ class PathVisualizer : Application() {
             gc.strokeOval(tPoint.x - circleSize / 2, tPoint.y - circleSize / 2, circleSize, circleSize)
             if (point.prevPoint != null) {
                 if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
-                    gc.stroke = Color.GREEN
+                    gc.stroke = Color.LIMEGREEN
                 else
                     gc.stroke = Color.WHITE
                 val tanPoint = world2Screen(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)))
@@ -309,7 +325,7 @@ class PathVisualizer : Application() {
             }
             if (point.nextPoint != null) {
                 if (point === selectedPoint && pointType == PointType.NEXT_TANGENT)
-                    gc.stroke = Color.GREEN
+                    gc.stroke = Color.LIMEGREEN
                 else
                     gc.stroke = Color.WHITE
                 val tanPoint = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
@@ -335,22 +351,85 @@ class PathVisualizer : Application() {
         //    }
     }
 
-    fun onMousePressed(me: MouseEvent) {
+    var startMouse = Vector2(0.0, 0.0)
 
+    fun onMousePressed(e: MouseEvent) {
+        val mouseVec = Vector2(e.x.toDouble(), e.y.toDouble())
+        startMouse = mouseVec
+
+        var shortestDistance = 10000.0
+        var closestPoint: Path2DPoint? = null
+
+        //Find closest point
+        var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
+        while (point != null) {
+            val tPoint = world2Screen(point.position)
+            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+            if (dist <= shortestDistance) {
+                shortestDistance = dist
+                closestPoint = point
+                pointType = PointType.POINT
+            }
+
+            if (point.prevPoint != null) {
+                val tanPoint1 = world2Screen(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)))
+                dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
+                if (dist <= shortestDistance) {
+                    shortestDistance = dist
+                    closestPoint = point
+                    pointType = PointType.PREV_TANGENT
+                }
+            }
+
+            if (point.nextPoint != null) {
+                val tanPoint2 = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
+                dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
+                if (dist <= shortestDistance) {
+                    shortestDistance = dist
+                    closestPoint = point
+                    pointType = PointType.NEXT_TANGENT
+                }
+            }
+            point = point.nextPoint
+            // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
+        }
+        if (shortestDistance <= circleSize / 2) {
+            selectedPoint = closestPoint
+        } else {
+            if (closestPoint!=null) {
+                if (shortestDistance>50) // trying to deselect
+                    selectedPoint = null
+                else
+                    selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+            }
+            else {
+                selectedPoint = selectedPath?.addVector2(screen2World(mouseVec))
+            }
+        }
+        editPoint = selectedPoint
+        repaint()
     }
 
-    fun onMouseMoved(me: MouseEvent) {
-
+    fun onMouseDragged(e: MouseEvent) {
+        if (editPoint != null) {
+            val worldPoint = screen2World(Vector2(e!!.x.toDouble(), e.y.toDouble()))
+            when (pointType) {
+                PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
+                PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
+                PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), tangentLengthDrawFactor)
+            }
+            repaint()
+        }
     }
 
-    fun onMouseReleased(me: MouseEvent) {
-
+    fun onMouseReleased(e: MouseEvent) {
+        editPoint = null  // no longer editing
     }
 }
 
+// : mouse routines - down, move, up
 // todo: investigate why mirrored is not working
 // todo: edit boxes respond - zoom, and pan
-// todo: mouse routines - down, move, up
 // todo: try layoutpanel for making buttons follow size of window on right
 // todo: autonomous and path combos working
 // todo: delete point button
