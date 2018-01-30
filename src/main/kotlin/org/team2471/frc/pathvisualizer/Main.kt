@@ -120,7 +120,7 @@ class PathVisualizer : Application() {
 
         canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
         canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
-        canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased(it) }
+        canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
     }
 
     // add all of the javaFX UI controls
@@ -151,7 +151,7 @@ class PathVisualizer : Application() {
         val zoomHBox = HBox()
         val zoomName = Text("Zoom  ")
         val zoomAdjust = TextField(zoom.toString())
-        zoomAdjust.textProperty().addListener({ obs, oldText, newText ->
+        zoomAdjust.textProperty().addListener({ _, _, newText ->
             zoom = newText.toDouble()
             repaint()
         })
@@ -180,12 +180,12 @@ class PathVisualizer : Application() {
         val panXName = Text("X = ")
         val panYName = Text("Y = ")
         val panXAdjust = TextField("0")
-        panXAdjust.textProperty().addListener({ obs, oldText, newText ->
+        panXAdjust.textProperty().addListener({ _, _, newText ->
             offset.x = newText.toDouble()
             repaint()
         })
         val panYAdjust = TextField("0")
-        panXAdjust.textProperty().addListener({ obs, oldText, newText ->
+        panXAdjust.textProperty().addListener({ _, _, newText ->
             offset.y = newText.toDouble()
             repaint()
         })
@@ -412,7 +412,7 @@ class PathVisualizer : Application() {
 
     fun onMouseDragged(e: MouseEvent) {
         if (editPoint != null) {
-            val worldPoint = screen2World(Vector2(e!!.x.toDouble(), e.y.toDouble()))
+            val worldPoint = screen2World(Vector2(e.x.toDouble(), e.y.toDouble()))
             when (pointType) {
                 PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
                 PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
@@ -422,14 +422,14 @@ class PathVisualizer : Application() {
         }
     }
 
-    fun onMouseReleased(e: MouseEvent) {
+    fun onMouseReleased() {
         editPoint = null  // no longer editing
     }
 }
 
 // : mouse routines - down, move, up
+// : edit boxes respond - zoom, and pan
 // todo: investigate why mirrored is not working
-// todo: edit boxes respond - zoom, and pan
 // todo: try layoutpanel for making buttons follow size of window on right
 // todo: autonomous and path combos working
 // todo: delete point button
@@ -439,5 +439,8 @@ class PathVisualizer : Application() {
 // todo: load from network tables for robot
 // todo: draw ease curve in bottom panel
 // todo: edit boxes for position and tangents of selected point
+// todo: pan with mouse
 // todo: editing of ease curve
 // todo: playback of robot travel
+// todo: arrow keys to nudge path points
+
