@@ -5,9 +5,6 @@ import java.awt.*
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.vector.Vector2
-import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig
-
-import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.event.MouseInputAdapter
 import java.awt.event.*
@@ -15,6 +12,19 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.awt.BorderLayout
 import java.awt.GridLayout
+
+class SharedAutonomousConfig( var name: String ) {
+    var paths: MutableMap<String, Path2D> = mutableMapOf()
+    var pathNames: Array<String> = arrayOf()
+
+    fun putPath( name: String, path2D: Path2D) {
+        paths.put(name, path2D)
+    }
+
+    fun getPath( name: String ) : Path2D? {
+        return paths.get(name)
+    }
+}
 
 class PathVisualizer : JPanel() {
 
@@ -217,13 +227,13 @@ class PathVisualizer : JPanel() {
 
         // Autonomi (or autonopodes?)
         val autonomousNames: Array<String?>
-        val numConfigs = SharedAutonomousConfig.configNames.size
+        val numConfigs = 0 //SharedAutonomousConfig.configNames.size
         autonomousNames = arrayOfNulls<String>(numConfigs + 1)
         var currentIndex = -1
         for (i in 0..numConfigs - 1) {
-            autonomousNames[i] = SharedAutonomousConfig.configNames[i]
-            if (SharedAutonomousConfig(autonomousNames[i]!!)== selectedAutonomous)
-                currentIndex = i
+//            autonomousNames[i] = SharedAutonomousConfig.configNames[i]
+//            if (SharedAutonomousConfig(autonomousNames[i]!!)== selectedAutonomous)
+//                currentIndex = i
         }
         autonomousNames[numConfigs] = "New Auto"
         autoSelection = JComboBox<String>(autonomousNames)
@@ -241,12 +251,12 @@ class PathVisualizer : JPanel() {
                             "") as String
 
                     if (s.length > 0) {
-                        selectedAutonomous = SharedAutonomousConfig(s)
+//                        selectedAutonomous = SharedAutonomousConfig(s)
                         autoSelection.insertItemAt(s, autoSelection.itemCount - 1)
                         autoSelection.selectedIndex = autoSelection.itemCount - 2
                     }
                 } else {  // any autonomous chosen
-                    selectedAutonomous = SharedAutonomousConfig(autoSelection.selectedItem.toString())
+  //                  selectedAutonomous = SharedAutonomousConfig(autoSelection.selectedItem.toString())
                 }
                 repaint()
             }

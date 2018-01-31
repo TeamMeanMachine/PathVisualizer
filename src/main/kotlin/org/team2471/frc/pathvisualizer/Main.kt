@@ -17,11 +17,23 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.text.Text
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import org.team2471.frc.lib.motion_profiling.SharedAutonomousConfig
 import org.team2471.frc.pathvisualizer.DefaultPath
 import kotlin.math.round
 import javafx.scene.control.SplitPane
 import javafx.scene.layout.StackPane
+import javafx.scene.control.TextInputDialog
+
+class Autonomous( var name: String ) {
+    var paths: MutableMap<String, Path2D> = mutableMapOf()
+
+    fun putPath( name: String, path2D: Path2D) {
+        paths.put(name, path2D)
+    }
+
+    fun getPath( name: String ) : Path2D? {
+        return paths.get(name)
+    }
+}
 
 class PathVisualizer : Application() {
 
@@ -38,8 +50,9 @@ class PathVisualizer : Application() {
     private val image = Image("assets/2018Field.png")
 
     // class state variables
-    private var mapAutonomous: MutableMap<String, SharedAutonomousConfig> = mutableMapOf()
-    private var selectedAutonomous: SharedAutonomousConfig? = null
+
+    private var mapAutonomous: MutableMap<String, Autonomous> = mutableMapOf()
+    private var selectedAutonomous: Autonomous? = null
     private var selectedPath: Path2D? = null
 
     // image stuff - measure your image with paint and enter these first 3
@@ -81,8 +94,6 @@ class PathVisualizer : Application() {
     // helper functions
     fun feetToPixels(feet: Double): Double = feet * fieldDimensionPixels.x / fieldDimensionFeet.x
 
-    fun pixelsToFeet(pixels: Double): Double = pixels * fieldDimensionFeet.x / fieldDimensionPixels.x
-
     private fun world2Screen(vector2: Vector2): Vector2 {
         val temp = vector2 * zoom
         temp.y = -temp.y
@@ -100,10 +111,10 @@ class PathVisualizer : Application() {
         stage.title = "Path Visualizer"
 
         // set up the paths and autos
-        selectedAutonomous = SharedAutonomousConfig("Auto1")
+        selectedAutonomous = Autonomous("Auto1")
         mapAutonomous.put(selectedAutonomous!!.name, selectedAutonomous!!)
         selectedPath = DefaultPath
-        selectedAutonomous!!.paths.put(selectedPath!!.name, selectedPath!!)
+        selectedAutonomous!!.putPath(selectedPath!!.name, selectedPath!!)
 
         // setup the layout
         val buttonsBox = VBox()
@@ -130,9 +141,36 @@ class PathVisualizer : Application() {
 
     // add all of the javaFX UI controls
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
+
+        // path combo box
+        val pathChooserHBox = HBox()
+        val pathChooserName = Text("Path Chooser  ")
+        val pathChooserBox = ComboBox<String>()
+        fillPathCombo(pathChooserBox)
+        pathChooserBox.valueProperty().addListener({_, _, newText ->
+            var newPathName = newText
+            if (newPathName=="New Path") {
+                val dialog = TextInputDialog("Path1")
+                dialog.title = "Path Name"
+                dialog.headerText = "Enter the name for your new path"
+                dialog.contentText = "Path name:"
+                val result = dialog.showAndWait()
+                result.ifPresent { name -> newPathName = name }
+                val newPath = Path2D(newPathName)
+                selectedAutonomous!!.putPath(newPathName, newPath)
+                pathChooserBox.items.add(pathChooserBox.items.count()-1, newPathName)
+            }
+            selectedPath = selectedAutonomous!!.getPath(newPathName)
+            pathChooserBox.value = newPathName
+            repaint()
+        })
+        pathChooserHBox.children.addAll(pathChooserName, pathChooserBox)
+
+        // autonomous combo box
         val autoChooserHBox = HBox()
         val autoChooserName = Text("Auto Chooser  ")
         val autoChooserBox = ComboBox<String>()
+        autoChooserBox.items.clear()
         for (kvAuto in mapAutonomous) {
             autoChooserBox.items.add(kvAuto.key)
             if (kvAuto.value == selectedAutonomous) {
@@ -140,22 +178,26 @@ class PathVisualizer : Application() {
             }
         }
         autoChooserBox.items.add("New Auto")
-        autoChooserHBox.children.addAll(autoChooserName, autoChooserBox)
-
-        val pathChooserHBox = HBox()
-        val pathChooserName = Text("Path Chooser  ")
-        val pathChooserBox = ComboBox<String>()
-        if (selectedAutonomous!=null) {
-            val pathNames = selectedAutonomous!!.pathNames
-            for (pathName in pathNames) {
-                pathChooserBox.items.add(pathName)
-                if (pathName == selectedPath.toString()) {
-                    pathChooserBox.value = pathName
-                }
+        autoChooserBox.valueProperty().addListener({_, _, newText ->
+            var newAutoName = newText
+            if (newAutoName=="New Auto") {
+                val dialog = TextInputDialog("Auto1")
+                dialog.title = "Auto Name"
+                dialog.headerText = "Enter the name for your new autonomous"
+                dialog.contentText = "Auto name:"
+                val result = dialog.showAndWait()
+                result.ifPresent { name -> newAutoName = name }
+                val newAuto = Autonomous(newAutoName)
+                mapAutonomous[newAutoName] = newAuto
+                autoChooserBox.items.add(autoChooserBox.items.count()-1, newAutoName)
             }
-        }
-        pathChooserBox.items.add("New Path")
-        pathChooserHBox.children.addAll(pathChooserName, pathChooserBox)
+            selectedAutonomous = mapAutonomous[newAutoName]
+            autoChooserBox.value = newAutoName
+            selectedPath = null
+            fillPathCombo(pathChooserBox)
+            repaint()
+        })
+        autoChooserHBox.children.addAll(autoChooserName, autoChooserBox)
 
         val zoomHBox = HBox()
         val zoomName = Text("Zoom  ")
@@ -212,6 +254,20 @@ class PathVisualizer : Application() {
                 panHBox)
     }
 
+    fun fillPathCombo(pathChooserBox: ComboBox<String>) {
+        pathChooserBox.items.clear()
+        if (selectedAutonomous!=null) {
+            val paths = selectedAutonomous!!.paths
+            for (kvPath in paths) {
+                pathChooserBox.items.add(kvPath.key)
+                if (kvPath.value == selectedPath) {
+                    pathChooserBox.value = kvPath.key
+                }
+            }
+            pathChooserBox.items.add("New Path")
+        }
+    }
+
     fun repaint() {
         val gc = canvas.graphicsContext2D
         gc.fill = Color.WHITE
@@ -236,7 +292,7 @@ class PathVisualizer : Application() {
     }
 
     private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
-        if (path2D == null)
+        if (path2D == null || path2D.duration==0.0)
             return
         val deltaT = path2D.duration / 100.0
         val prevPos = path2D.getPosition(0.0)
@@ -473,10 +529,11 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : edit boxes respond - zoom, and pan
 // : investigate why mirrored is not working
 // : try layoutpanel for making buttons follow size of window on right - used splitpane and resizable
-// todo: autonomous path combo working
-// todo: path combo working
+// : get path combo working
+// todo: get autonomous combo working
+// todo: new path draws blank
 // todo: delete point button
-// todo: add path properties - mirrored, speed, direction, robot width, height
+// todo: add path properties - mirrored, speed, direction, robot width, height, fudgefactor
 // todo: edit boxes for position and tangents of selected point
 // todo: save to file, load from file
 // todo: save to network tables for pathvisualizer
@@ -487,5 +544,4 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: draw ease curve in bottom panel
 // todo: editing of ease curve
 // todo: playback of robot travel
-
-
+// todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow?
