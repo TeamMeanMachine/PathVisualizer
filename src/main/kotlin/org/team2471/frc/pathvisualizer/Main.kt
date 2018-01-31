@@ -35,7 +35,6 @@ class PathVisualizer : Application() {
 
     // javaFX state which needs saved around
     private val canvas = ResizableCanvas(this)
-    private val gc = canvas.graphicsContext2D
     private val image = Image("assets/2018Field.png")
 
     // class state variables
@@ -211,6 +210,7 @@ class PathVisualizer : Application() {
     }
 
     fun repaint() {
+        val gc = canvas.graphicsContext2D
         gc.fill = Color.WHITE
         gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
 
@@ -470,16 +470,19 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : edit boxes respond - zoom, and pan
 // : investigate why mirrored is not working
 // : try layoutpanel for making buttons follow size of window on right - used splitpane and resizable
-// todo: autonomous and path combos working
+// todo: autonomous path combo working
+// todo: path combo working
 // todo: delete point button
-// todo: add path properties - robot width, height, speed, direction, mirrored
+// todo: add path properties - mirrored, speed, direction, robot width, height
+// todo: edit boxes for position and tangents of selected point
 // todo: save to file, load from file
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
-// todo: draw ease curve in bottom panel
-// todo: edit boxes for position and tangents of selected point
 // todo: pan with mouse
+// todo: zoom with the mouse wheel
+// todo: arrow keys to nudge path points
+// todo: draw ease curve in bottom panel
 // todo: editing of ease curve
 // todo: playback of robot travel
-// todo: arrow keys to nudge path points
+
 
