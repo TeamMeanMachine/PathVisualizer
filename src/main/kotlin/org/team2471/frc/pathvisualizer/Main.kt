@@ -54,7 +54,7 @@ class PathVisualizer : Application() {
     var offset: Vector2 = Vector2(0.0, 0.0)
 
     // location of image extremes in world units
-    private val upperLeftFeet = screen2World(Vector2(0.0, 0.0))  // calculate when zoom is 1:1, and offset is 0,0
+    private val upperLeftFeet = screen2World(Vector2(0.0, 0.0))  // calculate these when zoom is 1:1, and offset is 0,0
     private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
 
     // drawing
@@ -63,7 +63,6 @@ class PathVisualizer : Application() {
 
     // point editing
     private var editPoint: Path2DPoint? = null
-    private var editVector: Vector2? = null
     private var selectedPoint: Path2DPoint? = null
 
     // custom types
@@ -134,24 +133,28 @@ class PathVisualizer : Application() {
         val autoChooserHBox = HBox()
         val autoChooserName = Text("Auto Chooser  ")
         val autoChooserBox = ComboBox<String>()
-        autoChooserBox.items.addAll(
-                "hitler",
-                "communism",
-                "dothething",
-                "wooowee")
-        autoChooserBox.value = "hitler"
+        for (kvAuto in mapAutonomous) {
+            autoChooserBox.items.add(kvAuto.key)
+            if (kvAuto.value == selectedAutonomous) {
+                autoChooserBox.value = kvAuto.key
+            }
+        }
+        autoChooserBox.items.add("New Auto")
         autoChooserHBox.children.addAll(autoChooserName, autoChooserBox)
 
         val pathChooserHBox = HBox()
         val pathChooserName = Text("Path Chooser  ")
         val pathChooserBox = ComboBox<String>()
-        pathChooserBox.items.addAll(
-                "sliiide to the left",
-                "sliiiide to the right",
-                "two hops this time!",
-                "reverse, reverse!"
-        )
-        pathChooserBox.value = "sliiiide to the right"
+        if (selectedAutonomous!=null) {
+            val pathNames = selectedAutonomous!!.pathNames
+            for (pathName in pathNames) {
+                pathChooserBox.items.add(pathName)
+                if (pathName == selectedPath.toString()) {
+                    pathChooserBox.value = pathName
+                }
+            }
+        }
+        pathChooserBox.items.add("New Path")
         pathChooserHBox.children.addAll(pathChooserName, pathChooserBox)
 
         val zoomHBox = HBox()
