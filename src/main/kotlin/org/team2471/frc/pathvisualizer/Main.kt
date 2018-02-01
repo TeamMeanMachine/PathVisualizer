@@ -144,21 +144,32 @@ class PathVisualizer : Application() {
 
         // path combo box
         val pathChooserHBox = HBox()
-        val pathChooserName = Text("Path Chooser  ")
+        val pathChooserName = Text("Path:  ")
         val pathChooserBox = ComboBox<String>()
         fillPathCombo(pathChooserBox)
+        pathChooserBox.isEditable = true
         pathChooserBox.valueProperty().addListener({_, _, newText ->
             var newPathName = newText
             if (newPathName=="New Path") {
-                val dialog = TextInputDialog("Path1")
+                var defaultName = "Path"
+                var count = 1
+                while (selectedAutonomous!!.paths.containsKey(defaultName+count))
+                    count++
+                val dialog = TextInputDialog(defaultName+count)
                 dialog.title = "Path Name"
                 dialog.headerText = "Enter the name for your new path"
                 dialog.contentText = "Path name:"
                 val result = dialog.showAndWait()
-                result.ifPresent { name -> newPathName = name }
-                val newPath = Path2D(newPathName)
-                selectedAutonomous!!.putPath(newPathName, newPath)
-                pathChooserBox.items.add(pathChooserBox.items.count()-1, newPathName)
+                if (result.isPresent) {
+                    newPathName = result.get()
+                    val newPath = Path2D(newPathName)
+                    newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0,1.0); // always begin with an ease curve
+                    selectedAutonomous!!.putPath(newPathName, newPath)
+                    pathChooserBox.items.add(pathChooserBox.items.count()-1, newPathName)
+                }
+                else {
+                    newPathName = selectedPath?.name
+                }
             }
             selectedPath = selectedAutonomous!!.getPath(newPathName)
             pathChooserBox.value = newPathName
@@ -168,7 +179,7 @@ class PathVisualizer : Application() {
 
         // autonomous combo box
         val autoChooserHBox = HBox()
-        val autoChooserName = Text("Auto Chooser  ")
+        val autoChooserName = Text("Auto:  ")
         val autoChooserBox = ComboBox<String>()
         autoChooserBox.items.clear()
         for (kvAuto in mapAutonomous) {
@@ -181,15 +192,24 @@ class PathVisualizer : Application() {
         autoChooserBox.valueProperty().addListener({_, _, newText ->
             var newAutoName = newText
             if (newAutoName=="New Auto") {
-                val dialog = TextInputDialog("Auto1")
+                var defaultName = "Auto"
+                var count = 1
+                while (mapAutonomous.containsKey(defaultName+count))
+                    count++
+                val dialog = TextInputDialog(defaultName+count)
                 dialog.title = "Auto Name"
                 dialog.headerText = "Enter the name for your new autonomous"
                 dialog.contentText = "Auto name:"
                 val result = dialog.showAndWait()
-                result.ifPresent { name -> newAutoName = name }
-                val newAuto = Autonomous(newAutoName)
-                mapAutonomous[newAutoName] = newAuto
-                autoChooserBox.items.add(autoChooserBox.items.count()-1, newAutoName)
+                if (result.isPresent) {
+                    newAutoName = result.get()
+                    val newAuto = Autonomous(newAutoName)
+                    mapAutonomous[newAutoName] = newAuto
+                    autoChooserBox.items.add(autoChooserBox.items.count()-1, newAutoName)
+                }
+                else {
+                    newAutoName = selectedAutonomous?.name
+                }
             }
             selectedAutonomous = mapAutonomous[newAutoName]
             autoChooserBox.value = newAutoName
@@ -420,7 +440,7 @@ class PathVisualizer : Application() {
     var startMouse = Vector2(0.0, 0.0)
 
     fun onMousePressed(e: MouseEvent) {
-        val mouseVec = Vector2(e.x.toDouble(), e.y.toDouble())
+        val mouseVec = Vector2(e.x, e.y)
         startMouse = mouseVec
 
         var shortestDistance = 10000.0
@@ -463,12 +483,14 @@ class PathVisualizer : Application() {
             selectedPoint = closestPoint
         } else {
             if (closestPoint != null) {
-                if (shortestDistance > 50) // trying to deselect
+                if (shortestDistance > 50) // trying to deselect?
                     selectedPoint = null
                 else
                     selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
-            } else {
-                selectedPoint = selectedPath?.addVector2(screen2World(mouseVec))
+            } else {  // first point on a path?
+//                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
+//                selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), path2DPoint)
+                selectedPath?.addVector2(screen2World(mouseVec))
             }
         }
         editPoint = selectedPoint
@@ -477,7 +499,7 @@ class PathVisualizer : Application() {
 
     fun onMouseDragged(e: MouseEvent) {
         if (editPoint != null) {
-            val worldPoint = screen2World(Vector2(e.x.toDouble(), e.y.toDouble()))
+            val worldPoint = screen2World(Vector2(e.x, e.y))
             when (pointType) {
                 PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
                 PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
@@ -530,18 +552,21 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : investigate why mirrored is not working
 // : try layoutpanel for making buttons follow size of window on right - used splitpane and resizable
 // : get path combo working
-// todo: get autonomous combo working
-// todo: new path draws blank
+// : handle cancel on new dialogs
+// : generate unique name for Auto and Path
+// : new path draws blank
+// : get autonomous combo working
 // todo: delete point button
 // todo: add path properties - mirrored, speed, direction, robot width, height, fudgefactor
 // todo: edit boxes for position and tangents of selected point
 // todo: save to file, load from file
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
-// todo: pan with mouse
+// todo: clicking on path should select it
+// todo: pan with mouse with a pan button or middle mouse button
 // todo: zoom with the mouse wheel
 // todo: arrow keys to nudge path points
-// todo: draw ease curve in bottom panel
+// todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: editing of ease curve
 // todo: playback of robot travel
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow?
