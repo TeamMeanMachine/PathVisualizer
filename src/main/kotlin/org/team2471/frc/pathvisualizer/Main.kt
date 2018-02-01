@@ -22,6 +22,9 @@ import kotlin.math.round
 import javafx.scene.control.SplitPane
 import javafx.scene.layout.StackPane
 import javafx.scene.control.TextInputDialog
+import javafx.scene.control.CheckBox
+
+
 
 class Autonomous( var name: String ) {
     var paths: MutableMap<String, Path2D> = mutableMapOf()
@@ -278,12 +281,64 @@ class PathVisualizer : Application() {
             }
         }
 
+        val mirroredCheckBox = CheckBox("Mirrored:  ")
+        mirroredCheckBox.isSelected = selectedPath!!.isMirrored
+
+        val widthHBox = HBox()
+        val widthName = Text("Width:  ")
+        val widthText = TextField(selectedPath?.robotWidth.toString())
+        widthText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.robotWidth = newText.toDouble()
+            repaint()
+        })
+        widthHBox.children.addAll(widthName, widthText)
+
+        val lengthHBox = HBox()
+        val lengthName = Text("Length:  ")
+        val lengthText = TextField(selectedPath?.robotLength.toString())
+        lengthText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.robotLength = newText.toDouble()
+            repaint()
+        })
+        lengthHBox.children.addAll(lengthName, lengthText)
+
+        val widthFudgeFactorHBox = HBox()
+        val widthFudgeFactorName = Text("Width Fudge Factor:  ")
+        val widthFudgeFactorText = TextField(selectedPath?.widthFudgeFactor.toString())
+        widthFudgeFactorText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.widthFudgeFactor = newText.toDouble()
+            repaint()
+        })
+        widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
+
+/*
+        val robotDirectionHBox = HBox()
+        val robotDirectionName = Text("Robot Direction:  ")
+        val robotDirectionBox = ComboBox<String>()
+        robotDirectionBox.items.add("Forward")
+        robotDirectionBox.items.add("Backward")
+        robotDirectionBox.value = if (selectedPath!!.travelDirection>0) "Forward" else "Backward"
+        robotDirectionBox.valueProperty().addListener({ _, _, newText ->
+            selectedPath?.travelDirection = if (newText=="Forward") 1.0 else -1.0
+        }
+*/
+
+
+
+// todo: edit boxes for position and tangents of selected point
+// todo: save to file, load from file
+// todo: save to network tables for pathvisualizer
+
         buttonsBox.children.addAll(
                 autoChooserHBox,
                 pathChooserHBox,
                 zoomHBox,
                 panHBox,
-                deletePoint)
+                deletePoint,
+                mirroredCheckBox,
+                widthHBox,
+                lengthHBox,
+                widthFudgeFactorHBox)
     }
 
     fun fillPathCombo(pathChooserBox: ComboBox<String>) {
@@ -569,11 +624,14 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : new path draws blank
 // : get autonomous combo working
 // : delete point button
-// todo: add path properties - mirrored, speed, direction, robot width, height, fudgefactor
+// todo: add path properties - mirrored, speed, direction, robot width, length, fudgefactor
 // todo: edit boxes for position and tangents of selected point
+// todo: edit box for duration of path
 // todo: save to file, load from file
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
+
+// todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
 // todo: pan with mouse with a pan button or middle mouse button
 // todo: zoom with the mouse wheel
