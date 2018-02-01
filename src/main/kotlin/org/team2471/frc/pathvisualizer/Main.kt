@@ -173,6 +173,7 @@ class PathVisualizer : Application() {
             }
             selectedPath = selectedAutonomous!!.getPath(newPathName)
             pathChooserBox.value = newPathName
+            selectedPoint = null
             repaint()
         })
         pathChooserHBox.children.addAll(pathChooserName, pathChooserBox)
@@ -214,6 +215,7 @@ class PathVisualizer : Application() {
             selectedAutonomous = mapAutonomous[newAutoName]
             autoChooserBox.value = newAutoName
             selectedPath = null
+            selectedPoint = null
             fillPathCombo(pathChooserBox)
             repaint()
         })
@@ -267,11 +269,21 @@ class PathVisualizer : Application() {
                 panYName,
                 panYAdjust)
 
+        val deletePoint = Button("Delete Point")
+        deletePoint.setOnAction { _: ActionEvent ->
+            if (selectedPoint != null && selectedPath != null) {
+                selectedPath?.removePoint(selectedPoint)
+                selectedPoint = null
+                repaint()
+            }
+        }
+
         buttonsBox.children.addAll(
                 autoChooserHBox,
                 pathChooserHBox,
                 zoomHBox,
-                panHBox)
+                panHBox,
+                deletePoint)
     }
 
     fun fillPathCombo(pathChooserBox: ComboBox<String>) {
@@ -290,7 +302,7 @@ class PathVisualizer : Application() {
 
     fun repaint() {
         val gc = canvas.graphicsContext2D
-        gc.fill = Color.WHITE
+        gc.fill = Color.LIGHTGRAY
         gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
 
         // calculate ImageView corners
@@ -556,7 +568,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : generate unique name for Auto and Path
 // : new path draws blank
 // : get autonomous combo working
-// todo: delete point button
+// : delete point button
 // todo: add path properties - mirrored, speed, direction, robot width, height, fudgefactor
 // todo: edit boxes for position and tangents of selected point
 // todo: save to file, load from file
