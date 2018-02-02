@@ -150,7 +150,6 @@ class PathVisualizer : Application() {
         val pathChooserName = Text("Path:  ")
         val pathChooserBox = ComboBox<String>()
         fillPathCombo(pathChooserBox)
-        pathChooserBox.isEditable = true
         pathChooserBox.valueProperty().addListener({_, _, newText ->
             var newPathName = newText
             if (newPathName=="New Path") {
@@ -407,7 +406,7 @@ class PathVisualizer : Application() {
         if (path2D == null || !path2D.hasPoints())
             return
         if (path2D.duration > 0.0) {
-            val deltaT = path2D.duration / 100.0
+            val deltaT = path2D.duration / 300.0
             var prevPos = path2D.getPosition(0.0)
             var prevLeftPos = path2D.getLeftPosition(0.0)
             var prevRightPos = path2D.getRightPosition(0.0)
