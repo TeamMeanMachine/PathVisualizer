@@ -1,3 +1,5 @@
+import com.squareup.moshi.KotlinJsonAdapterFactory
+import com.squareup.moshi.Moshi
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
@@ -23,8 +25,9 @@ import javafx.scene.control.SplitPane
 import javafx.scene.layout.StackPane
 import javafx.scene.control.TextInputDialog
 import javafx.scene.control.CheckBox
+import org.team2471.frc.pathvisualizer.TestMoshi
 
-
+// todo: Autonomous - class to hold multiple paths /////////////////////////////////////////////////////////////////////
 
 class Autonomous( var name: String ) {
     var paths: MutableMap<String, Path2D> = mutableMapOf()
@@ -38,9 +41,11 @@ class Autonomous( var name: String ) {
     }
 }
 
+// todo: main application class ////////////////////////////////////////////////////////////////////////////////////////
+
 class PathVisualizer : Application() {
 
-    // the companion object which starts this class
+    // todo: the companion object which starts this class //////////////////////////////////////////////////////////////
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
@@ -48,6 +53,7 @@ class PathVisualizer : Application() {
         }
     }
 
+    // todo: class state - vars and vals ///////////////////////////////////////////////////////////////////////////////
     // javaFX state which needs saved around
     private val canvas = ResizableCanvas(this)
     private val image = Image("assets/2018Field.png")
@@ -94,7 +100,13 @@ class PathVisualizer : Application() {
 
     private var mouseMode = MouseMode.EDIT
 
-    // helper functions
+    val moshi = Moshi.Builder()
+            // Add any other JsonAdapter factories.
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
+// todo: helper functions //////////////////////////////////////////////////////////////////////////////////////////////
+
     fun feetToPixels(feet: Double): Double = feet * fieldDimensionPixels.x / fieldDimensionFeet.x
 
     private fun world2Screen(vector2: Vector2): Vector2 {
@@ -109,7 +121,8 @@ class PathVisualizer : Application() {
         return temp / zoom
     }
 
-    // get started - essentially the initialization function
+// todo: start /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     override fun start(stage: Stage) {
         stage.title = "Path Visualizer"
 
@@ -140,9 +153,13 @@ class PathVisualizer : Application() {
         canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
         canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
         canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+
+        // test json writing
+        TestMoshi()
     }
 
-    // add all of the javaFX UI controls
+// todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
         // path combo box
@@ -310,7 +327,6 @@ class PathVisualizer : Application() {
         })
         widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
 
-/*
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
         val robotDirectionBox = ComboBox<String>()
@@ -319,14 +335,27 @@ class PathVisualizer : Application() {
         robotDirectionBox.value = if (selectedPath!!.travelDirection>0) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener({ _, _, newText ->
             selectedPath?.travelDirection = if (newText=="Forward") 1.0 else -1.0
-        }
-*/
-
-
+        })
+        robotDirectionHBox.children.addAll(robotDirectionName, robotDirectionBox)
 
 // todo: edit boxes for position and tangents of selected point
-// todo: save to file, load from file
+
+        val filesBox = HBox()
+        val saveAsButton = Button("Save As")
+        saveAsButton.setOnAction { _: ActionEvent ->
+            val json = getAutonomiJson()
+            println(json)
+            // todo: bring up system save as dialog
+        }
+        // todo: also neeed buttons for save and open  // could put these in a file menu, or should they at least be at the top?
+        // should display the name of this config?
+        filesBox.children.addAll(saveAsButton)
+
 // todo: save to network tables for pathvisualizer
+        val sendToRobot = Button("Send To Robot")
+        sendToRobot.setOnAction { _: ActionEvent ->
+            //val json = getAutonomiJson()
+        }
 
         buttonsBox.children.addAll(
                 autoChooserHBox,
@@ -337,8 +366,13 @@ class PathVisualizer : Application() {
                 mirroredCheckBox,
                 widthHBox,
                 lengthHBox,
-                widthFudgeFactorHBox)
+                widthFudgeFactorHBox,
+                robotDirectionHBox,
+                filesBox
+                )
     }
+
+    // todo: UI helper functions //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     fun fillPathCombo(pathChooserBox: ComboBox<String>) {
         pathChooserBox.items.clear()
@@ -353,6 +387,21 @@ class PathVisualizer : Application() {
             pathChooserBox.items.add("New Path")
         }
     }
+
+    fun getAutonomiJson() : String {
+        var json = String()
+        for (kvAuto in mapAutonomous) {
+            val auto = kvAuto.value
+            for (kvPath in auto.paths) {
+                val path = kvPath.value
+                json += path.toJSonString()
+            }
+        }
+        println(json)
+        return json
+    }
+
+// todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
 
     fun repaint() {
         val gc = canvas.graphicsContext2D
@@ -505,6 +554,8 @@ class PathVisualizer : Application() {
 
     var startMouse = Vector2(0.0, 0.0)
 
+// todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
+
     fun onMousePressed(e: MouseEvent) {
         val mouseVec = Vector2(e.x, e.y)
         startMouse = mouseVec
@@ -580,6 +631,8 @@ class PathVisualizer : Application() {
     }
 }
 
+// todo: resizable canvas //////////////////////////////////////////////////////////////////////////////////////////////
+
 class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 
     private var pathVisualizer = pv
@@ -613,6 +666,8 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
     }
 }
 
+// todo list  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // : mouse routines - down, move, up
 // : edit boxes respond - zoom, and pan
 // : investigate why mirrored is not working
@@ -623,19 +678,26 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : new path draws blank
 // : get autonomous combo working
 // : delete point button
-// todo: add path properties - mirrored, speed, direction, robot width, length, fudgefactor
+// todo: add path properties - ...
+// todo: mirrored,
+// todo: speed,
+// todo: travel direction,
+// todo: robot width, length, fudgefactor
 // todo: edit boxes for position and tangents of selected point
 // todo: edit box for duration of path
 // todo: save to file, load from file
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
 
+// todo: add button beside auto and path combos to edit their names
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
+// todo: make a separate and larger radius for selecting points compared to drawing them
 // todo: pan with mouse with a pan button or middle mouse button
 // todo: zoom with the mouse wheel
-// todo: arrow keys to nudge path points
+// todo: arrow keys to nudge selected path points
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
-// todo: editing of ease curve
 // todo: playback of robot travel
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow?
+// todo: editing of ease curve
+// todo: multi-select path points by dragging selection dashed rectangle
