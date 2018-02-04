@@ -756,9 +756,11 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : robot width, length, fudgefactor
 // : convert robot width and length to inches - Duy
 // : save to file, load from file
-// todo: edit box for duration of path
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
+
+// todo: draw ease curve in bottom panel, use another SplitPane horizontal
+// todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
 
 // todo: add rename button beside auto and path combos to edit their names
 // todo: add delete buttons beside auto and path for deleting them
@@ -768,7 +770,6 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: pan with mouse with a pan button or middle mouse button
 // todo: zoom with the mouse wheel -- Julian
 // todo: arrow keys to nudge selected path points
-// todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: editing of ease curve
