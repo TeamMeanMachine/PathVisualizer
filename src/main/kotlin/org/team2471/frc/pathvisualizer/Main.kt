@@ -1,3 +1,4 @@
+import edu.wpi.first.wpilibj.networktables.NetworkTable
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
@@ -54,6 +55,7 @@ class PathVisualizer : Application() {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
+            //NetworkTablesDesktopClient().run()
             launch(PathVisualizer::class.java, *args)
         }
     }
@@ -406,7 +408,12 @@ class PathVisualizer : Application() {
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
             val json = autonomi.toJsonString()
-            // todo: save the json to network tables for pathvisualizer
+/*
+            edu.wpi.first.networktables.NetworkTable.setClientMode()
+            edu.wpi.first.networktables.NetworkTable.setIPAddress("10.24.71.100")
+            val table = edu.wpi.first.networktables.NetworkTable.getTable("PathVisualizer")
+            table.putNumber("autonomi", json)
+*/
         }
 
         buttonsBox.children.addAll(
@@ -756,7 +763,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : robot width, length, fudgefactor
 // : convert robot width and length to inches - Duy
 // : save to file, load from file
-// todo: save to network tables for pathvisualizer
+// : save to network tables for pathvisualizer
 // todo: load from network tables for robot
 
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
@@ -773,4 +780,5 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: editing of ease curve
-// todo: multi-select path points by dragging selection dashed rectangle
+// todo: multi-select path points by dragging selecti// todo: draw ease curve in bottom panel, use another SplitPane horizontal
+on dashed rectangle
