@@ -26,6 +26,8 @@ import javafx.scene.layout.StackPane
 import javafx.scene.control.TextInputDialog
 import javafx.scene.control.CheckBox
 import org.team2471.frc.pathvisualizer.TestMoshi
+import java.text.DecimalFormat
+import java.text.NumberFormat
 
 // todo: Autonomous - class to hold multiple paths /////////////////////////////////////////////////////////////////////
 
@@ -56,7 +58,7 @@ class PathVisualizer : Application() {
     // todo: class state - vars and vals ///////////////////////////////////////////////////////////////////////////////
     // javaFX state which needs saved around
     private val canvas = ResizableCanvas(this)
-    private val image = Image("assets/2018Field.png")
+    private val image = Image("assets/2018Field.PNG")
 
     // class state variables
 
@@ -109,6 +111,10 @@ class PathVisualizer : Application() {
 
     fun feetToPixels(feet: Double): Double = feet * fieldDimensionPixels.x / fieldDimensionFeet.x
 
+    inline fun <T:Any, R> whenNotNull(input: T?, callback: (T)->R): R? {
+        return input?.let(callback)
+    }
+
     private fun world2Screen(vector2: Vector2): Vector2 {
         val temp = vector2 * zoom
         temp.y = -temp.y
@@ -119,6 +125,13 @@ class PathVisualizer : Application() {
         val temp = vector2 - offset - zoomPivot
         temp.y = -temp.y
         return temp / zoom
+    }
+
+    fun Double.format(fracDigits: Int): String {
+        val fd = DecimalFormat()
+        fd.maximumFractionDigits = fracDigits
+        fd.minimumFractionDigits = fracDigits
+        return fd.format(this)
     }
 
 // todo: start /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,35 +310,8 @@ class PathVisualizer : Application() {
             }
         }
 
-        val mirroredCheckBox = CheckBox("Mirrored:  ")
+        val mirroredCheckBox = CheckBox("Mirrored")
         mirroredCheckBox.isSelected = selectedPath!!.isMirrored
-
-        val widthHBox = HBox()
-        val widthName = Text("Width:  ")
-        val widthText = TextField(selectedPath?.robotWidth.toString())
-        widthText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.robotWidth = newText.toDouble()
-            repaint()
-        })
-        widthHBox.children.addAll(widthName, widthText)
-
-        val lengthHBox = HBox()
-        val lengthName = Text("Length:  ")
-        val lengthText = TextField(selectedPath?.robotLength.toString())
-        lengthText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.robotLength = newText.toDouble()
-            repaint()
-        })
-        lengthHBox.children.addAll(lengthName, lengthText)
-
-        val widthFudgeFactorHBox = HBox()
-        val widthFudgeFactorName = Text("Width Fudge Factor:  ")
-        val widthFudgeFactorText = TextField(selectedPath?.widthFudgeFactor.toString())
-        widthFudgeFactorText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.widthFudgeFactor = newText.toDouble()
-            repaint()
-        })
-        widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
@@ -337,6 +323,48 @@ class PathVisualizer : Application() {
             selectedPath?.travelDirection = if (newText=="Forward") 1.0 else -1.0
         })
         robotDirectionHBox.children.addAll(robotDirectionName, robotDirectionBox)
+
+        val speedHBox = HBox()
+        val speedName = Text("Speed:  ")
+        val speedText = TextField(selectedPath?.speed.toString())
+        speedText.textProperty().addListener ({ _, _, newText ->
+            selectedPath?.speed = newText.toDouble()
+            repaint()
+        })
+        speedHBox.children.addAll(speedName, speedText)
+
+        val widthHBox = HBox()
+        val widthName = Text("Width:  ")
+        //this might perpetually throw an exception at every moment there isn't a path
+        // todo: experiment with this and change accordingly
+        val widthText = TextField((selectedPath!!.robotWidth * 12.0).format(1))
+        widthText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.robotWidth = (newText.toDouble()) / 12.0
+            //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
+            repaint()
+        })
+        val widthUnit = Text(" inches")
+        widthHBox.children.addAll(widthName, widthText, widthUnit)
+
+        val lengthHBox = HBox()
+        val lengthName = Text("Length:  ")
+        val lengthText = TextField((selectedPath!!.robotLength * 12.0).format(1))
+        lengthText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.robotLength = newText.toDouble()
+            //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
+            repaint()
+        })
+        val lengthUnit = Text("inches")
+        lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
+
+        val widthFudgeFactorHBox = HBox()
+        val widthFudgeFactorName = Text("Width Fudge Factor:  ")
+        val widthFudgeFactorText = TextField(selectedPath?.widthFudgeFactor.toString())
+        widthFudgeFactorText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.widthFudgeFactor = newText.toDouble()
+            repaint()
+        })
+        widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
 
 // todo: edit boxes for position and tangents of selected point
 
@@ -364,10 +392,11 @@ class PathVisualizer : Application() {
                 panHBox,
                 deletePoint,
                 mirroredCheckBox,
+                speedHBox,
+                robotDirectionHBox,
                 widthHBox,
                 lengthHBox,
                 widthFudgeFactorHBox,
-                robotDirectionHBox,
                 filesBox
                 )
     }
@@ -678,11 +707,13 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : new path draws blank
 // : get autonomous combo working
 // : delete point button
-// todo: add path properties - ...
-// todo: mirrored,
-// todo: speed,
-// todo: travel direction,
-// todo: robot width, length, fudgefactor
+// : add path properties - ...
+//  : mirrored,
+//  : speed,
+//  : travel direction,
+//  : robot width, length, fudgefactor
+// : change the displayed value of robot width and length to inch (it is currently in feet)
+// todo: round the length and width number to about 3 or 4 digits after the decimal point
 // todo: edit boxes for position and tangents of selected point
 // todo: edit box for duration of path
 // todo: save to file, load from file
