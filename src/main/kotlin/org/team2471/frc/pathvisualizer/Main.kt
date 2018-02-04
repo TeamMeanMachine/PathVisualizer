@@ -679,14 +679,14 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : new path draws blank
 // : get autonomous combo working
 // : delete point button
-// todo: add path properties - ...
-// todo: mirrored,
-// todo: speed,
-// todo: travel direction,
-// todo: robot width, length, fudgefactor
+// : add path properties - ...
+// : mirrored,
+// : speed,
+// : travel direction,
+// : robot width, length, fudgefactor
+// : save to file, load from file
 // todo: edit boxes for position and tangents of selected point
 // todo: edit box for duration of path
-// todo: save to file, load from file
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
 // todo: convert robot width and length to inches
