@@ -684,8 +684,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : speed,
 // : travel direction,
 // : robot width, length, fudgefactor
-// : save to file, load from file
-// todo: edit boxes for position and tangents of selected point
+// todo: save to file, load from file
 // todo: edit box for duration of path
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
