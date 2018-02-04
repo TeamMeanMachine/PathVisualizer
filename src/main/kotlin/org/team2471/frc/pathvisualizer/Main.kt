@@ -24,9 +24,7 @@ import javafx.scene.control.SplitPane
 import javafx.scene.layout.StackPane
 import javafx.scene.control.TextInputDialog
 import javafx.scene.control.CheckBox
-import org.team2471.frc.pathvisualizer.TestMoshi
 import java.text.DecimalFormat
-import java.text.NumberFormat
 import javafx.stage.FileChooser
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
@@ -177,11 +175,11 @@ class PathVisualizer : Application() {
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
         // path combo box
-        val pathChooserHBox = HBox()
-        val pathChooserName = Text("Path:  ")
-        val pathChooserBox = ComboBox<String>()
-        fillPathCombo(pathChooserBox)
-        pathChooserBox.valueProperty().addListener({_, _, newText ->
+        val pathComboHBox = HBox()
+        val pathComboName = Text("Path:  ")
+        val pathComboBox = ComboBox<String>()
+        refreshPathCombo(pathComboBox)
+        pathComboBox.valueProperty().addListener({_, _, newText ->
             var newPathName = newText
             if (newPathName=="New Path") {
                 var defaultName = "Path"
@@ -198,32 +196,27 @@ class PathVisualizer : Application() {
                     val newPath = Path2D(newPathName)
                     newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0,1.0); // always begin with an ease curve
                     selectedAutonomous!!.putPath(newPath)
-                    pathChooserBox.items.add(pathChooserBox.items.count()-1, newPathName)
+                    pathComboBox.items.add(pathComboBox.items.count()-1, newPathName)
                 }
                 else {
                     newPathName = selectedPath?.name
                 }
             }
-            selectedPath = selectedAutonomous!!.getPath(newPathName)
-            pathChooserBox.value = newPathName
+            if (selectedAutonomous!=null) {
+                selectedPath = selectedAutonomous!!.getPath(newPathName)
+            }
+            pathComboBox.value = newPathName
             selectedPoint = null
             repaint()
         })
-        pathChooserHBox.children.addAll(pathChooserName, pathChooserBox)
+        pathComboHBox.children.addAll(pathComboName, pathComboBox)
 
         // autonomous combo box
-        val autoChooserHBox = HBox()
-        val autoChooserName = Text("Auto:  ")
-        val autoChooserBox = ComboBox<String>()
-        autoChooserBox.items.clear()
-        for (kvAuto in autonomi.mapAutonomous) {
-            autoChooserBox.items.add(kvAuto.key)
-            if (kvAuto.value == selectedAutonomous) {
-                autoChooserBox.value = kvAuto.key
-            }
-        }
-        autoChooserBox.items.add("New Auto")
-        autoChooserBox.valueProperty().addListener({_, _, newText ->
+        val autoComboHBox = HBox()
+        val autoComboName = Text("Auto:  ")
+        val autoComboBox = ComboBox<String>()
+        refreshAutoCombo(autoComboBox)
+        autoComboBox.valueProperty().addListener({_, _, newText ->
             var newAutoName = newText
             if (newAutoName=="New Auto") {
                 var defaultName = "Auto"
@@ -239,20 +232,20 @@ class PathVisualizer : Application() {
                     newAutoName = result.get()
                     val newAuto = Autonomous(newAutoName)
                     autonomi.put(newAuto)
-                    autoChooserBox.items.add(autoChooserBox.items.count()-1, newAutoName)
+                    autoComboBox.items.add(autoComboBox.items.count()-1, newAutoName)
                 }
                 else {
                     newAutoName = selectedAutonomous?.name
                 }
             }
             selectedAutonomous = autonomi.get(newAutoName)
-            autoChooserBox.value = newAutoName
+            autoComboBox.value = newAutoName
             selectedPath = null
             selectedPoint = null
-            fillPathCombo(pathChooserBox)
+            refreshPathCombo(pathComboBox)
             repaint()
         })
-        autoChooserHBox.children.addAll(autoChooserName, autoChooserBox)
+        autoComboHBox.children.addAll(autoComboName, autoComboBox)
 
         val zoomHBox = HBox()
         val zoomName = Text("Zoom  ")
@@ -367,7 +360,7 @@ class PathVisualizer : Application() {
         })
         widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
 
-// todo: edit boxes for position and tangents of selected point
+        // todo: edit boxes for position and tangents of selected point
 
         val filesBox = HBox()
         filesBox.spacing = 10.0
@@ -388,8 +381,8 @@ class PathVisualizer : Application() {
         }
         val saveButton = Button("Save")
         saveButton.setOnAction { _: ActionEvent ->
-            val file = File(fileName)
-            if (file!=null) {
+            if (!fileName.isEmpty()) {
+                val file = File(fileName)
                 val json = autonomi.toJsonString()
                 val writer = PrintWriter(file)
                 writer.append(json)
@@ -405,21 +398,22 @@ class PathVisualizer : Application() {
             if (file != null) {
                 var json: String = file.readText()
                 autonomi = Autonomi.fromJsonString(json)
+                refreshEverything(autoComboBox, pathComboBox)
             }
         }
         filesBox.children.addAll(saveAsButton, saveButton, openButton)
 
-// todo: save to network tables for pathvisualizer
-        val sendToRobot = Button("Send To Robot")
-        sendToRobot.setOnAction { _: ActionEvent ->
-            //val json = getAutonomiJson()
+        val sendToRobotButton = Button("Send To Robot")
+        sendToRobotButton.setOnAction { _: ActionEvent ->
+            val json = autonomi.toJsonString()
+            // todo: save the json to network tables for pathvisualizer
         }
 
         buttonsBox.children.addAll(
-                autoChooserHBox,
-                pathChooserHBox,
                 zoomHBox,
                 panHBox,
+                autoComboHBox,
+                pathComboHBox,
                 deletePoint,
                 mirroredCheckBox,
                 speedHBox,
@@ -427,24 +421,49 @@ class PathVisualizer : Application() {
                 widthHBox,
                 lengthHBox,
                 widthFudgeFactorHBox,
-                filesBox
+                filesBox,
+                sendToRobotButton
                 )
     }
 
     // todo: UI helper functions //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    fun fillPathCombo(pathChooserBox: ComboBox<String>) {
-        pathChooserBox.items.clear()
+    private fun refreshAutoCombo(autoComboBox: ComboBox<String>) {
+        autoComboBox.items.clear()
+        for (kvAuto in autonomi.mapAutonomous) {
+            autoComboBox.items.add(kvAuto.key)
+            if (kvAuto.value == selectedAutonomous) {
+                autoComboBox.value = kvAuto.key
+            }
+        }
+        autoComboBox.items.add("New Auto")
+        if (selectedAutonomous==null) {
+            selectedAutonomous = autonomi.mapAutonomous.values.firstOrNull()
+            autoComboBox.value = selectedAutonomous?.name
+        }
+    }
+
+    private fun refreshPathCombo(pathComobBox: ComboBox<String>) {
+        pathComobBox.items.clear()
         if (selectedAutonomous!=null) {
             val paths = selectedAutonomous!!.paths
             for (kvPath in paths) {
-                pathChooserBox.items.add(kvPath.key)
+                pathComobBox.items.add(kvPath.key)
                 if (kvPath.value == selectedPath) {
-                    pathChooserBox.value = kvPath.key
+                    pathComobBox.value = kvPath.key
                 }
             }
-            pathChooserBox.items.add("New Path")
+            pathComobBox.items.add("New Path")
+            if (selectedPath==null) {
+                selectedPath = paths.values.firstOrNull()
+                pathComobBox.value = selectedPath?.name
+            }
         }
+    }
+
+    private fun refreshEverything(autoComboBox: ComboBox<String>, pathComboBox: ComboBox<String>) {
+        refreshAutoCombo(autoComboBox)
+        refreshPathCombo(pathComboBox)
     }
 
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -667,6 +686,7 @@ class PathVisualizer : Application() {
                 PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
                 PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
                 PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), tangentLengthDrawFactor)
+                else -> {}
             }
             repaint()
         }
@@ -725,23 +745,23 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : get autonomous combo working
 // : delete point button
 // : add path properties - ...
-//  : mirrored,
-//  : speed,
-//  : travel direction,
-//  : robot width, length, fudgefactor
-// : change the displayed value of robot width and length to inch (it is currently in feet)
-// todo: round the length and width number to about 3 or 4 digits after the decimal point
 // : mirrored,
 // : speed,
 // : travel direction,
 // : robot width, length, fudgefactor
-// todo: save to file, load from file
+// : change the displayed value of robot width and length to inch (it is currently in feet)
+// : mirrored,
+// : speed,
+// : travel direction,
+// : robot width, length, fudgefactor
+// : convert robot width and length to inches - Duy
+// : save to file, load from file
 // todo: edit box for duration of path
 // todo: save to network tables for pathvisualizer
 // todo: load from network tables for robot
-// todo: convert robot width and length to inches
 
-// todo: add button beside auto and path combos to edit their names
+// todo: add rename button beside auto and path combos to edit their names
+// todo: add delete buttons beside auto and path for deleting them
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
 // todo: make a separate and larger radius for selecting points compared to drawing them
@@ -749,7 +769,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: zoom with the mouse wheel -- Julian
 // todo: arrow keys to nudge selected path points
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
-// todo: playback of robot travel
-// todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow?
+// todo: playback of robot travel - this should be broken into sub tasks
+// todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: editing of ease curve
 // todo: multi-select path points by dragging selection dashed rectangle
