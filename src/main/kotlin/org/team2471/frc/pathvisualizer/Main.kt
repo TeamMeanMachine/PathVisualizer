@@ -1,4 +1,6 @@
-import edu.wpi.first.wpilibj.networktables.NetworkTable
+import edu.wpi.first.networktables.NetworkTable
+import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
@@ -55,7 +57,6 @@ class PathVisualizer : Application() {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            //NetworkTablesDesktopClient().run()
             launch(PathVisualizer::class.java, *args)
         }
     }
@@ -407,13 +408,7 @@ class PathVisualizer : Application() {
 
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
-            val json = autonomi.toJsonString()
-/*
-            edu.wpi.first.networktables.NetworkTable.setClientMode()
-            edu.wpi.first.networktables.NetworkTable.setIPAddress("10.24.71.100")
-            val table = edu.wpi.first.networktables.NetworkTable.getTable("PathVisualizer")
-            table.putNumber("autonomi", json)
-*/
+            val json = autonomi.publishToNetworkTables()
         }
 
         buttonsBox.children.addAll(
@@ -771,6 +766,9 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 
 // todo: add rename button beside auto and path combos to edit their names
 // todo: add delete buttons beside auto and path for deleting them
+// todo: add text box for team number or ip
+// todo: change path combo to a list box
+// todo: add edit box for coloring maximum speed
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
 // todo: make a separate and larger radius for selecting points compared to drawing them
@@ -780,5 +778,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: editing of ease curve
-// todo: multi-select path points by dragging selecti// todo: draw ease curve in bottom panel, use another SplitPane horizontal
-on dashed rectangle
+// todo: multi-select path points by dragging selecting with dashed rectangle
+// todo: draw ease curve in bottom panel, use another SplitPane horizontal
+// todo: add pause and turn in place path types (actions)
+// todo: decide what properties should be saved locally and save them to the registry or local folder
