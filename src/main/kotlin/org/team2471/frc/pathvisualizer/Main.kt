@@ -371,7 +371,7 @@ class PathVisualizer : Application() {
         saveAsButton.setOnAction { _: ActionEvent ->
             val fileChooser = FileChooser()
             fileChooser.setTitle("Save Autonomi File As...")
-            val extFilter = FileChooser.ExtensionFilter("Autonomi files (*.autonomi)", "*.autonomi")
+            val extFilter = FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json")
             fileChooser.extensionFilters.add(extFilter)
             val file = fileChooser.showSaveDialog(stage)
             if (file!=null) {
@@ -396,7 +396,7 @@ class PathVisualizer : Application() {
         openButton.setOnAction { _: ActionEvent ->
             val fileChooser = FileChooser()
             fileChooser.setTitle("Open Autonomi File...")
-            fileChooser.extensionFilters.add(FileChooser.ExtensionFilter("Autonomi files (*.autonomi)", "*.autonomi"))
+            fileChooser.extensionFilters.add(FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json"))
             val file = fileChooser.showOpenDialog(stage)
             if (file != null) {
                 var json: String = file.readText()
@@ -759,12 +759,12 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : convert robot width and length to inches - Duy
 // : save to file, load from file
 // : save to network tables for pathvisualizer
-// todo: load from network tables for robot
+// : load from network tables for robot
 
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
 
-// todo: add rename button beside auto and path combos to edit their names
+// todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
 // todo: add text box for team number or ip
 // todo: change path combo to a list box
