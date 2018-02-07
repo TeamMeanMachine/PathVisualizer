@@ -406,10 +406,17 @@ class PathVisualizer : Application() {
         }
         filesBox.children.addAll(saveAsButton, saveButton, openButton)
 
+        val robotHBox = HBox()
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
-            val json = autonomi.publishToNetworkTables()
+            autonomi.publishToNetworkTables()
         }
+        val addressName = Text("  IP Address:  ")
+        val addressText = TextField("10.24.71.100")
+        addressText.textProperty().addListener({ _, _, newText ->
+//            autonomi.IPAddress = newText
+        })
+        robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
         buttonsBox.children.addAll(
                 zoomHBox,
@@ -424,7 +431,7 @@ class PathVisualizer : Application() {
                 lengthHBox,
                 widthFudgeFactorHBox,
                 filesBox,
-                sendToRobotButton
+                robotHBox
                 )
     }
 
