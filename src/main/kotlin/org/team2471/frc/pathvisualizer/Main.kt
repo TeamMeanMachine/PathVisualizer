@@ -731,22 +731,36 @@ class PathVisualizer : Application() {
            MouseMode.EDIT -> editPoint = null  // no longer editing
            MouseMode.PAN -> mouseMode = MouseMode.EDIT
         }
+        canvas.requestFocus()
     }
 
 
     fun onZoom(e: ZoomEvent) {
-        print(e.zoomFactor)
+        print("hello")
         zoom *= e.zoomFactor
         repaint()
     }
 
+
     fun onKeyPressed(e: KeyEvent) {
-        print("hello")
         if (e.isControlDown) {
-            if (e.character.equals(61)) {
-                zoom++
+            when (e.text) {
+                "=" -> {
+                    zoom++
+
+                }
+                "-" -> {
+                    zoom--
+                }
+            }
+            //zoomAdjust.text = zoom.toString()
+        }
+        when (e.text) {
+            "p" -> {
+                mouseMode = MouseMode.PAN
             }
         }
+        repaint()
     }
 
 }
