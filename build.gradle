@@ -7,7 +7,7 @@ apply plugin: 'kotlin'
 sourceCompatibility = 1.8
 
 buildscript {
-    ext.kotlin_version = '1.2.0'
+    ext.kotlin_version = '1.2.21'
     repositories {
         mavenCentral()
     }
@@ -25,7 +25,8 @@ repositories {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile group: 'junit', name: 'junit', version: '4.11'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile "edu.wpi.first.ntcore:ntcore-jni:4.0.0:all"
     compile project("meanlib")
     compile 'com.squareup.moshi:moshi:1.5.0'
     compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
@@ -35,6 +36,7 @@ jar {
     manifest {
         attributes 'Main-Class': 'org.team2471.frc.pathvisualizer.MainKt'
     }
+
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
