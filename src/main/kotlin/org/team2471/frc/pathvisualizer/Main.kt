@@ -274,8 +274,6 @@ class PathVisualizer : Application() {
             repaint()
         }
 
-
-
         zoomHBox.children.addAll(
                 zoomName,
                 zoomMinus,
@@ -296,12 +294,17 @@ class PathVisualizer : Application() {
             offset.y = newText.toDouble()
             repaint()
         })
+        val panButton = Button("Pan")
+        panButton.setOnAction { _: ActionEvent ->
+            mouseMode = MouseMode.PAN
+        }
         panHBox.children.addAll(
                 panName,
                 panXName,
                 panXAdjust,
                 panYName,
-                panYAdjust)
+                panYAdjust,
+                panButton)
 
         val deletePoint = Button("Delete Point")
         deletePoint.setOnAction { _: ActionEvent ->
@@ -634,81 +637,101 @@ class PathVisualizer : Application() {
     var startMouse = Vector2(0.0, 0.0)
 
 // todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
-
+    var oCoord: Vector2 = Vector2(0.0, 0.0)
     fun onMousePressed(e: MouseEvent) {
-        val mouseVec = Vector2(e.x, e.y)
-        startMouse = mouseVec
+        when (mouseMode) {
+            MouseMode.EDIT -> {
+                val mouseVec = Vector2(e.x, e.y)
+                startMouse = mouseVec
 
-        var shortestDistance = 10000.0
-        var closestPoint: Path2DPoint? = null
+                var shortestDistance = 10000.0
+                var closestPoint: Path2DPoint? = null
 
-        //Find closest point
-        var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
-        while (point != null) {
-            val tPoint = world2Screen(point.position)
-            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
-            if (dist <= shortestDistance) {
-                shortestDistance = dist
-                closestPoint = point
-                pointType = PointType.POINT
-            }
+                //Find closest point
+                var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
+                while (point != null) {
+                    val tPoint = world2Screen(point.position)
+                    var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+                    if (dist <= shortestDistance) {
+                        shortestDistance = dist
+                        closestPoint = point
+                        pointType = PointType.POINT
+                    }
 
-            if (point.prevPoint != null) {
-                val tanPoint1 = world2Screen(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)))
-                dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
-                if (dist <= shortestDistance) {
-                    shortestDistance = dist
-                    closestPoint = point
-                    pointType = PointType.PREV_TANGENT
+                    if (point.prevPoint != null) {
+                        val tanPoint1 = world2Screen(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)))
+                        dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
+                        if (dist <= shortestDistance) {
+                            shortestDistance = dist
+                            closestPoint = point
+                            pointType = PointType.PREV_TANGENT
+                        }
+                    }
+
+                    if (point.nextPoint != null) {
+                        val tanPoint2 = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
+                        dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
+                        if (dist <= shortestDistance) {
+                            shortestDistance = dist
+                            closestPoint = point
+                            pointType = PointType.NEXT_TANGENT
+                        }
+                    }
+                    point = point.nextPoint
+                    // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
                 }
-            }
-
-            if (point.nextPoint != null) {
-                val tanPoint2 = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
-                dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
-                if (dist <= shortestDistance) {
-                    shortestDistance = dist
-                    closestPoint = point
-                    pointType = PointType.NEXT_TANGENT
+                if (shortestDistance <= circleSize / 2) {
+                    selectedPoint = closestPoint
+                } else {
+                    if (closestPoint != null) {
+                        if (shortestDistance > 50) // trying to deselect?
+                            selectedPoint = null
+                        else
+                            selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+                    } else {  // first point on a path?
+                        //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
+                        //                selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), path2DPoint)
+                        selectedPath?.addVector2(screen2World(mouseVec))
+                    }
                 }
+                editPoint = selectedPoint
+                repaint()
             }
-            point = point.nextPoint
-            // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
-        }
-        if (shortestDistance <= circleSize / 2) {
-            selectedPoint = closestPoint
-        } else {
-            if (closestPoint != null) {
-                if (shortestDistance > 50) // trying to deselect?
-                    selectedPoint = null
-                else
-                    selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
-            } else {  // first point on a path?
-//                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
-//                selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), path2DPoint)
-                selectedPath?.addVector2(screen2World(mouseVec))
+            MouseMode.PAN -> {
+                oCoord = Vector2(e.x, e.y) - offset
             }
         }
-        editPoint = selectedPoint
-        repaint()
     }
 
     fun onMouseDragged(e: MouseEvent) {
-        if (editPoint != null) {
-            val worldPoint = screen2World(Vector2(e.x, e.y))
-            when (pointType) {
-                PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
-                PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
-                PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), tangentLengthDrawFactor)
-                else -> {}
+        when (mouseMode) {
+            MouseMode.EDIT -> {
+                if (editPoint != null) {
+                    val worldPoint = screen2World(Vector2(e.x, e.y))
+                    when (pointType) {
+                        PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
+                        PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
+                        PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), tangentLengthDrawFactor)
+                        else -> {
+                        }
+                    }
+                    repaint()
+                }
             }
-            repaint()
+            MouseMode.PAN -> {
+                offset.x = e.x - oCoord.x
+                offset.y = e.y - oCoord.y
+                repaint()
+            }
         }
     }
 
     fun onMouseReleased() {
-        editPoint = null  // no longer editing
+        when (mouseMode) {
+           MouseMode.EDIT -> editPoint = null  // no longer editing
+           MouseMode.PAN -> mouseMode = MouseMode.EDIT
         }
+    }
 
 
     fun onZoom(e: ZoomEvent) {
