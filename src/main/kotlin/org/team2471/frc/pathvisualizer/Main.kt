@@ -8,6 +8,8 @@ import javafx.stage.Stage
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Insets
+import javafx.scene.Cursor
+import javafx.scene.ImageCursor
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Button
 import javafx.scene.control.ComboBox
@@ -173,6 +175,7 @@ class PathVisualizer : Application() {
         canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
         canvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
         canvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
+        canvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
     }
 
 // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -639,6 +642,10 @@ class PathVisualizer : Application() {
 // todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
     var oCoord: Vector2 = Vector2(0.0, 0.0)
     fun onMousePressed(e: MouseEvent) {
+        if (e.isMiddleButtonDown) {
+            canvas.cursor = Cursor.CROSSHAIR
+            mouseMode = MouseMode.PAN
+        }
         when (mouseMode) {
             MouseMode.EDIT -> {
                 val mouseVec = Vector2(e.x, e.y)
@@ -698,6 +705,7 @@ class PathVisualizer : Application() {
                 repaint()
             }
             MouseMode.PAN -> {
+                canvas.cursor = ImageCursor.CROSSHAIR
                 oCoord = Vector2(e.x, e.y) - offset
             }
         }
@@ -731,12 +739,13 @@ class PathVisualizer : Application() {
            MouseMode.EDIT -> editPoint = null  // no longer editing
            MouseMode.PAN -> mouseMode = MouseMode.EDIT
         }
+        canvas.cursor = Cursor.DEFAULT
         canvas.requestFocus()
     }
 
 
     fun onZoom(e: ZoomEvent) {
-        print("hello")
+        println("Hey! It worked!")
         zoom *= e.zoomFactor
         repaint()
     }
@@ -757,10 +766,19 @@ class PathVisualizer : Application() {
         }
         when (e.text) {
             "p" -> {
+                canvas.cursor = ImageCursor.CROSSHAIR
                 mouseMode = MouseMode.PAN
             }
         }
         repaint()
+    }
+
+    fun onScroll(e: ScrollEvent) {
+        if (mouseMode != MouseMode.PAN) {
+            zoom += e.deltaY / 50
+            zoom += e.deltaY / 50
+            repaint()
+        }
     }
 
 }
