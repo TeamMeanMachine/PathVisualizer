@@ -15,7 +15,6 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.vector.Vector2
 import javafx.scene.canvas.GraphicsContext
-import javafx.scene.input.MouseEvent
 import javafx.scene.text.Text
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -25,6 +24,7 @@ import javafx.scene.control.SplitPane
 import javafx.scene.layout.StackPane
 import javafx.scene.control.TextInputDialog
 import javafx.scene.control.CheckBox
+import javafx.scene.input.*
 import org.team2471.frc.pathvisualizer.TestMoshi
 
 // todo: Autonomous - class to hold multiple paths /////////////////////////////////////////////////////////////////////
@@ -153,6 +153,8 @@ class PathVisualizer : Application() {
         canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
         canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
         canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        canvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
+        canvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
 
         // test json writing
         TestMoshi()
@@ -261,6 +263,9 @@ class PathVisualizer : Application() {
             zoomAdjust.text = zoom.toString()
             repaint()
         }
+
+
+
         zoomHBox.children.addAll(
                 zoomName,
                 zoomMinus,
@@ -628,7 +633,24 @@ class PathVisualizer : Application() {
 
     fun onMouseReleased() {
         editPoint = null  // no longer editing
+        }
+
+
+    fun onZoom(e: ZoomEvent) {
+        print(e.zoomFactor)
+        zoom *= e.zoomFactor
+        repaint()
     }
+
+    fun onKeyPressed(e: KeyEvent) {
+        print("hello")
+        if (e.isControlDown) {
+            if (e.character.equals(61)) {
+                zoom++
+            }
+        }
+    }
+
 }
 
 // todo: resizable canvas //////////////////////////////////////////////////////////////////////////////////////////////
