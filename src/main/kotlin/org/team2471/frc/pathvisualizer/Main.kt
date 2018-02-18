@@ -1,6 +1,3 @@
-import edu.wpi.first.networktables.NetworkTable
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
@@ -35,21 +32,6 @@ import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
 import java.io.File
 import java.io.PrintWriter
-
-// todo: Autonomous - class to hold multiple paths /////////////////////////////////////////////////////////////////////
-
-class Autonomous( var name: String ) {
-    var paths: MutableMap<String, Path2D> = mutableMapOf()
-
-    fun putPath( name: String, path2D: Path2D) {
-        paths.put(name, path2D)
-    }
-
-    fun getPath( name: String ) : Path2D? {
-        return paths.get(name)
-    }
-}
-
 
 // todo: main application class ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +121,7 @@ class PathVisualizer : Application() {
         return fd.format(this)
     }
 
-// todo: start /////////////////////////////////////////////////////////////////////////////////////////////////////////
+// todo: start - this happens when java fx starts our app ///////////////////////////////////////////////////////////////
 
     override fun start(stage: Stage) {
         stage.title = "Path Visualizer"
@@ -149,7 +131,8 @@ class PathVisualizer : Application() {
         selectedAutonomous = Autonomous("Auto1")
         autonomi.put(selectedAutonomous!!)
         selectedPath = DefaultPath
-        selectedAutonomous!!.putPath(selectedPath!!)
+        if (selectedPath != null)
+            selectedAutonomous!!.putPath(selectedPath!!)
 
         // setup the layout
         val buttonsBox = VBox()
@@ -177,6 +160,12 @@ class PathVisualizer : Application() {
         canvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
         canvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
     }
+
+// todo: stop - this happens when the app shuts down ////////////////////////////////////////////////////////////////////
+
+//    override fun stop() {
+//        super.stop()
+//    }
 
 // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -319,7 +308,7 @@ class PathVisualizer : Application() {
         }
 
         val mirroredCheckBox = CheckBox("Mirrored")
-        mirroredCheckBox.isSelected = selectedPath!!.isMirrored
+        mirroredCheckBox.isSelected = if (selectedPath!=null) selectedPath!!.isMirrored else false
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
@@ -423,9 +412,9 @@ class PathVisualizer : Application() {
             autonomi.publishToNetworkTables()
         }
         val addressName = Text("  IP Address:  ")
-        val addressText = TextField("10.24.71.100")
+        val addressText = TextField("10.24.71.2")
         addressText.textProperty().addListener({ _, _, newText ->
-//            autonomi.IPAddress = newText
+            autonomi.serverId = newText
         })
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
@@ -847,6 +836,8 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
 
+// todo: rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
+// todo: remember last loaded/saved file in registry and automatically load it at startup
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
 // todo: add text box for team number or ip

@@ -6,8 +6,8 @@ object DefaultPath : Path2D() {
   init {
     name = "Circle"
     travelDirection = 1.0
-    robotWidth = 36.5 / 12
-    val tangentLength = 6.0
+    robotWidth = 25.0 / 12
+    val tangentLength = 6.5
 
     addPointAndTangent(0.0, 0.0, 0.0, tangentLength)
     addPointAndTangent(4.0, 4.0, tangentLength, 0.0)
