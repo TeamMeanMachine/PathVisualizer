@@ -642,7 +642,7 @@ class PathVisualizer : Application() {
 // todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
     var oCoord: Vector2 = Vector2(0.0, 0.0)
     fun onMousePressed(e: MouseEvent) {
-        if (e.isMiddleButtonDown) {
+        if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
             canvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
@@ -727,6 +727,7 @@ class PathVisualizer : Application() {
                 }
             }
             MouseMode.PAN -> {
+                println("${offset.x} and ${offset.y}")
                 offset.x = e.x - oCoord.x
                 offset.y = e.y - oCoord.y
                 repaint()
@@ -745,7 +746,6 @@ class PathVisualizer : Application() {
 
 
     fun onZoom(e: ZoomEvent) {
-        println("Hey! It worked!")
         zoom *= e.zoomFactor
         repaint()
     }
@@ -775,8 +775,7 @@ class PathVisualizer : Application() {
 
     fun onScroll(e: ScrollEvent) {
         if (mouseMode != MouseMode.PAN) {
-            zoom += e.deltaY / 50
-            zoom += e.deltaY / 50
+            zoom -= e.deltaY / 25
             repaint()
         }
     }
@@ -856,7 +855,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
 // todo: make a separate and larger radius for selecting points compared to drawing them
-// todo: pan with mouse with a pan button or middle mouse button
+// todo: pan with mouse with a pan button or middle mouse button -- Julian
 // todo: zoom with the mouse wheel -- Julian
 // todo: arrow keys to nudge selected path points
 // todo: playback of robot travel - this should be broken into sub tasks
