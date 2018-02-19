@@ -5,6 +5,7 @@ import javafx.stage.Stage
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Insets
+import javafx.geometry.Orientation
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
 import javafx.scene.canvas.Canvas
@@ -47,7 +48,8 @@ class PathVisualizer : Application() {
 
     // todo: class state - vars and vals ///////////////////////////////////////////////////////////////////////////////
     // javaFX state which needs saved around
-    private val canvas = ResizableCanvas(this)
+    private val fieldCanvas = ResizableCanvas(this)
+    private val easeCanvas = ResizableCanvas(this)
     private val image = Image("assets/2018Field.PNG")
     private var stage: Stage? = null
     private var fileName = String()
@@ -141,25 +143,27 @@ class PathVisualizer : Application() {
         buttonsBox.padding = Insets(10.0, 10.0, 10.0, 10.0)
         addControlsToButtonsBox(buttonsBox)
 
-        val stackPane = StackPane(canvas)
-        val splitPane = SplitPane(stackPane, buttonsBox)
-        splitPane.setDividerPositions(0.7)
+        val fieldStackPane = StackPane(fieldCanvas)
+        val easeStackPane = StackPane(easeCanvas)
+        val verticalSplitPane = SplitPane(fieldStackPane, easeStackPane)
+        verticalSplitPane.orientation = Orientation.VERTICAL
+        verticalSplitPane.setDividerPositions(0.85)
 
-        stage.scene = Scene(splitPane, 1600.0, 900.0)
+        val horizontalSplitPane = SplitPane(verticalSplitPane, buttonsBox)
+        horizontalSplitPane.setDividerPositions(0.7)
+
+        stage.scene = Scene(horizontalSplitPane, 1600.0, 900.0)
         stage.sizeToScene()
-
-        //val easeCanvas = Canvas()
-        //anchorPane.bottomAnchor = easeCanvas
 
         repaint()
         stage.show()
 
-        canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
-        canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
-        canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
-        canvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
-        canvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
-        canvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
+        fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
+        fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
+        fieldCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        fieldCanvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
+        fieldCanvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
+        fieldCanvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
     }
 
 // todo: stop - this happens when the app shuts down ////////////////////////////////////////////////////////////////////
@@ -419,6 +423,15 @@ class PathVisualizer : Application() {
         })
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
+        val secondsHBox = HBox()
+        val secondsName = Text("Seconds:  ")
+        val secondsText = TextField((selectedPath!!.duration).format(1))
+        secondsText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.duration = newText.toDouble()
+            repaint()
+        })
+        secondsHBox.children.addAll(secondsName, secondsText)
+
         buttonsBox.children.addAll(
                 zoomHBox,
                 panHBox,
@@ -432,7 +445,8 @@ class PathVisualizer : Application() {
                 lengthHBox,
                 widthFudgeFactorHBox,
                 filesBox,
-                robotHBox
+                robotHBox,
+                secondsHBox
                 )
     }
 
@@ -479,9 +493,9 @@ class PathVisualizer : Application() {
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
 
     fun repaint() {
-        val gc = canvas.graphicsContext2D
+        val gc = fieldCanvas.graphicsContext2D
         gc.fill = Color.LIGHTGRAY
-        gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
+        gc.fillRect(0.0, 0.0, fieldCanvas.width, fieldCanvas.height)
 
         // calculate ImageView corners
         val upperLeftPixels = world2Screen(upperLeftFeet)
@@ -633,7 +647,7 @@ class PathVisualizer : Application() {
     var oCoord: Vector2 = Vector2(0.0, 0.0)
     fun onMousePressed(e: MouseEvent) {
         if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
-            canvas.cursor = Cursor.CROSSHAIR
+            fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
         when (mouseMode) {
@@ -695,7 +709,7 @@ class PathVisualizer : Application() {
                 repaint()
             }
             MouseMode.PAN -> {
-                canvas.cursor = ImageCursor.CROSSHAIR
+                fieldCanvas.cursor = ImageCursor.CROSSHAIR
                 oCoord = Vector2(e.x, e.y) - offset
             }
         }
@@ -730,8 +744,8 @@ class PathVisualizer : Application() {
            MouseMode.EDIT -> editPoint = null  // no longer editing
            MouseMode.PAN -> mouseMode = MouseMode.EDIT
         }
-        canvas.cursor = Cursor.DEFAULT
-        canvas.requestFocus()
+        fieldCanvas.cursor = Cursor.DEFAULT
+        fieldCanvas.requestFocus()
     }
 
 
@@ -756,7 +770,7 @@ class PathVisualizer : Application() {
         }
         when (e.text) {
             "p" -> {
-                canvas.cursor = ImageCursor.CROSSHAIR
+                fieldCanvas.cursor = ImageCursor.CROSSHAIR
                 mouseMode = MouseMode.PAN
             }
         }
@@ -841,6 +855,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
 // todo: write one autonomous at a time to the network tables
+// todo: invert pinch zooming
 
 // todo: rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // todo: remember last loaded/saved file in registry and automatically load it at startup
