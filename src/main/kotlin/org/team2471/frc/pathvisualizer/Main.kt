@@ -5,6 +5,7 @@ import javafx.stage.Stage
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Insets
+import javafx.geometry.Orientation
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
 import javafx.scene.canvas.Canvas
@@ -47,7 +48,8 @@ class PathVisualizer : Application() {
 
     // todo: class state - vars and vals ///////////////////////////////////////////////////////////////////////////////
     // javaFX state which needs saved around
-    private val canvas = ResizableCanvas(this)
+    private val fieldCanvas = ResizableCanvas(this)
+    private val easeCanvas = ResizableCanvas(this)
     private val image = Image("assets/2018Field.PNG")
     private var stage: Stage? = null
     private var fileName = String()
@@ -74,7 +76,8 @@ class PathVisualizer : Application() {
     private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
 
     // drawing
-    private val circleSize = 10.0
+    private val drawCircleSize = 10.0
+    private val hitTestCircleSize = 20.0
     private val tangentLengthDrawFactor = 3.0
 
     // point editing
@@ -140,25 +143,27 @@ class PathVisualizer : Application() {
         buttonsBox.padding = Insets(10.0, 10.0, 10.0, 10.0)
         addControlsToButtonsBox(buttonsBox)
 
-        val stackPane = StackPane(canvas)
-        val splitPane = SplitPane(stackPane, buttonsBox)
-        splitPane.setDividerPositions(0.7)
+        val fieldStackPane = StackPane(fieldCanvas)
+        val easeStackPane = StackPane(easeCanvas)
+        val verticalSplitPane = SplitPane(fieldStackPane, easeStackPane)
+        verticalSplitPane.orientation = Orientation.VERTICAL
+        verticalSplitPane.setDividerPositions(0.85)
 
-        stage.scene = Scene(splitPane, 1600.0, 900.0)
+        val horizontalSplitPane = SplitPane(verticalSplitPane, buttonsBox)
+        horizontalSplitPane.setDividerPositions(0.7)
+
+        stage.scene = Scene(horizontalSplitPane, 1600.0, 900.0)
         stage.sizeToScene()
-
-        //val easeCanvas = Canvas()
-        //anchorPane.bottomAnchor = easeCanvas
 
         repaint()
         stage.show()
 
-        canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
-        canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
-        canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
-        canvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
-        canvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
-        canvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
+        fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
+        fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
+        fieldCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        fieldCanvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
+        fieldCanvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
+        fieldCanvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
     }
 
 // todo: stop - this happens when the app shuts down ////////////////////////////////////////////////////////////////////
@@ -200,7 +205,7 @@ class PathVisualizer : Application() {
                 }
             }
             if (selectedAutonomous!=null) {
-                selectedPath = selectedAutonomous!!.get(newPathName)
+                selectedPath = selectedAutonomous!![newPathName]
             }
             pathComboBox.value = newPathName
             selectedPoint = null
@@ -354,14 +359,14 @@ class PathVisualizer : Application() {
         val lengthUnit = Text("inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
-        val widthFudgeFactorHBox = HBox()
-        val widthFudgeFactorName = Text("Width Fudge Factor:  ")
-        val widthFudgeFactorText = TextField(selectedPath?.widthFudgeFactor.toString())
-        widthFudgeFactorText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.widthFudgeFactor = newText.toDouble()
+        val scrubFactorHBox = HBox()
+        val scrubFactorName = Text("Width Fudge Factor:  ")
+        val scrubFactorText = TextField(selectedPath?.scrubFactor.toString())
+        scrubFactorText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.scrubFactor = newText.toDouble()
             repaint()
         })
-        widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
+        scrubFactorHBox.children.addAll(scrubFactorName, scrubFactorText)
 
         // todo: edit boxes for position and tangents of selected point
 
@@ -418,9 +423,16 @@ class PathVisualizer : Application() {
         })
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
+        val secondsHBox = HBox()
+        val secondsName = Text("Seconds:  ")
+        val secondsText = TextField((selectedPath!!.duration).format(1))
+        secondsText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.duration = newText.toDouble()
+            repaint()
+        })
+        secondsHBox.children.addAll(secondsName, secondsText)
+
         buttonsBox.children.addAll(
-                zoomHBox,
-                panHBox,
                 autoComboHBox,
                 pathComboHBox,
                 deletePoint,
@@ -429,9 +441,10 @@ class PathVisualizer : Application() {
                 robotDirectionHBox,
                 widthHBox,
                 lengthHBox,
-                widthFudgeFactorHBox,
+                scrubFactorHBox,
                 filesBox,
-                robotHBox
+                robotHBox,
+                secondsHBox
                 )
     }
 
@@ -478,9 +491,9 @@ class PathVisualizer : Application() {
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
 
     fun repaint() {
-        val gc = canvas.graphicsContext2D
+        val gc = fieldCanvas.graphicsContext2D
         gc.fill = Color.LIGHTGRAY
-        gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
+        gc.fillRect(0.0, 0.0, fieldCanvas.width, fieldCanvas.height)
 
         // calculate ImageView corners
         val upperLeftPixels = world2Screen(upperLeftFeet)
@@ -587,14 +600,14 @@ class PathVisualizer : Application() {
                 gc.stroke = Color.WHITE
 
             val tPoint = world2Screen(point.position)
-            gc.strokeOval(tPoint.x - circleSize / 2, tPoint.y - circleSize / 2, circleSize, circleSize)
+            gc.strokeOval(tPoint.x - drawCircleSize / 2, tPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
             if (point.prevPoint != null) {
                 if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
                     gc.stroke = Color.LIMEGREEN
                 else
                     gc.stroke = Color.WHITE
                 val tanPoint = world2Screen(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)))
-                gc.strokeOval(tanPoint.x - circleSize / 2, tanPoint.y - circleSize / 2, circleSize, circleSize)
+                gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
                 gc.lineWidth = 2.0
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
             }
@@ -604,7 +617,7 @@ class PathVisualizer : Application() {
                 else
                     gc.stroke = Color.WHITE
                 val tanPoint = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
-                gc.strokeOval(tanPoint.x - circleSize / 2, tanPoint.y - circleSize / 2, circleSize, circleSize)
+                gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
                 gc.lineWidth = 2.0
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
             }
@@ -632,7 +645,7 @@ class PathVisualizer : Application() {
     var oCoord: Vector2 = Vector2(0.0, 0.0)
     fun onMousePressed(e: MouseEvent) {
         if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
-            canvas.cursor = Cursor.CROSSHAIR
+            fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
         when (mouseMode) {
@@ -676,7 +689,7 @@ class PathVisualizer : Application() {
                     point = point.nextPoint
                     // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
                 }
-                if (shortestDistance <= circleSize / 2) {
+                if (shortestDistance <= hitTestCircleSize / 2) {
                     selectedPoint = closestPoint
                 } else {
                     if (closestPoint != null) {
@@ -694,7 +707,7 @@ class PathVisualizer : Application() {
                 repaint()
             }
             MouseMode.PAN -> {
-                canvas.cursor = ImageCursor.CROSSHAIR
+                fieldCanvas.cursor = ImageCursor.CROSSHAIR
                 oCoord = Vector2(e.x, e.y) - offset
             }
         }
@@ -729,8 +742,8 @@ class PathVisualizer : Application() {
            MouseMode.EDIT -> editPoint = null  // no longer editing
            MouseMode.PAN -> mouseMode = MouseMode.EDIT
         }
-        canvas.cursor = Cursor.DEFAULT
-        canvas.requestFocus()
+        fieldCanvas.cursor = Cursor.DEFAULT
+        fieldCanvas.requestFocus()
     }
 
 
@@ -755,7 +768,7 @@ class PathVisualizer : Application() {
         }
         when (e.text) {
             "p" -> {
-                canvas.cursor = ImageCursor.CROSSHAIR
+                fieldCanvas.cursor = ImageCursor.CROSSHAIR
                 mouseMode = MouseMode.PAN
             }
         }
@@ -832,27 +845,32 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : save to file, load from file
 // : save to network tables for pathvisualizer
 // : load from network tables for robot
+// : add text box for team number or ip
+// : pan with mouse with a pan button or middle mouse button -- Julian
+// : zoom with the mouse wheel -- Julian
+// : make a separate and larger radius for selecting points compared to drawing them
 
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
+// todo: write one autonomous at a time to the network tables
+// todo: invert pinch zooming
 
 // todo: rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // todo: remember last loaded/saved file in registry and automatically load it at startup
+
+// todo: add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
-// todo: add text box for team number or ip
 // todo: change path combo to a list box
-// todo: add edit box for coloring maximum speed
+// todo: add edit box for what speed is colored maximum green
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
-// todo: make a separate and larger radius for selecting points compared to drawing them
-// todo: pan with mouse with a pan button or middle mouse button -- Julian
-// todo: zoom with the mouse wheel -- Julian
 // todo: arrow keys to nudge selected path points
+
 // todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: editing of ease curve
 // todo: multi-select path points by dragging selecting with dashed rectangle
-// todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
+// todo:
