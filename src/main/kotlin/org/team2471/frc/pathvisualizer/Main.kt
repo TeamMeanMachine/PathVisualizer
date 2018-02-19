@@ -359,14 +359,14 @@ class PathVisualizer : Application() {
         val lengthUnit = Text("inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
-        val widthFudgeFactorHBox = HBox()
-        val widthFudgeFactorName = Text("Width Fudge Factor:  ")
-        val widthFudgeFactorText = TextField(selectedPath?.widthFudgeFactor.toString())
-        widthFudgeFactorText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.widthFudgeFactor = newText.toDouble()
+        val scrubFactorHBox = HBox()
+        val scrubFactorName = Text("Width Fudge Factor:  ")
+        val scrubFactorText = TextField(selectedPath?.scrubFactor.toString())
+        scrubFactorText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.scrubFactor = newText.toDouble()
             repaint()
         })
-        widthFudgeFactorHBox.children.addAll(widthFudgeFactorName, widthFudgeFactorText)
+        scrubFactorHBox.children.addAll(scrubFactorName, scrubFactorText)
 
         // todo: edit boxes for position and tangents of selected point
 
@@ -433,8 +433,6 @@ class PathVisualizer : Application() {
         secondsHBox.children.addAll(secondsName, secondsText)
 
         buttonsBox.children.addAll(
-                zoomHBox,
-                panHBox,
                 autoComboHBox,
                 pathComboHBox,
                 deletePoint,
@@ -443,7 +441,7 @@ class PathVisualizer : Application() {
                 robotDirectionHBox,
                 widthHBox,
                 lengthHBox,
-                widthFudgeFactorHBox,
+                scrubFactorHBox,
                 filesBox,
                 robotHBox,
                 secondsHBox
