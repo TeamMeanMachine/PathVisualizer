@@ -74,7 +74,8 @@ class PathVisualizer : Application() {
     private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
 
     // drawing
-    private val circleSize = 10.0
+    private val drawCircleSize = 10.0
+    private val hitTestCircleSize = 20.0
     private val tangentLengthDrawFactor = 3.0
 
     // point editing
@@ -200,7 +201,7 @@ class PathVisualizer : Application() {
                 }
             }
             if (selectedAutonomous!=null) {
-                selectedPath = selectedAutonomous!!.getPath(newPathName)
+                selectedPath = selectedAutonomous!![newPathName]
             }
             pathComboBox.value = newPathName
             selectedPoint = null
@@ -587,14 +588,14 @@ class PathVisualizer : Application() {
                 gc.stroke = Color.WHITE
 
             val tPoint = world2Screen(point.position)
-            gc.strokeOval(tPoint.x - circleSize / 2, tPoint.y - circleSize / 2, circleSize, circleSize)
+            gc.strokeOval(tPoint.x - drawCircleSize / 2, tPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
             if (point.prevPoint != null) {
                 if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
                     gc.stroke = Color.LIMEGREEN
                 else
                     gc.stroke = Color.WHITE
                 val tanPoint = world2Screen(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)))
-                gc.strokeOval(tanPoint.x - circleSize / 2, tanPoint.y - circleSize / 2, circleSize, circleSize)
+                gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
                 gc.lineWidth = 2.0
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
             }
@@ -604,7 +605,7 @@ class PathVisualizer : Application() {
                 else
                     gc.stroke = Color.WHITE
                 val tanPoint = world2Screen(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)))
-                gc.strokeOval(tanPoint.x - circleSize / 2, tanPoint.y - circleSize / 2, circleSize, circleSize)
+                gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
                 gc.lineWidth = 2.0
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
             }
@@ -676,7 +677,7 @@ class PathVisualizer : Application() {
                     point = point.nextPoint
                     // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
                 }
-                if (shortestDistance <= circleSize / 2) {
+                if (shortestDistance <= hitTestCircleSize / 2) {
                     selectedPoint = closestPoint
                 } else {
                     if (closestPoint != null) {
@@ -832,27 +833,31 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : save to file, load from file
 // : save to network tables for pathvisualizer
 // : load from network tables for robot
+// : add text box for team number or ip
+// : pan with mouse with a pan button or middle mouse button -- Julian
+// : zoom with the mouse wheel -- Julian
+// : make a separate and larger radius for selecting points compared to drawing them
 
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
+// todo: write one autonomous at a time to the network tables
 
 // todo: rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // todo: remember last loaded/saved file in registry and automatically load it at startup
+
+// todo: add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
-// todo: add text box for team number or ip
 // todo: change path combo to a list box
-// todo: add edit box for coloring maximum speed
+// todo: add edit box for what speed is colored maximum green
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
-// todo: make a separate and larger radius for selecting points compared to drawing them
-// todo: pan with mouse with a pan button or middle mouse button -- Julian
-// todo: zoom with the mouse wheel -- Julian
 // todo: arrow keys to nudge selected path points
+
 // todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: editing of ease curve
 // todo: multi-select path points by dragging selecting with dashed rectangle
-// todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
+// todo:
