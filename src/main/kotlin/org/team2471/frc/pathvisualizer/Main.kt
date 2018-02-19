@@ -200,7 +200,7 @@ class PathVisualizer : Application() {
                 }
             }
             if (selectedAutonomous!=null) {
-                selectedPath = selectedAutonomous!!.getPath(newPathName)
+                selectedPath = selectedAutonomous!!.get(newPathName)
             }
             pathComboBox.value = newPathName
             selectedPoint = null
