@@ -173,13 +173,22 @@ class PathVisualizer : Application() {
 //    }
 
 // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
+    private val autoComboBox = ComboBox<String>()
+    private val pathComboBox = ComboBox<String>()
+    private val mirroredCheckBox = CheckBox("Mirrored")
+    private val robotDirectionBox = ComboBox<String>()
+    private val secondsText = TextField()
+    private val speedText = TextField()
+    private val trackWidthText = TextField()
+    private val widthText = TextField()
+    private val lengthText = TextField()
+    private val scrubFactorText = TextField()
 
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
         // path combo box
         val pathComboHBox = HBox()
         val pathComboName = Text("Path:  ")
-        val pathComboBox = ComboBox<String>()
         refreshPathCombo(pathComboBox)
         pathComboBox.valueProperty().addListener({_, _, newText ->
             var newPathName = newText
@@ -216,7 +225,6 @@ class PathVisualizer : Application() {
         // autonomous combo box
         val autoComboHBox = HBox()
         val autoComboName = Text("Auto:  ")
-        val autoComboBox = ComboBox<String>()
         refreshAutoCombo(autoComboBox)
         autoComboBox.valueProperty().addListener({_, _, newText ->
             var newAutoName = newText
@@ -249,60 +257,6 @@ class PathVisualizer : Application() {
         })
         autoComboHBox.children.addAll(autoComboName, autoComboBox)
 
-        val zoomHBox = HBox()
-        val zoomName = Text("Zoom  ")
-        val zoomAdjust = TextField(zoom.toString())
-        zoomAdjust.textProperty().addListener({ _, _, newText ->
-            zoom = newText.toDouble()
-            repaint()
-        })
-        val zoomMinus = Button("-")
-        zoomMinus.setOnAction { _: ActionEvent ->
-            //set what you want the buttons to do here
-            zoom-- // so the zoom code or calls to a zoom function or whatever go here
-            zoomAdjust.text = zoom.toString()
-            repaint()
-        }
-        val zoomPlus = Button("+")
-        zoomPlus.setOnAction { _: ActionEvent ->
-            // same as above
-            zoom++
-            zoomAdjust.text = zoom.toString()
-            repaint()
-        }
-
-        zoomHBox.children.addAll(
-                zoomName,
-                zoomMinus,
-                zoomAdjust,
-                zoomPlus)
-
-        val panHBox = HBox()
-        val panName = Text("Pan  ")
-        val panXName = Text("X = ")
-        val panYName = Text("Y = ")
-        val panXAdjust = TextField(offset.x.toString())
-        panXAdjust.textProperty().addListener({ _, _, newText ->
-            offset.x = newText.toDouble()
-            repaint()
-        })
-        val panYAdjust = TextField(offset.y.toString())
-        panYAdjust.textProperty().addListener({ _, _, newText ->
-            offset.y = newText.toDouble()
-            repaint()
-        })
-        val panButton = Button("Pan")
-        panButton.setOnAction { _: ActionEvent ->
-            mouseMode = MouseMode.PAN
-        }
-        panHBox.children.addAll(
-                panName,
-                panXName,
-                panXAdjust,
-                panYName,
-                panYAdjust,
-                panButton)
-
         val deletePoint = Button("Delete Point")
         deletePoint.setOnAction { _: ActionEvent ->
             if (selectedPoint != null && selectedPath != null) {
@@ -312,34 +266,55 @@ class PathVisualizer : Application() {
             }
         }
 
-        val mirroredCheckBox = CheckBox("Mirrored")
         mirroredCheckBox.isSelected = if (selectedPath!=null) selectedPath!!.isMirrored else false
+        mirroredCheckBox.setOnAction { _: ActionEvent ->
+            selectedPath?.isMirrored = mirroredCheckBox.isSelected
+            repaint()
+        }
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
-        val robotDirectionBox = ComboBox<String>()
         robotDirectionBox.items.add("Forward")
         robotDirectionBox.items.add("Backward")
         robotDirectionBox.value = if (selectedPath!!.travelDirection>0) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener({ _, _, newText ->
             selectedPath?.travelDirection = if (newText=="Forward") 1.0 else -1.0
+            repaint()
         })
         robotDirectionHBox.children.addAll(robotDirectionName, robotDirectionBox)
 
+        val secondsHBox = HBox()
+        val secondsName = Text("Seconds:  ")
+        secondsText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.duration = newText.toDouble()
+            repaint()
+        })
+        secondsHBox.children.addAll(secondsName, secondsText)
+
         val speedHBox = HBox()
-        val speedName = Text("Speed:  ")
-        val speedText = TextField(selectedPath?.speed.toString())
+        val speedName = Text("Speed Multiplier:  ")
         speedText.textProperty().addListener ({ _, _, newText ->
             selectedPath?.speed = newText.toDouble()
             repaint()
         })
         speedHBox.children.addAll(speedName, speedText)
 
-        val widthHBox = HBox()
-        val widthName = Text("Width:  ")
+        val trackWidthHBox = HBox()
+        val trackWidthName = Text("Track Width:  ")
         //this might perpetually throw an exception at every moment there isn't a path
         // todo: experiment with this and change accordingly
-        val widthText = TextField((selectedPath!!.robotWidth * 12.0).format(1))
+        trackWidthText.textProperty().addListener({ _, _, newText ->
+            selectedPath?.robotWidth = (newText.toDouble()) / 12.0
+            //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
+            repaint()
+        })
+        val trackWidthUnit = Text(" inches")
+        trackWidthHBox.children.addAll(trackWidthName, trackWidthText, trackWidthUnit)
+
+        val widthHBox = HBox()
+        val widthName = Text("Robot Width:  ")
+        //this might perpetually throw an exception at every moment there isn't a path
+        // todo: experiment with this and change accordingly
         widthText.textProperty().addListener({ _, _, newText ->
             selectedPath?.robotWidth = (newText.toDouble()) / 12.0
             //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
@@ -349,8 +324,7 @@ class PathVisualizer : Application() {
         widthHBox.children.addAll(widthName, widthText, widthUnit)
 
         val lengthHBox = HBox()
-        val lengthName = Text("Length:  ")
-        val lengthText = TextField((selectedPath!!.robotLength * 12.0).format(1))
+        val lengthName = Text("Robot Length:  ")
         lengthText.textProperty().addListener({ _, _, newText ->
             selectedPath?.robotLength = newText.toDouble()
             //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
@@ -360,8 +334,7 @@ class PathVisualizer : Application() {
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
         val scrubFactorHBox = HBox()
-        val scrubFactorName = Text("Width Fudge Factor:  ")
-        val scrubFactorText = TextField(selectedPath?.scrubFactor.toString())
+        val scrubFactorName = Text("Width Scrub Factor:  ")
         scrubFactorText.textProperty().addListener({ _, _, newText ->
             selectedPath?.scrubFactor = newText.toDouble()
             repaint()
@@ -406,10 +379,10 @@ class PathVisualizer : Application() {
             if (file != null) {
                 var json: String = file.readText()
                 autonomi = Autonomi.fromJsonString(json)
-                refreshEverything(autoComboBox, pathComboBox)
+                refreshEverything()
             }
         }
-        filesBox.children.addAll(saveAsButton, saveButton, openButton)
+        filesBox.children.addAll(openButton, saveAsButton, saveButton)
 
         val robotHBox = HBox()
         val sendToRobotButton = Button("Send To Robot")
@@ -423,29 +396,23 @@ class PathVisualizer : Application() {
         })
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
-        val secondsHBox = HBox()
-        val secondsName = Text("Seconds:  ")
-        val secondsText = TextField((selectedPath!!.duration).format(1))
-        secondsText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.duration = newText.toDouble()
-            repaint()
-        })
-        secondsHBox.children.addAll(secondsName, secondsText)
-
         buttonsBox.children.addAll(
                 autoComboHBox,
                 pathComboHBox,
                 deletePoint,
                 mirroredCheckBox,
+                secondsHBox,
                 speedHBox,
                 robotDirectionHBox,
+                trackWidthHBox,
                 widthHBox,
                 lengthHBox,
                 scrubFactorHBox,
                 filesBox,
-                robotHBox,
-                secondsHBox
+                robotHBox
                 )
+
+        refreshEverything()
     }
 
     // todo: UI helper functions //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -483,9 +450,17 @@ class PathVisualizer : Application() {
         }
     }
 
-    private fun refreshEverything(autoComboBox: ComboBox<String>, pathComboBox: ComboBox<String>) {
+    private fun refreshEverything() {
         refreshAutoCombo(autoComboBox)
         refreshPathCombo(pathComboBox)
+        mirroredCheckBox.isSelected = selectedPath!!.isMirrored
+        robotDirectionBox.value = if (selectedPath!!.travelDirection>0) "Forward" else "Backward"
+        secondsText.text = selectedPath!!.duration.format(1)
+        speedText.text = selectedPath!!.speed.format(1)
+        trackWidthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
+        widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
+        lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
+        scrubFactorText.text = selectedPath!!.scrubFactor.format(3)
     }
 
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -851,10 +826,14 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : make a separate and larger radius for selecting points compared to drawing them
 // : edit box for duration of path,
 
+// todo: -Bob-
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: place path duration in bottom corner of ease canvas using StackPane
-// todo: write one autonomous per key/value pair to the network tables
-// todo: invert pinch zooming
+// todo: write autonomous or path to the network tables as a single json key/value pair instead of autonomi root
+// todo: support mirror state of the path (where?  in getPosition() or in worldToScreen()?)
+
+
+// todo: invert pinch zooming - Julian
 
 // todo: rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // todo: remember last loaded/saved file in registry and automatically load it at startup
