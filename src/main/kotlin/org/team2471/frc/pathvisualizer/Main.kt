@@ -849,10 +849,11 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : pan with mouse with a pan button or middle mouse button -- Julian
 // : zoom with the mouse wheel -- Julian
 // : make a separate and larger radius for selecting points compared to drawing them
+// : edit box for duration of path,
 
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
-// todo: edit box for duration of path, place in bottom corner of ease canvas using StackPane
-// todo: write one autonomous at a time to the network tables
+// todo: place path duration in bottom corner of ease canvas using StackPane
+// todo: write one autonomous per key/value pair to the network tables
 // todo: invert pinch zooming
 
 // todo: rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
