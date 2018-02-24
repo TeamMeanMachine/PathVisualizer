@@ -5,8 +5,7 @@ import org.team2471.frc.lib.motion_profiling.Path2D
 object DefaultPath : Path2D() {
   init {
     name = "Circle"
-    travelDirection = 1.0
-    robotWidth = 25.0 / 12
+    robotDirection = RobotDirection.FORWARD
     val tangentLength = 6.5
 
     addPointAndTangent(0.0, 0.0, 0.0, tangentLength)
