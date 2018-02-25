@@ -559,9 +559,11 @@ class PathVisualizer : Application() {
         gc.stroke = Color.WHITE
         var t = deltaT
         while (t <= path2D.durationWithSpeed) {
+            val ease = t/path2D.durationWithSpeed
             pos = path2D.getPosition(t)
 
             // center line
+            gc.stroke = Color(ease*Color.WHITE.red, ease*Color.WHITE.green, ease*Color.WHITE.blue, 1.0)
             drawPathLine(gc, prevPos, pos)
             prevPos.set(pos.x, pos.y)
             t += deltaT
