@@ -18,7 +18,6 @@ import javafx.scene.control.*
 import javafx.scene.text.Text
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import org.team2471.frc.pathvisualizer.DefaultPath
 import kotlin.math.round
 import javafx.scene.layout.StackPane
 import javafx.scene.input.*
@@ -48,8 +47,8 @@ class PathVisualizer : Application() {
     private val easeCanvas = ResizableCanvas(this)
     private val image = Image("assets/2018Field.PNG")
     private var stage: Stage? = null
-    private val userPref = Preferences.systemRoot()
-    private val userFilenameKey = "org.frc2471.PathVisualizer.FileName"
+    private val userPref = Preferences.userRoot()
+    private val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
     private var fileName = userPref.get(userFilenameKey, "")
 
     // class state variables
