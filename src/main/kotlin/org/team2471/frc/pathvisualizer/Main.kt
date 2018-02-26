@@ -208,6 +208,7 @@ class PathVisualizer : Application() {
     private val widthText = TextField()
     private val lengthText = TextField()
     private val scrubFactorText = TextField()
+    private var refreshing = false;
 
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
@@ -216,34 +217,36 @@ class PathVisualizer : Application() {
         val pathComboName = Text("Path:  ")
         refreshPathCombo(pathComboBox)
         pathComboBox.valueProperty().addListener({_, _, newText ->
-            var newPathName = newText
-            if (newPathName=="New Path") {
-                var defaultName = "Path"
-                var count = 1
-                while (selectedAutonomous!!.paths.containsKey(defaultName+count))
-                    count++
-                val dialog = TextInputDialog(defaultName+count)
-                dialog.title = "Path Name"
-                dialog.headerText = "Enter the name for your new path"
-                dialog.contentText = "Path name:"
-                val result = dialog.showAndWait()
-                if (result.isPresent) {
-                    newPathName = result.get()
-                    val newPath = Path2D(newPathName)
-                    newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0,1.0); // always begin with an ease curve
-                    selectedAutonomous!!.putPath(newPath)
-                    pathComboBox.items.add(pathComboBox.items.count()-1, newPathName)
+            if (!refreshing) {
+                var newPathName = newText
+                if (newPathName == "New Path") {
+                    var defaultName = "Path"
+                    var count = 1
+                    while (selectedAutonomous!!.paths.containsKey(defaultName + count))
+                        count++
+                    val dialog = TextInputDialog(defaultName + count)
+                    dialog.title = "Path Name"
+                    dialog.headerText = "Enter the name for your new path"
+                    dialog.contentText = "Path name:"
+                    val result = dialog.showAndWait()
+                    if (result.isPresent) {
+                        newPathName = result.get()
+                        val newPath = Path2D(newPathName)
+                        newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0, 1.0); // always begin with an ease curve
+                        selectedAutonomous!!.putPath(newPath)
+                        pathComboBox.items.add(pathComboBox.items.count() - 1, newPathName)
+                    } else {
+                        newPathName = selectedPath?.name
+                    }
                 }
-                else {
-                    newPathName = selectedPath?.name
+                if (selectedAutonomous != null) {
+                    selectedPath = selectedAutonomous!![newPathName]
                 }
+                pathComboBox.value = newPathName
+                selectedPoint = null
+                repaint()
+                refreshEverything()
             }
-            if (selectedAutonomous!=null) {
-                selectedPath = selectedAutonomous!![newPathName]
-            }
-            pathComboBox.value = newPathName
-            selectedPoint = null
-            repaint()
         })
         pathComboHBox.children.addAll(pathComboName, pathComboBox)
 
@@ -252,33 +255,34 @@ class PathVisualizer : Application() {
         val autoComboName = Text("Auto:  ")
         refreshAutoCombo(autoComboBox)
         autoComboBox.valueProperty().addListener({_, _, newText ->
-            var newAutoName = newText
-            if (newAutoName=="New Auto") {
-                var defaultName = "Auto"
-                var count = 1
-                while (autonomi.mapAutonomous.containsKey(defaultName+count))
-                    count++
-                val dialog = TextInputDialog(defaultName+count)
-                dialog.title = "Auto Name"
-                dialog.headerText = "Enter the name for your new autonomous"
-                dialog.contentText = "Auto name:"
-                val result = dialog.showAndWait()
-                if (result.isPresent) {
-                    newAutoName = result.get()
-                    val newAuto = Autonomous(newAutoName)
-                    autonomi.put(newAuto)
-                    autoComboBox.items.add(autoComboBox.items.count()-1, newAutoName)
+            if (!refreshing) {
+                var newAutoName = newText
+                if (newAutoName == "New Auto") {
+                    var defaultName = "Auto"
+                    var count = 1
+                    while (autonomi.mapAutonomous.containsKey(defaultName + count))
+                        count++
+                    val dialog = TextInputDialog(defaultName + count)
+                    dialog.title = "Auto Name"
+                    dialog.headerText = "Enter the name for your new autonomous"
+                    dialog.contentText = "Auto name:"
+                    val result = dialog.showAndWait()
+                    if (result.isPresent) {
+                        newAutoName = result.get()
+                        val newAuto = Autonomous(newAutoName)
+                        autonomi.put(newAuto)
+                        autoComboBox.items.add(autoComboBox.items.count() - 1, newAutoName)
+                    } else {
+                        newAutoName = selectedAutonomous?.name
+                    }
                 }
-                else {
-                    newAutoName = selectedAutonomous?.name
-                }
+                selectedAutonomous = autonomi.get(newAutoName)
+                autoComboBox.value = newAutoName
+                selectedPath = null
+                selectedPoint = null
+                refreshEverything()
+                repaint()
             }
-            selectedAutonomous = autonomi.get(newAutoName)
-            autoComboBox.value = newAutoName
-            selectedPath = null
-            selectedPoint = null
-            refreshPathCombo(pathComboBox)
-            repaint()
         })
         autoComboHBox.children.addAll(autoComboName, autoComboBox)
 
@@ -293,8 +297,10 @@ class PathVisualizer : Application() {
 
         mirroredCheckBox.isSelected = if (selectedPath!=null) selectedPath!!.isMirrored else false
         mirroredCheckBox.setOnAction { _: ActionEvent ->
-            selectedPath?.isMirrored = mirroredCheckBox.isSelected
-            repaint()
+            if (!refreshing) {
+                selectedPath?.isMirrored = mirroredCheckBox.isSelected
+                repaint()
+            }
         }
 
         val robotDirectionHBox = HBox()
@@ -303,41 +309,48 @@ class PathVisualizer : Application() {
         robotDirectionBox.items.add("Backward")
         robotDirectionBox.value = if (selectedPath==null || selectedPath!!.robotDirection==Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener({ _, _, newText ->
-            selectedPath?.robotDirection = if (newText=="Forward") Path2D.RobotDirection.FORWARD else Path2D.RobotDirection.BACKWARD
-            repaint()
+            if (!refreshing) {
+                selectedPath?.robotDirection = if (newText == "Forward") Path2D.RobotDirection.FORWARD else Path2D.RobotDirection.BACKWARD
+                repaint()
+            }
         })
         robotDirectionHBox.children.addAll(robotDirectionName, robotDirectionBox)
 
         val secondsHBox = HBox()
         val secondsName = Text("Seconds:  ")
+        // this is java code to try to create a
 //        val pattern = Pattern.compile("\\d*|\\d+\\,\\d*");
 //        val formatter = TextFormatter(UnaryOperator<TextFormatter.Change>) change -> {
 //            return pattern.matcher(change.getControlNewText()).matches() ? change : null;
 //        })
 //        secondsText.setTextFormatter(formatter);
         secondsText.textProperty().addListener({ _, _, newText ->
-            selectedPath?.duration = newText.toDouble()
-            repaint()
+            if (!refreshing) {
+                selectedPath?.duration = newText.toDouble()
+                repaint()
+            }
         })
         secondsHBox.children.addAll(secondsName, secondsText)
 
         val speedHBox = HBox()
         val speedName = Text("Speed Multiplier:  ")
         speedText.textProperty().addListener ({ _, _, newText ->
-            val tempSpeed = newText.toDouble()
-            selectedPath?.speed = if (tempSpeed!=0.0) tempSpeed else 1.0
-            repaint()
+            if (!refreshing) {
+                val tempSpeed = newText.toDouble()
+                selectedPath?.speed = if (tempSpeed != 0.0) tempSpeed else 1.0
+                repaint()
+            }
         })
         speedHBox.children.addAll(speedName, speedText)
 
         val trackWidthHBox = HBox()
         val trackWidthName = Text("Track Width:  ")
-        //this might perpetually throw an exception at every moment there isn't a path
-        // todo: experiment with this and change accordingly
         trackWidthText.textProperty().addListener({ _, _, newText ->
-            selectedAutonomous?.trackWidth = (newText.toDouble()) / 12.0
-            trackWidthText.text = (selectedAutonomous!!.trackWidth * 12.0).format(1)
-            repaint()
+            if (!refreshing) {
+                selectedAutonomous?.trackWidth = (newText.toDouble()) / 12.0
+                trackWidthText.text = (selectedAutonomous!!.trackWidth * 12.0).format(1)
+                repaint()
+            }
         })
         val trackWidthUnit = Text(" inches")
         trackWidthHBox.children.addAll(trackWidthName, trackWidthText, trackWidthUnit)
@@ -345,19 +358,21 @@ class PathVisualizer : Application() {
         val scrubFactorHBox = HBox()
         val scrubFactorName = Text("Width Scrub Factor:  ")
         scrubFactorText.textProperty().addListener({ _, _, newText ->
-            selectedAutonomous?.scrubFactor = newText.toDouble()
-            repaint()
+            if (!refreshing) {
+                selectedAutonomous?.scrubFactor = newText.toDouble()
+                repaint()
+            }
         })
         scrubFactorHBox.children.addAll(scrubFactorName, scrubFactorText)
 
         val widthHBox = HBox()
         val widthName = Text("Robot Width:  ")
-        //this might perpetually throw an exception at every moment there isn't a path
-        // todo: experiment with this and change accordingly
         widthText.textProperty().addListener({ _, _, newText ->
-            selectedAutonomous?.robotWidth = (newText.toDouble()) / 12.0
-            //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
-            repaint()
+            if (!refreshing) {
+                selectedAutonomous?.robotWidth = (newText.toDouble()) / 12.0
+                //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
+                repaint()
+            }
         })
         val widthUnit = Text(" inches")
         widthHBox.children.addAll(widthName, widthText, widthUnit)
@@ -365,9 +380,11 @@ class PathVisualizer : Application() {
         val lengthHBox = HBox()
         val lengthName = Text("Robot Length:  ")
         lengthText.textProperty().addListener({ _, _, newText ->
-            selectedAutonomous?.robotLength = newText.toDouble()
-            //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
-            repaint()
+            if (!refreshing) {
+                selectedAutonomous?.robotLength = newText.toDouble()
+                //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
+                repaint()
+            }
         })
         val lengthUnit = Text("inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
@@ -416,7 +433,9 @@ class PathVisualizer : Application() {
         val addressName = Text("  IP Address:  ")
         val addressText = TextField("10.24.71.2")
         addressText.textProperty().addListener({ _, _, newText ->
-            autonomi.serverId = newText
+            if (!refreshing) {
+                autonomi.serverId = newText
+            }
         })
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
@@ -507,6 +526,7 @@ class PathVisualizer : Application() {
     }
 
     private fun refreshEverything() {
+        refreshing = true
         refreshAutoCombo(autoComboBox)
         refreshPathCombo(pathComboBox)
         if (selectedPath!=null) {
@@ -521,6 +541,7 @@ class PathVisualizer : Application() {
             lengthText.text = (selectedAutonomous!!.robotLength * 12.0).format(1)
             scrubFactorText.text = selectedAutonomous!!.scrubFactor.format(3)
         }
+        refreshing = false
     }
 
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,6 +558,12 @@ class PathVisualizer : Application() {
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
 
         drawPaths(gc)
+    }
+
+    private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
+        val tp1 = world2Screen(p1)
+        val tp2 = world2Screen(p2)
+        gc.strokeLine(tp1.x, tp1.y, tp2.x, tp2.y)
     }
 
     private fun drawPaths(gc: GraphicsContext) {
@@ -570,12 +597,6 @@ class PathVisualizer : Application() {
         }
     }
 
-    private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
-        val tp1 = world2Screen(p1)
-        val tp2 = world2Screen(p2)
-        gc.strokeLine(tp1.x, tp1.y, tp2.x, tp2.y)
-    }
-
     private fun drawSelectedPath(gc: GraphicsContext, path2D: Path2D?) {
         if (path2D == null || !path2D.hasPoints())
             return
@@ -604,7 +625,7 @@ class PathVisualizer : Application() {
                     //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
                 }
                 else {
-                    gc.stroke = Color.BLUE
+                    gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
                     //gc.stroke = Color(ease*Color.LIMEGREEN.red, ease*Color.LIMEGREEN.green, ease*Color.LIMEGREEN.blue, 1.0)
                 }
                 drawPathLine(gc, prevLeftPos, leftPos)
@@ -618,7 +639,7 @@ class PathVisualizer : Application() {
                     //gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
                 }
                 else {
-                    gc.stroke = Color.BLUE
+                    gc.stroke = Color(0.0, rightSpeed, 1.0 - rightSpeed, 1.0)
                     //gc.stroke = Color(ease*Color.BLUE.red, ease*Color.BLUE.green, ease*Color.BLUE.blue, 1.0)
                 }
                 drawPathLine(gc, prevRightPos, rightPos)
