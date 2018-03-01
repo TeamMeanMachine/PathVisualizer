@@ -199,7 +199,7 @@ class PathVisualizer : Application() {
 
 // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
     private val autoComboBox = ComboBox<String>()
-    private val pathComboBox = ComboBox<String>()
+    private val pathComboBox = ListView<String>()
     private val mirroredCheckBox = CheckBox("Mirrored")
     private val robotDirectionBox = ComboBox<String>()
     private val secondsText = TextField()
@@ -213,10 +213,11 @@ class PathVisualizer : Application() {
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
         // path combo box
+        pathComboBox.prefHeight = 200.0
         val pathComboHBox = HBox()
         val pathComboName = Text("Path:  ")
         refreshPathCombo(pathComboBox)
-        pathComboBox.valueProperty().addListener({_, _, newText ->
+        pathComboBox.getSelectionModel().selectedItemProperty().addListener({_, _, newText ->
             if (!refreshing) {
                 var newPathName = newText
                 if (newPathName == "New Path") {
@@ -242,7 +243,7 @@ class PathVisualizer : Application() {
                 if (selectedAutonomous != null) {
                     selectedPath = selectedAutonomous!![newPathName]
                 }
-                pathComboBox.value = newPathName
+                pathComboBox.selectionModel.select(newPathName)
                 selectedPoint = null
                 repaint()
                 refreshEverything()
@@ -507,20 +508,20 @@ class PathVisualizer : Application() {
         }
     }
 
-    private fun refreshPathCombo(pathComobBox: ComboBox<String>) {
+    private fun refreshPathCombo(pathComobBox: ListView<String>) {
         pathComobBox.items.clear()
         if (selectedAutonomous!=null) {
             val paths = selectedAutonomous!!.paths
             for (kvPath in paths) {
                 pathComobBox.items.add(kvPath.key)
                 if (kvPath.value == selectedPath) {
-                    pathComobBox.value = kvPath.key
+                    pathComobBox.selectionModel.select(kvPath.key)
                 }
             }
             pathComobBox.items.add("New Path")
             if (selectedPath==null) {
                 selectedPath = paths.values.firstOrNull()
-                pathComobBox.value = selectedPath?.name
+                pathComobBox.selectionModel.select(selectedPath?.name)
             }
         }
     }
@@ -625,7 +626,8 @@ class PathVisualizer : Application() {
                     //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
                 }
                 else {
-                    gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
+                    gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)
+                    //gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
                     //gc.stroke = Color(ease*Color.LIMEGREEN.red, ease*Color.LIMEGREEN.green, ease*Color.LIMEGREEN.blue, 1.0)
                 }
                 drawPathLine(gc, prevLeftPos, leftPos)
@@ -639,7 +641,8 @@ class PathVisualizer : Application() {
                     //gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
                 }
                 else {
-                    gc.stroke = Color(0.0, rightSpeed, 1.0 - rightSpeed, 1.0)
+                    gc.stroke = Color(1.0 - rightSpeed, 0.0, rightSpeed, 1.0)
+                    //gc.stroke = Color(0.0, rightSpeed, 1.0 - rightSpeed, 1.0)
                     //gc.stroke = Color(ease*Color.BLUE.red, ease*Color.BLUE.green, ease*Color.BLUE.blue, 1.0)
                 }
                 drawPathLine(gc, prevRightPos, rightPos)
