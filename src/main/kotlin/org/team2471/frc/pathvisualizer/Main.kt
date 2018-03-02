@@ -83,10 +83,10 @@ class PathVisualizer : Application() {
 
     // custom types
     private enum class PointType {
-        NONE, POINT, PREV_TANGENT, NEXT_TANGENT
+        POINT, PREV_TANGENT, NEXT_TANGENT
     }
 
-    private var pointType = PointType.NONE
+    private var pointType = PointType.POINT
 
     private enum class MouseMode {
         EDIT, PAN
@@ -199,7 +199,7 @@ class PathVisualizer : Application() {
 
 // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
     private val autoComboBox = ComboBox<String>()
-    private val pathComboBox = ListView<String>()
+    private val pathListView = ListView<String>()
     private val mirroredCheckBox = CheckBox("Mirrored")
     private val robotDirectionBox = ComboBox<String>()
     private val secondsText = TextField()
@@ -208,16 +208,21 @@ class PathVisualizer : Application() {
     private val widthText = TextField()
     private val lengthText = TextField()
     private val scrubFactorText = TextField()
+    private val xPosText = TextField()
+    private val yPosText = TextField()
+    private val angleText = TextField()
+    private val magnitudeText = TextField()
+    private val slopeModeCombo = ComboBox<String>()
     private var refreshing = false;
 
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
         // path combo box
-        pathComboBox.prefHeight = 200.0
-        val pathComboHBox = HBox()
-        val pathComboName = Text("Path:  ")
-        refreshPathCombo(pathComboBox)
-        pathComboBox.getSelectionModel().selectedItemProperty().addListener({_, _, newText ->
+        pathListView.prefHeight = 180.0
+        val pathListViewHBox = HBox()
+        val pathListViewName = Text("Path:  ")
+        refreshpathListView(pathListView)
+        pathListView.getSelectionModel().selectedItemProperty().addListener({ _, _, newText ->
             if (!refreshing) {
                 var newPathName = newText
                 if (newPathName == "New Path") {
@@ -235,7 +240,7 @@ class PathVisualizer : Application() {
                         val newPath = Path2D(newPathName)
                         newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0, 1.0); // always begin with an ease curve
                         selectedAutonomous!!.putPath(newPath)
-                        pathComboBox.items.add(pathComboBox.items.count() - 1, newPathName)
+                        pathListView.items.add(pathListView.items.count() - 1, newPathName)
                     } else {
                         newPathName = selectedPath?.name
                     }
@@ -243,13 +248,13 @@ class PathVisualizer : Application() {
                 if (selectedAutonomous != null) {
                     selectedPath = selectedAutonomous!![newPathName]
                 }
-                pathComboBox.selectionModel.select(newPathName)
+                pathListView.selectionModel.select(newPathName)
                 selectedPoint = null
                 repaint()
-                refreshEverything()
+                refreshAll()
             }
         })
-        pathComboHBox.children.addAll(pathComboName, pathComboBox)
+        pathListViewHBox.children.addAll(pathListViewName, pathListView)
 
         // autonomous combo box
         val autoComboHBox = HBox()
@@ -281,7 +286,7 @@ class PathVisualizer : Application() {
                 autoComboBox.value = newAutoName
                 selectedPath = null
                 selectedPoint = null
-                refreshEverything()
+                refreshAll()
                 repaint()
             }
         })
@@ -344,6 +349,107 @@ class PathVisualizer : Application() {
         })
         speedHBox.children.addAll(speedName, speedText)
 
+        val pointPosHBox = HBox()
+        val posLabel = Text("Position:  ")
+        xPosText.textProperty().addListener({ _, _, newText ->
+            if (!refreshing && selectedPoint!=null) {
+                when (pointType) {
+                    PointType.POINT -> {
+                        selectedPoint!!.position = Vector2(newText.toDouble(), yPosText.text.toDouble())
+                    }
+                    PointType.PREV_TANGENT -> {
+                        selectedPoint!!.prevTangent = Vector2(newText.toDouble(), yPosText.text.toDouble()) * -tangentLengthDrawFactor
+                    }
+                    PointType.NEXT_TANGENT -> {
+                        selectedPoint!!.nextTangent = Vector2(newText.toDouble(), yPosText.text.toDouble()) * tangentLengthDrawFactor
+                    }
+                }
+                repaint()
+                refreshPoint()
+            }
+        })
+        yPosText.textProperty().addListener({ _, _, newText ->
+            if (!refreshing && selectedPoint!=null) {
+                when (pointType) {
+                    PointType.POINT -> {
+                        selectedPoint!!.position = Vector2(xPosText.text.toDouble(), newText.toDouble())
+                    }
+                    PointType.PREV_TANGENT -> {
+                        selectedPoint!!.prevTangent = Vector2(xPosText.text.toDouble(), newText.toDouble()) * -tangentLengthDrawFactor
+                    }
+                    PointType.NEXT_TANGENT -> {
+                        selectedPoint!!.nextTangent = Vector2(xPosText.text.toDouble(), newText.toDouble()) * tangentLengthDrawFactor
+                    }
+                }
+                repaint()
+                refreshPoint()
+            }
+        })
+        val posUnit = Text(" feet")
+        pointPosHBox.children.addAll(posLabel, xPosText, yPosText, posUnit)
+
+        val tangentHBox = HBox()
+        val tangentLabel = Text("Tangent:  ")
+        angleText.textProperty().addListener({ _, _, newText ->
+            if (!refreshing && selectedPoint!=null) {
+                when (pointType) {
+                    PointType.POINT -> {
+                    }
+                    PointType.PREV_TANGENT -> {
+                        selectedPoint!!.prevAngleAndMagnitude.x = newText.toDouble()
+                    }
+                    PointType.NEXT_TANGENT -> {
+                        selectedPoint!!.nextAngleAndMagnitude.x = newText.toDouble()
+                    }
+                }
+                repaint()
+                refreshPoint()
+            }
+        })
+        magnitudeText.textProperty().addListener({ _, _, newText ->
+            if (!refreshing && selectedPoint!=null) {
+                when (pointType) {
+                    PointType.POINT -> {
+                    }
+                    PointType.PREV_TANGENT -> {
+                        selectedPoint!!.nextAngleAndMagnitude.y = newText.toDouble()
+                    }
+                    PointType.NEXT_TANGENT -> {
+                        selectedPoint!!.prevAngleAndMagnitude.y = newText.toDouble()
+                    }
+                }
+                repaint()
+                refreshPoint()
+            }
+        })
+        val angleUnit = Text(" degrees")
+        val magnitudeUnit = Text(" magnitude")
+        tangentHBox.children.addAll(tangentLabel, angleText, angleUnit, magnitudeText, magnitudeUnit )
+
+        val slopeMethodHBox = HBox()
+        val slopeComboLabel = Text("Slope Method:  ")
+        slopeModeCombo.items.addAll("Smooth", "Manual", "None")
+        slopeModeCombo.valueProperty().addListener({_, _, newText ->
+            if (!refreshing && selectedPoint!=null) {
+                when (newText) {
+                    "Smooth" -> {
+                        selectedPoint!!.nextSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_SMOOTH
+                        selectedPoint!!.prevSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_SMOOTH
+                    }
+                    "Manual" -> {
+                        selectedPoint!!.nextSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_MANUAL
+                        selectedPoint!!.prevSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_MANUAL
+                    }
+                    "Linear" -> {
+                        selectedPoint!!.nextSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_LINEAR
+                        selectedPoint!!.prevSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_LINEAR
+                    }
+                }
+                repaint()
+            }
+        })
+        slopeMethodHBox.children.addAll(slopeComboLabel, slopeModeCombo)
+
         val trackWidthHBox = HBox()
         val trackWidthName = Text("Track Width:  ")
         trackWidthText.textProperty().addListener({ _, _, newText ->
@@ -389,8 +495,6 @@ class PathVisualizer : Application() {
         })
         val lengthUnit = Text("inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
-
-        // todo: edit boxes for position and tangents of selected point
 
         val filesBox = HBox()
         filesBox.spacing = 10.0
@@ -442,13 +546,17 @@ class PathVisualizer : Application() {
 
         buttonsBox.children.addAll(
                 autoComboHBox,
-                pathComboHBox,
+                pathListViewHBox,
                 deletePoint,
                 Separator(),
                 mirroredCheckBox,
                 secondsHBox,
                 speedHBox,
                 robotDirectionHBox,
+                Separator(),
+                pointPosHBox,
+                tangentHBox,
+                slopeMethodHBox,
                 Separator(),
                 trackWidthHBox,
                 scrubFactorHBox,
@@ -459,7 +567,7 @@ class PathVisualizer : Application() {
                 robotHBox
                 )
 
-        refreshEverything()
+        refreshAll()
     }
 
     private fun openFile(fn: String) {
@@ -471,7 +579,7 @@ class PathVisualizer : Application() {
         var json: String = file.readText()
         autonomi = Autonomi.fromJsonString(json)
         userPref.put(userFilenameKey, file.name);
-        refreshEverything()
+        refreshAll()
     }
 
     private fun saveAs() {
@@ -508,7 +616,7 @@ class PathVisualizer : Application() {
         }
     }
 
-    private fun refreshPathCombo(pathComobBox: ListView<String>) {
+    private fun refreshpathListView(pathComobBox: ListView<String>) {
         pathComobBox.items.clear()
         if (selectedAutonomous!=null) {
             val paths = selectedAutonomous!!.paths
@@ -526,10 +634,53 @@ class PathVisualizer : Application() {
         }
     }
 
-    private fun refreshEverything() {
+    private fun refreshPoint() {
+        if (selectedPoint != null) {
+            refreshing = true
+            when (pointType) {
+                PointType.POINT -> {
+                    xPosText.text = (selectedPoint!!.position.x).format(2)
+                    yPosText.text = (selectedPoint!!.position.y).format(2)
+                    angleText.text = ""
+                    magnitudeText.text = ""
+                    slopeModeCombo.selectionModel.select("None")
+                }
+                PointType.PREV_TANGENT -> {
+                    xPosText.text = (selectedPoint!!.prevTangent.x/-tangentLengthDrawFactor).format(2)
+                    yPosText.text = (selectedPoint!!.prevTangent.y/-tangentLengthDrawFactor).format(2)
+                    angleText.text = (selectedPoint!!.prevAngleAndMagnitude.x).format(1)
+                    magnitudeText.text = (selectedPoint!!.prevAngleAndMagnitude.y).format(2)
+                    when (selectedPoint!!.prevSlopeMethod) {
+                        Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
+                        Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                    }
+                }
+                PointType.NEXT_TANGENT -> {
+                    xPosText.text = (selectedPoint!!.nextTangent.x/tangentLengthDrawFactor).format(2)
+                    yPosText.text = (selectedPoint!!.nextTangent.y/tangentLengthDrawFactor).format(2)
+                    angleText.text = (selectedPoint!!.nextAngleAndMagnitude.x).format(1)
+                    magnitudeText.text = (selectedPoint!!.nextAngleAndMagnitude.y).format(2)
+                    when (selectedPoint!!.nextSlopeMethod) {
+                        Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
+                        Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                    }
+                }
+            }
+        }
+        else {
+            xPosText.text = ""
+            yPosText.text = ""
+            angleText.text = ""
+            magnitudeText.text = ""
+            slopeModeCombo.selectionModel.select("None")
+        }
+        refreshing = false
+    }
+
+    private fun refreshAll() {
         refreshing = true
         refreshAutoCombo(autoComboBox)
-        refreshPathCombo(pathComboBox)
+        refreshpathListView(pathListView)
         if (selectedPath!=null) {
             mirroredCheckBox.isSelected = selectedPath!!.isMirrored
             robotDirectionBox.value = if (selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
@@ -542,6 +693,7 @@ class PathVisualizer : Application() {
             lengthText.text = (selectedAutonomous!!.robotLength * 12.0).format(1)
             scrubFactorText.text = selectedAutonomous!!.scrubFactor.format(3)
         }
+        refreshPoint()
         refreshing = false
     }
 
@@ -756,7 +908,7 @@ class PathVisualizer : Application() {
                     selectedPoint = closestPoint
                 } else {
                     if (closestPoint != null) {
-                        if (shortestDistance > 50) // trying to deselect?
+                        if (shortestDistance > hitTestCircleSize * 2) // trying to deselect?
                             selectedPoint = null
                         else
                             selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
@@ -767,6 +919,7 @@ class PathVisualizer : Application() {
                     }
                 }
                 editPoint = selectedPoint
+                refreshPoint()
                 repaint()
             }
             MouseMode.PAN -> {
@@ -788,6 +941,7 @@ class PathVisualizer : Application() {
                         else -> {
                         }
                     }
+                    refreshPoint()
                     repaint()
                 }
             }
@@ -811,7 +965,7 @@ class PathVisualizer : Application() {
 
 
     fun onZoom(e: ZoomEvent) {
-        zoom *= e.zoomFactor
+        zoom /= e.zoomFactor
         repaint()
     }
 
@@ -835,12 +989,36 @@ class PathVisualizer : Application() {
                 mouseMode = MouseMode.PAN
             }
         }
-        repaint()
+        if (selectedPoint!=null && e.isControlDown) {
+            var offset = Vector2(0.0,0.0)
+            when (e.getCode()) {
+                KeyCode.UP -> offset.y += 0.1
+                KeyCode.DOWN -> offset.y -= 0.1
+                KeyCode.LEFT -> offset.x -= 0.1
+                KeyCode.RIGHT -> offset.x += 0.1
+            }
+            when (pointType) {
+                PointType.POINT -> {
+                    selectedPoint!!.position += offset
+                }
+                PointType.PREV_TANGENT -> {
+                    selectedPoint!!.prevTangent += offset * -tangentLengthDrawFactor
+                }
+                PointType.NEXT_TANGENT -> {
+                    selectedPoint!!.nextTangent += offset * tangentLengthDrawFactor
+                }
+            }
+            if (offset!=Vector2(0.0,0.0)) {
+                refreshPoint()
+                repaint()
+                fieldCanvas.requestFocus()
+            }
+        }
     }
 
     fun onScroll(e: ScrollEvent) {
         if (mouseMode != MouseMode.PAN) {
-            zoom -= e.deltaY / 25
+            zoom += e.deltaY / 25
             repaint()
         }
     }
@@ -917,24 +1095,25 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : fix robotDirection and speed properties
 // : rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // : set initial folder to the output folder for open and save
+// : change path combo to a list box
 
 // todo: -Bob-
+
+// todo: add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
+// todo: add combo box for tangent modes of selected point
+// todo: arrow keys to nudge selected path points
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: place path duration in bottom corner of ease canvas using StackPane
-// todo: write autonomous or path to the network tables as a single json key/value pair instead of autonomi root
+// todo: place edit box for magnitude of ease curve (or one for each end)
+// todo: remember last loaded/saved file in registry and automatically load it at startup
 
 // todo: invert pinch zooming - Julian
 
-// todo: remember last loaded/saved file in registry and automatically load it at startup
-
-// todo: add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
-// todo: change path combo to a list box
 // todo: add edit box for what speed is colored maximum green
 // todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
-// todo: arrow keys to nudge selected path points
 
 // todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
@@ -942,4 +1121,5 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
+// todo: write autonomous or path to the network tables as a single json key/value pair instead of autonomi root - maybe/maybe not?
 // todo:
