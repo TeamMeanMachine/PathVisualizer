@@ -58,9 +58,9 @@ class PathVisualizer : Application() {
     private var selectedPath: Path2D? = null
 
     // image stuff - measure your image with paint and enter these first 3
-    private val upperLeftOfFieldPixels = Vector2(39.0, 58.0)
-    private val lowerRightOfFieldPixels = Vector2(624.0, 701.0)
-    private val zoomPivot = Vector2(366.0, 701.0)  // the location in the image where the zoom origin will originate
+    private val upperLeftOfFieldPixels = Vector2(86.0, 103.0)
+    private val lowerRightOfFieldPixels = Vector2(990.0, 1000.0)
+    private val zoomPivot = Vector2(535.0, 1000.0)  // the location in the image where the zoom origin will originate
     private val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     private val fieldDimensionFeet = Vector2(27.0, 27.0)
 
