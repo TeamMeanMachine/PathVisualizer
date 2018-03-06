@@ -992,10 +992,10 @@ class PathVisualizer : Application() {
         if (selectedPoint!=null && e.isControlDown) {
             var offset = Vector2(0.0,0.0)
             when (e.getCode()) {
-                KeyCode.UP -> offset.y += 0.1
-                KeyCode.DOWN -> offset.y -= 0.1
-                KeyCode.LEFT -> offset.x -= 0.1
-                KeyCode.RIGHT -> offset.x += 0.1
+                KeyCode.UP -> offset.y += 1.0/12.0
+                KeyCode.DOWN -> offset.y -= 1.0/12.0
+                KeyCode.LEFT -> offset.x -= 1.0/12.0
+                KeyCode.RIGHT -> offset.x += 1.0/12.0
             }
             when (pointType) {
                 PointType.POINT -> {
