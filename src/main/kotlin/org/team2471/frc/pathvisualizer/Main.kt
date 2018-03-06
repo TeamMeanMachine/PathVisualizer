@@ -1,3 +1,4 @@
+import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
@@ -80,6 +81,8 @@ class PathVisualizer : Application() {
     // point editing
     private var editPoint: Path2DPoint? = null
     private var selectedPoint: Path2DPoint? = null
+
+    private val networkTableInstance = NetworkTableInstance.create()
 
     // custom types
     private enum class PointType {
@@ -538,15 +541,17 @@ class PathVisualizer : Application() {
         val robotHBox = HBox()
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
-            autonomi.publishToNetworkTables()
+            autonomi.publishToNetworkTables(networkTableInstance)
         }
         val addressName = Text("  IP Address:  ")
-        val addressText = TextField("10.24.71.2")
-        addressText.textProperty().addListener({ _, _, newText ->
+        val defaultAddress = "10.24.71.2"
+        val addressText = TextField(defaultAddress)
+        addressText.textProperty().addListener({ _, _, address ->
             if (!refreshing) {
-                autonomi.serverId = newText
+                connect(address)
             }
         })
+        connect(defaultAddress)
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
         buttonsBox.children.addAll(
@@ -573,6 +578,23 @@ class PathVisualizer : Application() {
                 )
 
         refreshAll()
+    }
+
+    private fun connect(address: String) {
+        println("Connecting to address $address")
+        // shut down previous server
+        networkTableInstance.stopDSClient()
+        networkTableInstance.stopClient()
+        networkTableInstance.deleteAllEntries()
+
+        // reconnect with new address
+        networkTableInstance.setNetworkIdentity("PathVisualizer")
+
+        if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
+            networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
+        } else {
+            networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+        }
     }
 
     private fun openFile(fn: String) {
