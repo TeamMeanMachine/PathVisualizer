@@ -216,6 +216,7 @@ class PathVisualizer : Application() {
     private val angleText = TextField()
     private val magnitudeText = TextField()
     private val slopeModeCombo = ComboBox<String>()
+    private val pathLengthText = TextField()
     private var refreshing = false
 
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
@@ -295,6 +296,7 @@ class PathVisualizer : Application() {
         })
         autoComboHBox.children.addAll(autoComboName, autoComboBox)
 
+        val miscHBox = HBox()
         val deletePoint = Button("Delete Point")
         deletePoint.setOnAction { _: ActionEvent ->
             if (selectedPoint != null && selectedPath != null) {
@@ -303,6 +305,9 @@ class PathVisualizer : Application() {
                 repaint()
             }
         }
+        val pathLengthLabel = Text("Path Length:  ")
+        val pathLengthUnits = Text("   Feet")
+        miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
         mirroredCheckBox.isSelected = if (selectedPath!=null) selectedPath!!.isMirrored else false
         mirroredCheckBox.setOnAction { _: ActionEvent ->
@@ -552,7 +557,7 @@ class PathVisualizer : Application() {
         buttonsBox.children.addAll(
                 autoComboHBox,
                 pathListViewHBox,
-                deletePoint,
+                miscHBox,
                 Separator(),
                 mirroredCheckBox,
                 secondsHBox,
@@ -708,6 +713,7 @@ class PathVisualizer : Application() {
             robotDirectionBox.value = if (selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
             secondsText.text = selectedPath!!.duration.format(1)
             speedText.text = selectedPath!!.speed.format(1)
+            pathLengthText.text = selectedPath!!.length.format(2)
         }
         if (selectedAutonomous!=null) {
             trackWidthText.text = (selectedAutonomous!!.trackWidth * 12.0).format(1)
@@ -1014,10 +1020,10 @@ class PathVisualizer : Application() {
         if (selectedPoint!=null && e.isControlDown) {
             var offset = Vector2(0.0,0.0)
             when (e.getCode()) {
-                KeyCode.UP -> offset.y += 0.1
-                KeyCode.DOWN -> offset.y -= 0.1
-                KeyCode.LEFT -> offset.x -= 0.1
-                KeyCode.RIGHT -> offset.x += 0.1
+                KeyCode.UP -> offset.y += 1.0/12.0
+                KeyCode.DOWN -> offset.y -= 1.0/12.0
+                KeyCode.LEFT -> offset.x -= 1.0/12.0
+                KeyCode.RIGHT -> offset.x += 1.0/12.0
             }
             when (pointType) {
                 PointType.POINT -> {
@@ -1118,23 +1124,21 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // : set initial folder to the output folder for open and save
 // : change path combo to a list box
+// : invert pinch zooming - Julian
+// : add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
+// : add combo box for tangent modes of selected point
+// : arrow keys to nudge selected path points
+// : upres or repaint a new high res field image
+// : add path length field for measuring the field drawing, etc...
 
-// todo: -Bob-
-
-// todo: add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
-// todo: add combo box for tangent modes of selected point
-// todo: arrow keys to nudge selected path points
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: place path duration in bottom corner of ease canvas using StackPane
 // todo: place edit box for magnitude of ease curve (or one for each end)
 // todo: remember last loaded/saved file in registry and automatically load it at startup
 
-// todo: invert pinch zooming - Julian
-
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
 // todo: add edit box for what speed is colored maximum green
-// todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
 
 // todo: playback of robot travel - this should be broken into sub tasks
@@ -1144,4 +1148,3 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
 // todo: write autonomous or path to the network tables as a single json key/value pair instead of autonomi root - maybe/maybe not?
-// todo:
