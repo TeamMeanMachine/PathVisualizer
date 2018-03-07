@@ -1129,10 +1129,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : add combo box for tangent modes of selected point
 // : arrow keys to nudge selected path points
 // : upres or repaint a new high res field image
-
-// todo: -Bob-
-
-// todo: add path length field for measuring the field drawing, etc...
+// : add path length field for measuring the field drawing, etc...
 
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: place path duration in bottom corner of ease canvas using StackPane
