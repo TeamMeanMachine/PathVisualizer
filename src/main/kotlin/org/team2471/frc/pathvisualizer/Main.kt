@@ -1,3 +1,4 @@
+import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.HBox
@@ -80,6 +81,8 @@ class PathVisualizer : Application() {
     // point editing
     private var editPoint: Path2DPoint? = null
     private var selectedPoint: Path2DPoint? = null
+
+    private val networkTableInstance = NetworkTableInstance.create()
 
     // custom types
     private enum class PointType {
@@ -213,7 +216,8 @@ class PathVisualizer : Application() {
     private val angleText = TextField()
     private val magnitudeText = TextField()
     private val slopeModeCombo = ComboBox<String>()
-    private var refreshing = false;
+    private val pathLengthText = TextField()
+    private var refreshing = false
 
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
@@ -292,6 +296,7 @@ class PathVisualizer : Application() {
         })
         autoComboHBox.children.addAll(autoComboName, autoComboBox)
 
+        val miscHBox = HBox()
         val deletePoint = Button("Delete Point")
         deletePoint.setOnAction { _: ActionEvent ->
             if (selectedPoint != null && selectedPath != null) {
@@ -300,6 +305,9 @@ class PathVisualizer : Application() {
                 repaint()
             }
         }
+        val pathLengthLabel = Text("Path Length:  ")
+        val pathLengthUnits = Text("   Feet")
+        miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
         mirroredCheckBox.isSelected = if (selectedPath!=null) selectedPath!!.isMirrored else false
         mirroredCheckBox.setOnAction { _: ActionEvent ->
@@ -533,21 +541,23 @@ class PathVisualizer : Application() {
         val robotHBox = HBox()
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
-            autonomi.publishToNetworkTables()
+            autonomi.publishToNetworkTables(networkTableInstance)
         }
         val addressName = Text("  IP Address:  ")
-        val addressText = TextField("10.24.71.2")
-        addressText.textProperty().addListener({ _, _, newText ->
+        val defaultAddress = "10.24.71.2"
+        val addressText = TextField(defaultAddress)
+        addressText.textProperty().addListener({ _, _, address ->
             if (!refreshing) {
-                autonomi.serverId = newText
+                connect(address)
             }
         })
+        connect(defaultAddress)
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
 
         buttonsBox.children.addAll(
                 autoComboHBox,
                 pathListViewHBox,
-                deletePoint,
+                miscHBox,
                 Separator(),
                 mirroredCheckBox,
                 secondsHBox,
@@ -568,6 +578,23 @@ class PathVisualizer : Application() {
                 )
 
         refreshAll()
+    }
+
+    private fun connect(address: String) {
+        println("Connecting to address $address")
+        // shut down previous server
+        networkTableInstance.stopDSClient()
+        networkTableInstance.stopClient()
+        networkTableInstance.deleteAllEntries()
+
+        // reconnect with new address
+        networkTableInstance.setNetworkIdentity("PathVisualizer")
+
+        if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
+            networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
+        } else {
+            networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+        }
     }
 
     private fun openFile(fn: String) {
@@ -686,6 +713,7 @@ class PathVisualizer : Application() {
             robotDirectionBox.value = if (selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
             secondsText.text = selectedPath!!.duration.format(1)
             speedText.text = selectedPath!!.speed.format(1)
+            pathLengthText.text = selectedPath!!.length.format(2)
         }
         if (selectedAutonomous!=null) {
             trackWidthText.text = (selectedAutonomous!!.trackWidth * 12.0).format(1)
@@ -992,10 +1020,10 @@ class PathVisualizer : Application() {
         if (selectedPoint!=null && e.isControlDown) {
             var offset = Vector2(0.0,0.0)
             when (e.getCode()) {
-                KeyCode.UP -> offset.y += 0.1
-                KeyCode.DOWN -> offset.y -= 0.1
-                KeyCode.LEFT -> offset.x -= 0.1
-                KeyCode.RIGHT -> offset.x += 0.1
+                KeyCode.UP -> offset.y += 1.0/12.0
+                KeyCode.DOWN -> offset.y -= 1.0/12.0
+                KeyCode.LEFT -> offset.x -= 1.0/12.0
+                KeyCode.RIGHT -> offset.x += 1.0/12.0
             }
             when (pointType) {
                 PointType.POINT -> {
@@ -1096,23 +1124,21 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
 // : set initial folder to the output folder for open and save
 // : change path combo to a list box
+// : invert pinch zooming - Julian
+// : add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
+// : add combo box for tangent modes of selected point
+// : arrow keys to nudge selected path points
+// : upres or repaint a new high res field image
+// : add path length field for measuring the field drawing, etc...
 
-// todo: -Bob-
-
-// todo: add edit boxes for x, y coordinate of selected point and magnitude and angle of tangent points
-// todo: add combo box for tangent modes of selected point
-// todo: arrow keys to nudge selected path points
 // todo: draw ease curve in bottom panel, use another SplitPane horizontal
 // todo: place path duration in bottom corner of ease canvas using StackPane
 // todo: place edit box for magnitude of ease curve (or one for each end)
 // todo: remember last loaded/saved file in registry and automatically load it at startup
 
-// todo: invert pinch zooming - Julian
-
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
 // todo: add edit box for what speed is colored maximum green
-// todo: upres or repaint a new high res field image
 // todo: clicking on path should select it
 
 // todo: playback of robot travel - this should be broken into sub tasks
@@ -1122,4 +1148,3 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
 // todo: write autonomous or path to the network tables as a single json key/value pair instead of autonomi root - maybe/maybe not?
-// todo:
