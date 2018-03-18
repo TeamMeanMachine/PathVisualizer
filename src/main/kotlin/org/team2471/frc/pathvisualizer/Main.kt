@@ -26,6 +26,7 @@ import java.text.DecimalFormat
 import javafx.stage.FileChooser
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
+import org.team2471.frc.pathvisualizer.*
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
@@ -148,15 +149,15 @@ class PathVisualizer : Application() {
 
         if (!fileName.isEmpty())
             openFile(fileName)
-        else {
-            // set up the paths and autos
-            selectedAutonomous = Autonomous("Auto1")
-            selectedAutonomous?.trackWidth = 25.0 / 12
-            autonomi.put(selectedAutonomous!!)
-            selectedPath = null // Path2D("Path1")  // DefaultPath
-            if (selectedPath != null)
-                selectedAutonomous!!.putPath(selectedPath!!)
-        }
+
+        // set up the paths and autos
+//        selectedAutonomous = Autonomous("Tests")
+//        autonomi.put(selectedAutonomous!!)
+//        selectedPath = EightFootStraight
+//        selectedAutonomous!!.putPath(selectedPath!!)
+//        selectedAutonomous!!.putPath(EightFootCircle)
+//        selectedAutonomous!!.putPath(FourFootCircle)
+//        selectedAutonomous!!.putPath(TwoFootCircle)
 
         // setup the layout
         val buttonsBox = VBox()
