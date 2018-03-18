@@ -543,6 +543,11 @@ class PathVisualizer : Application() {
         }
         filesBox.children.addAll(openButton, saveAsButton, saveButton)
 
+        val testDrivingButton = Button("Test Driving")
+        testDrivingButton.setOnAction {  _: ActionEvent ->
+            testDriving()
+        }
+
         val robotHBox = HBox()
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
@@ -731,6 +736,28 @@ class PathVisualizer : Application() {
         }
         refreshPoint()
         refreshing = false
+    }
+
+    private fun testDriving() {
+        if (selectedPath == null || selectedPath!!.duration==0.0)
+            return
+        selectedPath!!.resetDistances()
+        val deltaT = (1.0/50.0)
+        val prevPos = selectedPath!!.getPosition(0.0)
+        var pos: Vector2
+
+        var t = deltaT
+        while (t <= selectedPath!!.durationWithSpeed) {
+            val ease = t/selectedPath!!.durationWithSpeed
+            pos = selectedPath!!.getPosition(t)
+            val leftDist = selectedPath!!.getLeftDistance(t);
+            val rightDist = selectedPath!!.getRightDistance(t);
+
+            println("Pos: ${pos.y}  Left: $leftDist  Right: $rightDist")
+
+            prevPos.set(pos.x, pos.y)
+            t += deltaT
+        }
     }
 
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
