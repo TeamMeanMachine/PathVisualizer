@@ -30,6 +30,7 @@ import org.team2471.frc.pathvisualizer.*
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
+import kotlin.math.max
 
 // todo: main application class ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +69,7 @@ class PathVisualizer : Application() {
 
     // view settings
     private var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1
-    var offset: Vector2 = Vector2(0.0, 0.0)
+    var offset = Vector2(0.0, 0.0)
 
     // location of image extremes in world units
     private val upperLeftFeet = screen2World(Vector2(0.0, 0.0))  // calculate these when zoom is 1:1, and offset is 0,0
@@ -102,7 +103,7 @@ class PathVisualizer : Application() {
 
     fun feetToPixels(feet: Double): Double = feet * fieldDimensionPixels.x / fieldDimensionFeet.x
 
-    inline fun <T:Any, R> whenNotNull(input: T?, callback: (T)->R): R? {
+    inline fun <T : Any, R> whenNotNull(input: T?, callback: (T) -> R): R? {
         return input?.let(callback)
     }
 
@@ -151,13 +152,12 @@ class PathVisualizer : Application() {
             openFile(fileName)
 
         // set up the paths and autos
-//        selectedAutonomous = Autonomous("Tests")
-//        autonomi.put(selectedAutonomous!!)
-//        selectedPath = EightFootStraight
-//        selectedAutonomous!!.putPath(selectedPath!!)
-//        selectedAutonomous!!.putPath(EightFootCircle)
-//        selectedAutonomous!!.putPath(FourFootCircle)
-//        selectedAutonomous!!.putPath(TwoFootCircle)
+        val testAuto = Autonomous("Tests")
+        autonomi.put(testAuto)
+        testAuto.putPath(EightFootStraight)
+        testAuto.putPath(EightFootCircle)
+        testAuto.putPath(FourFootCircle)
+        testAuto.putPath(TwoFootCircle)
 
         // setup the layout
         val buttonsBox = VBox()
@@ -205,7 +205,7 @@ class PathVisualizer : Application() {
 //        super.stop()
 //    }
 
-// todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
     private val autoComboBox = ComboBox<String>()
     private val pathListView = ListView<String>()
     private val mirroredCheckBox = CheckBox("Mirrored")
@@ -269,7 +269,7 @@ class PathVisualizer : Application() {
         val autoComboHBox = HBox()
         val autoComboName = Text("Auto:  ")
         refreshAutoCombo(autoComboBox)
-        autoComboBox.valueProperty().addListener({_, _, newText ->
+        autoComboBox.valueProperty().addListener({ _, _, newText ->
             if (!refreshing) {
                 var newAutoName = newText
                 if (newAutoName == "New Auto") {
@@ -314,7 +314,7 @@ class PathVisualizer : Application() {
         val pathLengthUnits = Text("   Feet")
         miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
-        mirroredCheckBox.isSelected = if (selectedPath!=null) selectedPath!!.isMirrored else false
+        mirroredCheckBox.isSelected = if (selectedPath != null) selectedPath!!.isMirrored else false
         mirroredCheckBox.setOnAction { _: ActionEvent ->
             if (!refreshing) {
                 selectedPath?.isMirrored = mirroredCheckBox.isSelected
@@ -326,7 +326,7 @@ class PathVisualizer : Application() {
         val robotDirectionName = Text("Robot Direction:  ")
         robotDirectionBox.items.add("Forward")
         robotDirectionBox.items.add("Backward")
-        robotDirectionBox.value = if (selectedPath==null || selectedPath!!.robotDirection==Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
+        robotDirectionBox.value = if (selectedPath == null || selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener({ _, _, newText ->
             if (!refreshing) {
                 selectedPath?.robotDirection = if (newText == "Forward") Path2D.RobotDirection.FORWARD else Path2D.RobotDirection.BACKWARD
@@ -353,7 +353,7 @@ class PathVisualizer : Application() {
 
         val speedHBox = HBox()
         val speedName = Text("Speed Multiplier:  ")
-        speedText.textProperty().addListener ({ _, _, newText ->
+        speedText.textProperty().addListener({ _, _, newText ->
             if (!refreshing) {
                 val tempSpeed = newText.toDouble()
                 selectedPath?.speed = if (tempSpeed != 0.0) tempSpeed else 1.0
@@ -365,7 +365,7 @@ class PathVisualizer : Application() {
         val pointPosHBox = HBox()
         val posLabel = Text("Position:  ")
         xPosText.textProperty().addListener({ _, _, newText ->
-            if (!refreshing && selectedPoint!=null) {
+            if (!refreshing && selectedPoint != null) {
                 when (pointType) {
                     PointType.POINT -> {
                         selectedPoint!!.position = Vector2(newText.toDouble(), yPosText.text.toDouble())
@@ -382,7 +382,7 @@ class PathVisualizer : Application() {
             }
         })
         yPosText.textProperty().addListener({ _, _, newText ->
-            if (!refreshing && selectedPoint!=null) {
+            if (!refreshing && selectedPoint != null) {
                 when (pointType) {
                     PointType.POINT -> {
                         selectedPoint!!.position = Vector2(xPosText.text.toDouble(), newText.toDouble())
@@ -404,7 +404,7 @@ class PathVisualizer : Application() {
         val tangentHBox = HBox()
         val tangentLabel = Text("Tangent:  ")
         angleText.textProperty().addListener({ _, _, newText ->
-            if (!refreshing && selectedPoint!=null) {
+            if (!refreshing && selectedPoint != null) {
                 when (pointType) {
                     PointType.POINT -> {
                     }
@@ -420,7 +420,7 @@ class PathVisualizer : Application() {
             }
         })
         magnitudeText.textProperty().addListener({ _, _, newText ->
-            if (!refreshing && selectedPoint!=null) {
+            if (!refreshing && selectedPoint != null) {
                 when (pointType) {
                     PointType.POINT -> {
                     }
@@ -437,13 +437,13 @@ class PathVisualizer : Application() {
         })
         val angleUnit = Text(" degrees")
         val magnitudeUnit = Text(" magnitude")
-        tangentHBox.children.addAll(tangentLabel, angleText, angleUnit, magnitudeText, magnitudeUnit )
+        tangentHBox.children.addAll(tangentLabel, angleText, angleUnit, magnitudeText, magnitudeUnit)
 
         val slopeMethodHBox = HBox()
         val slopeComboLabel = Text("Slope Method:  ")
         slopeModeCombo.items.addAll("Smooth", "Manual", "None")
-        slopeModeCombo.valueProperty().addListener({_, _, newText ->
-            if (!refreshing && selectedPoint!=null) {
+        slopeModeCombo.valueProperty().addListener({ _, _, newText ->
+            if (!refreshing && selectedPoint != null) {
                 when (newText) {
                     "Smooth" -> {
                         selectedPoint!!.nextSlopeMethod = Path2DPoint.SlopeMethod.SLOPE_SMOOTH
@@ -532,8 +532,7 @@ class PathVisualizer : Application() {
         saveButton.setOnAction { _: ActionEvent ->
             if (fileName.isEmpty()) {
                 saveAs()
-            }
-            else {
+            } else {
                 val file = File(fileName)
                 val json = autonomi.toJsonString()
                 val writer = PrintWriter(file)
@@ -544,7 +543,7 @@ class PathVisualizer : Application() {
         filesBox.children.addAll(openButton, saveAsButton, saveButton)
 
         val testDrivingButton = Button("Test Driving")
-        testDrivingButton.setOnAction {  _: ActionEvent ->
+        testDrivingButton.setOnAction { _: ActionEvent ->
             testDriving()
         }
 
@@ -585,7 +584,7 @@ class PathVisualizer : Application() {
                 Separator(),
                 filesBox,
                 robotHBox
-                )
+        )
 
         refreshAll()
     }
@@ -647,7 +646,7 @@ class PathVisualizer : Application() {
             }
         }
         autoComboBox.items.add("New Auto")
-        if (selectedAutonomous==null) {
+        if (selectedAutonomous == null) {
             selectedAutonomous = autonomi.mapAutonomous.values.firstOrNull()
             autoComboBox.value = selectedAutonomous?.name
         }
@@ -655,7 +654,7 @@ class PathVisualizer : Application() {
 
     private fun refreshpathListView(pathComobBox: ListView<String>) {
         pathComobBox.items.clear()
-        if (selectedAutonomous!=null) {
+        if (selectedAutonomous != null) {
             val paths = selectedAutonomous!!.paths
             for (kvPath in paths) {
                 pathComobBox.items.add(kvPath.key)
@@ -664,7 +663,7 @@ class PathVisualizer : Application() {
                 }
             }
             pathComobBox.items.add("New Path")
-            if (selectedPath==null) {
+            if (selectedPath == null) {
                 selectedPath = paths.values.firstOrNull()
                 pathComobBox.selectionModel.select(selectedPath?.name)
             }
@@ -683,8 +682,8 @@ class PathVisualizer : Application() {
                     slopeModeCombo.selectionModel.select("None")
                 }
                 PointType.PREV_TANGENT -> {
-                    xPosText.text = (selectedPoint!!.prevTangent.x/-tangentLengthDrawFactor).format(2)
-                    yPosText.text = (selectedPoint!!.prevTangent.y/-tangentLengthDrawFactor).format(2)
+                    xPosText.text = (selectedPoint!!.prevTangent.x / -tangentLengthDrawFactor).format(2)
+                    yPosText.text = (selectedPoint!!.prevTangent.y / -tangentLengthDrawFactor).format(2)
                     angleText.text = (selectedPoint!!.prevAngleAndMagnitude.x).format(1)
                     magnitudeText.text = (selectedPoint!!.prevAngleAndMagnitude.y).format(2)
                     when (selectedPoint!!.prevSlopeMethod) {
@@ -693,8 +692,8 @@ class PathVisualizer : Application() {
                     }
                 }
                 PointType.NEXT_TANGENT -> {
-                    xPosText.text = (selectedPoint!!.nextTangent.x/tangentLengthDrawFactor).format(2)
-                    yPosText.text = (selectedPoint!!.nextTangent.y/tangentLengthDrawFactor).format(2)
+                    xPosText.text = (selectedPoint!!.nextTangent.x / tangentLengthDrawFactor).format(2)
+                    yPosText.text = (selectedPoint!!.nextTangent.y / tangentLengthDrawFactor).format(2)
                     angleText.text = (selectedPoint!!.nextAngleAndMagnitude.x).format(1)
                     magnitudeText.text = (selectedPoint!!.nextAngleAndMagnitude.y).format(2)
                     when (selectedPoint!!.nextSlopeMethod) {
@@ -703,11 +702,10 @@ class PathVisualizer : Application() {
                     }
                 }
             }
-            if (selectedPath!=null) {
+            if (selectedPath != null) {
                 pathLengthText.text = selectedPath!!.length.format(2)
             }
-        }
-        else {
+        } else {
             xPosText.text = ""
             yPosText.text = ""
             angleText.text = ""
@@ -721,14 +719,14 @@ class PathVisualizer : Application() {
         refreshing = true
         refreshAutoCombo(autoComboBox)
         refreshpathListView(pathListView)
-        if (selectedPath!=null) {
+        if (selectedPath != null) {
             mirroredCheckBox.isSelected = selectedPath!!.isMirrored
             robotDirectionBox.value = if (selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
             secondsText.text = selectedPath!!.duration.format(1)
             speedText.text = selectedPath!!.speed.format(1)
             pathLengthText.text = selectedPath!!.length.format(2)
         }
-        if (selectedAutonomous!=null) {
+        if (selectedAutonomous != null) {
             trackWidthText.text = (selectedAutonomous!!.trackWidth * 12.0).format(1)
             widthText.text = (selectedAutonomous!!.robotWidth * 12.0).format(1)
             lengthText.text = (selectedAutonomous!!.robotLength * 12.0).format(1)
@@ -739,16 +737,16 @@ class PathVisualizer : Application() {
     }
 
     private fun testDriving() {
-        if (selectedPath == null || selectedPath!!.duration==0.0)
+        if (selectedPath == null || selectedPath!!.duration == 0.0)
             return
         selectedPath!!.resetDistances()
-        val deltaT = (1.0/50.0)
+        val deltaT = (1.0 / 50.0)
         val prevPos = selectedPath!!.getPosition(0.0)
         var pos: Vector2
 
         var t = deltaT
         while (t <= selectedPath!!.durationWithSpeed) {
-            val ease = t/selectedPath!!.durationWithSpeed
+            val ease = t / selectedPath!!.durationWithSpeed
             pos = selectedPath!!.getPosition(t)
             val leftDist = selectedPath!!.getLeftDistance(t);
             val rightDist = selectedPath!!.getRightDistance(t);
@@ -795,7 +793,7 @@ class PathVisualizer : Application() {
     }
 
     private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
-        if (path2D == null || path2D.duration==0.0)
+        if (path2D == null || path2D.duration == 0.0)
             return
         path2D.resetDistances()
         val deltaT = path2D.durationWithSpeed / 200.0
@@ -805,11 +803,11 @@ class PathVisualizer : Application() {
         gc.stroke = Color.WHITE
         var t = deltaT
         while (t <= path2D.durationWithSpeed) {
-            val ease = t/path2D.durationWithSpeed
+            val ease = t / path2D.durationWithSpeed
             pos = path2D.getPosition(t)
 
             // center line
-            gc.stroke = Color(ease*Color.WHITE.red, ease*Color.WHITE.green, ease*Color.WHITE.blue, 1.0)
+            gc.stroke = Color(ease * Color.WHITE.red, ease * Color.WHITE.green, ease * Color.WHITE.blue, 1.0)
             drawPathLine(gc, prevPos, pos)
             prevPos.set(pos.x, pos.y)
             t += deltaT
@@ -830,7 +828,7 @@ class PathVisualizer : Application() {
             var t = deltaT
             path2D.resetDistances()
             while (t <= path2D.durationWithSpeed) {
-                val ease = t/path2D.durationWithSpeed
+                val ease = t / path2D.durationWithSpeed
                 leftPos = path2D.getLeftPosition(t)
                 rightPos = path2D.getRightPosition(t)
 
@@ -842,8 +840,7 @@ class PathVisualizer : Application() {
                 if (leftDelta >= 0) {
                     gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)
                     //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
-                }
-                else {
+                } else {
                     gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)
                     //gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
                     //gc.stroke = Color(ease*Color.LIMEGREEN.red, ease*Color.LIMEGREEN.green, ease*Color.LIMEGREEN.blue, 1.0)
@@ -857,8 +854,7 @@ class PathVisualizer : Application() {
                 if (rightDelta >= 0) {
                     gc.stroke = Color(1.0 - rightSpeed, rightSpeed, 0.0, 1.0)
                     //gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
-                }
-                else {
+                } else {
                     gc.stroke = Color(1.0 - rightSpeed, 0.0, rightSpeed, 1.0)
                     //gc.stroke = Color(0.0, rightSpeed, 1.0 - rightSpeed, 1.0)
                     //gc.stroke = Color(ease*Color.BLUE.red, ease*Color.BLUE.green, ease*Color.BLUE.blue, 1.0)
@@ -907,66 +903,78 @@ class PathVisualizer : Application() {
     }
 
     fun drawEaseCurve(gc: GraphicsContext) {
-        if (selectedPath == null || selectedPath!!.duration==0.0 || gc.canvas.width==0.0)
+        if (selectedPath == null || selectedPath!!.duration == 0.0 || gc.canvas.width == 0.0)
             return
         gc.fill = Color.LIGHTGRAY
         gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
         gc.lineWidth = 2.0
 
+        val maxVelocity = 12.5  // feet per sec
         val maxAcceleration = 5.0  // feet per sec^2
-        val maxSpeed = 15.0  // feet per sec
         val maxCurveAcceleration = 5.0  // feet per sec^2
-        val accelerationFactor = 0.75  // we may want a scale factor for all 3 parameters
-        val speedFactor = 0.75  // we may want a scale factor for all 3 parameters
-        val curveFactor = 0.75  // we may want a scale factor for all 3 parameters
+        val speedFactor = 0.75
+        val accelerationFactor = 0.75
+        val curveFactor = 0.75
 
-        // start with time 0,
-        // arc length s = 0,
-        // velocity and acceleration start at 0 too
-
-        var ease = 0.0
-        var t = 0.0
-        var s = 0.0
-        var speed = 0.0
-        var accel = maxCurveAcceleration * accelerationFactor
         val pathLength = selectedPath!!.length
-        var deltaT = 1.0/50.0
+        var deltaT = 1.0 / 50.0
+        var t = deltaT
+        var prevPosition = selectedPath!!.xyCurve.getPositionAtDistance(0.0)
+        var prevVelocity = Vector2(0.0,0.0)
+        var ease = 0.0
 
-        while (ease<=1.0) {
+/*
+        while (t <= selectedPath!!.durationWithSpeed) {
+            ease = selectedPath!!.easeCurve.getValue(t)
+            var distance = ease * pathLength
+            var position = selectedPath!!.xyCurve.getPositionAtDistance(distance)
+            var velocity = (position - prevPosition) / deltaT
+            var acceleration = (velocity - prevVelocity) / deltaT
 
-
-
-            speed += accel
-            if (speed > maxSpeed)
-                speed = maxSpeed
+            var newEase = false
+            if (Vector2.length(acceleration) > maxAcceleration) {
+                acceleration = Vector2.normalize(acceleration) * maxAcceleration
+                velocity = prevVelocity + acceleration * deltaT
+                newEase = true
+            }
+            if (Vector2.length(velocity) > maxVelocity) {
+                velocity = Vector2.normalize(velocity) * maxVelocity
+                newEase = true
+            }
+            if (newEase) {
+                position = prevPosition + velocity * deltaT
+                distance = Vector2.length(position - prevPosition)
+                ease = distance / pathLength
+                selectedPath!!.easeCurve.storeValue(t,ease)
+            }
+*/
 
             t += deltaT
-            s += speed * deltaT
-            ease = s / pathLength
+            prevVelocity = velocity
         }
 
         deltaT = selectedPath!!.durationWithSpeed / gc.canvas.width
         t = 0.0
         ease = selectedPath!!.easeCurve.getValue(t)
-        var x = t/selectedPath!!.durationWithSpeed * gc.canvas.width
-        var y = (1.0-ease) * gc.canvas.height
+        var x = t / selectedPath!!.durationWithSpeed * gc.canvas.width
+        var y = (1.0 - ease) * gc.canvas.height
         var pos = Vector2(x, y)
         var prevPos = pos
         t = deltaT
         while (t <= selectedPath!!.durationWithSpeed) {
             ease = selectedPath!!.easeCurve.getValue(t)
-            x = t/selectedPath!!.durationWithSpeed * gc.canvas.width
-            y = (1.0-ease) * gc.canvas.height
+            x = t / selectedPath!!.durationWithSpeed * gc.canvas.width
+            y = (1.0 - ease) * gc.canvas.height
             pos = Vector2(x, y)
-            gc.stroke = Color(ease*Color.RED.red, ease*Color.RED.green, ease*Color.RED.blue, 1.0)
+            gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
             //drawPathLine(gc, prevPos, pos)
-            gc.strokeLine(prevPos.x,prevPos.y,pos.x,pos.y)
+            gc.strokeLine(prevPos.x, prevPos.y, pos.x, pos.y)
             prevPos = pos
             t += deltaT
         }
     }
 
-// todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
+    // todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
     var startMouse = Vector2(0.0, 0.0)
     var oCoord: Vector2 = Vector2(0.0, 0.0)
 
@@ -1068,8 +1076,8 @@ class PathVisualizer : Application() {
 
     fun onMouseReleased() {
         when (mouseMode) {
-           MouseMode.EDIT -> editPoint = null  // no longer editing
-           MouseMode.PAN -> mouseMode = MouseMode.EDIT
+            MouseMode.EDIT -> editPoint = null  // no longer editing
+            MouseMode.PAN -> mouseMode = MouseMode.EDIT
         }
         fieldCanvas.cursor = Cursor.DEFAULT
         fieldCanvas.requestFocus()
@@ -1101,13 +1109,13 @@ class PathVisualizer : Application() {
                 mouseMode = MouseMode.PAN
             }
         }
-        if (selectedPoint!=null && e.isControlDown) {
-            var offset = Vector2(0.0,0.0)
+        if (selectedPoint != null && e.isControlDown) {
+            var offset = Vector2(0.0, 0.0)
             when (e.getCode()) {
-                KeyCode.UP -> offset.y += 1.0/12.0
-                KeyCode.DOWN -> offset.y -= 1.0/12.0
-                KeyCode.LEFT -> offset.x -= 1.0/12.0
-                KeyCode.RIGHT -> offset.x += 1.0/12.0
+                KeyCode.UP -> offset.y += 1.0 / 12.0
+                KeyCode.DOWN -> offset.y -= 1.0 / 12.0
+                KeyCode.LEFT -> offset.x -= 1.0 / 12.0
+                KeyCode.RIGHT -> offset.x += 1.0 / 12.0
             }
             when (pointType) {
                 PointType.POINT -> {
@@ -1120,7 +1128,7 @@ class PathVisualizer : Application() {
                     selectedPoint!!.nextTangent += offset * tangentLengthDrawFactor
                 }
             }
-            if (offset!=Vector2(0.0,0.0)) {
+            if (offset != Vector2(0.0, 0.0)) {
                 refreshPoint()
                 repaint()
                 fieldCanvas.requestFocus()
