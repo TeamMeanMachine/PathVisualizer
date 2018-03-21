@@ -947,11 +947,11 @@ class PathVisualizer : Application() {
                 ease = distance / pathLength
                 selectedPath!!.easeCurve.storeValue(t,ease)
             }
-*/
-
             t += deltaT
             prevVelocity = velocity
         }
+*/
+
 
         deltaT = selectedPath!!.durationWithSpeed / gc.canvas.width
         t = 0.0
