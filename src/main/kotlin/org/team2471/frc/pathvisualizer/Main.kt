@@ -76,7 +76,7 @@ class PathVisualizer : Application() {
 
     // drawing
     private val drawCircleSize = 10.0
-    private val hitTestCircleSize = 20.0
+    private val hitTestCircleSize = 15.0
     private val tangentLengthDrawFactor = 3.0
 
     // point editing
@@ -170,6 +170,10 @@ class PathVisualizer : Application() {
         val verticalSplitPane = SplitPane(fieldStackPane, easeStackPane)
         verticalSplitPane.orientation = Orientation.VERTICAL
         verticalSplitPane.setDividerPositions(0.85)
+        fieldCanvas.widthProperty().bind(fieldStackPane.widthProperty())
+        fieldCanvas.heightProperty().bind(fieldStackPane.heightProperty())
+        easeCanvas.widthProperty().bind(easeStackPane.widthProperty())
+        easeCanvas.heightProperty().bind(easeStackPane.heightProperty())
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, buttonsBox)
         horizontalSplitPane.setDividerPositions(0.7)
@@ -306,7 +310,7 @@ class PathVisualizer : Application() {
                 repaint()
             }
         }
-        val pathLengthLabel = Text("Path Length:  ")
+        val pathLengthLabel = Text("   Path Length:  ")
         val pathLengthUnits = Text("   Feet")
         miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
@@ -539,6 +543,11 @@ class PathVisualizer : Application() {
         }
         filesBox.children.addAll(openButton, saveAsButton, saveButton)
 
+        val testDrivingButton = Button("Test Driving")
+        testDrivingButton.setOnAction {  _: ActionEvent ->
+            testDriving()
+        }
+
         val robotHBox = HBox()
         val sendToRobotButton = Button("Send To Robot")
         sendToRobotButton.setOnAction { _: ActionEvent ->
@@ -694,6 +703,9 @@ class PathVisualizer : Application() {
                     }
                 }
             }
+            if (selectedPath!=null) {
+                pathLengthText.text = selectedPath!!.length.format(2)
+            }
         }
         else {
             xPosText.text = ""
@@ -726,6 +738,28 @@ class PathVisualizer : Application() {
         refreshing = false
     }
 
+    private fun testDriving() {
+        if (selectedPath == null || selectedPath!!.duration==0.0)
+            return
+        selectedPath!!.resetDistances()
+        val deltaT = (1.0/50.0)
+        val prevPos = selectedPath!!.getPosition(0.0)
+        var pos: Vector2
+
+        var t = deltaT
+        while (t <= selectedPath!!.durationWithSpeed) {
+            val ease = t/selectedPath!!.durationWithSpeed
+            pos = selectedPath!!.getPosition(t)
+            val leftDist = selectedPath!!.getLeftDistance(t);
+            val rightDist = selectedPath!!.getRightDistance(t);
+
+            println("Pos: ${pos.y}  Left: $leftDist  Right: $rightDist")
+
+            prevPos.set(pos.x, pos.y)
+            t += deltaT
+        }
+    }
+
 // todo: draw functions ////////////////////////////////////////////////////////////////////////////////////////////////
 
     fun repaint() {
@@ -740,6 +774,9 @@ class PathVisualizer : Application() {
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
 
         drawPaths(gc)
+
+        val easeGC = easeCanvas.graphicsContext2D
+        drawEaseCurve(easeGC)
     }
 
     private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
@@ -869,24 +906,70 @@ class PathVisualizer : Application() {
         }
     }
 
-    fun drawEaseCurve() {
-        // draw the ease curve  // be nice to draw this beneath the map
-        //    double prevEase = 0.0;
-        //    gc.setStroke(new BasicStroke(3));
-        //    for (double t = deltaT; t <= path2D.getDuration(); t += deltaT) {
-        //      // draw the ease curve too
-        //      gc.setColor(Color.black);
-        //      double ease = path2D.getEaseCurve().getValue(t);
-        //      double prevT = t - deltaT;
-        //      gc.drawLine((int) (prevT * 40 + 100), (int) (prevEase * -200 + 700), (int) (t * 40 + 100), (int) (ease * -200 + 700));
-        //      prevEase = ease;
-        //    }
+    fun drawEaseCurve(gc: GraphicsContext) {
+        if (selectedPath == null || selectedPath!!.duration==0.0 || gc.canvas.width==0.0)
+            return
+        gc.fill = Color.LIGHTGRAY
+        gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
+        gc.lineWidth = 2.0
+
+        val maxAcceleration = 5.0  // feet per sec^2
+        val maxSpeed = 15.0  // feet per sec
+        val maxCurveAcceleration = 5.0  // feet per sec^2
+        val accelerationFactor = 0.75  // we may want a scale factor for all 3 parameters
+        val speedFactor = 0.75  // we may want a scale factor for all 3 parameters
+        val curveFactor = 0.75  // we may want a scale factor for all 3 parameters
+
+        // start with time 0,
+        // arc length s = 0,
+        // velocity and acceleration start at 0 too
+
+        var ease = 0.0
+        var t = 0.0
+        var s = 0.0
+        var speed = 0.0
+        var accel = maxCurveAcceleration * accelerationFactor
+        val pathLength = selectedPath!!.length
+        var deltaT = 1.0/50.0
+
+        while (ease<=1.0) {
+
+
+
+            speed += accel
+            if (speed > maxSpeed)
+                speed = maxSpeed
+
+            t += deltaT
+            s += speed * deltaT
+            ease = s / pathLength
+        }
+
+        deltaT = selectedPath!!.durationWithSpeed / gc.canvas.width
+        t = 0.0
+        ease = selectedPath!!.easeCurve.getValue(t)
+        var x = t/selectedPath!!.durationWithSpeed * gc.canvas.width
+        var y = (1.0-ease) * gc.canvas.height
+        var pos = Vector2(x, y)
+        var prevPos = pos
+        t = deltaT
+        while (t <= selectedPath!!.durationWithSpeed) {
+            ease = selectedPath!!.easeCurve.getValue(t)
+            x = t/selectedPath!!.durationWithSpeed * gc.canvas.width
+            y = (1.0-ease) * gc.canvas.height
+            pos = Vector2(x, y)
+            gc.stroke = Color(ease*Color.RED.red, ease*Color.RED.green, ease*Color.RED.blue, 1.0)
+            //drawPathLine(gc, prevPos, pos)
+            gc.strokeLine(prevPos.x,prevPos.y,pos.x,pos.y)
+            prevPos = pos
+            t += deltaT
+        }
     }
 
-    var startMouse = Vector2(0.0, 0.0)
-
 // todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
+    var startMouse = Vector2(0.0, 0.0)
     var oCoord: Vector2 = Vector2(0.0, 0.0)
+
     fun onMousePressed(e: MouseEvent) {
         if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
             fieldCanvas.cursor = Cursor.CROSSHAIR
@@ -1071,7 +1154,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
     }
 
     override fun maxHeight(width: Double): Double {
-        return 1000.0
+        return 10000.0
     }
 
     override fun minWidth(height: Double): Double {
@@ -1083,8 +1166,8 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
     }
 
     override fun resize(_width: Double, _height: Double) {
-        width = _width
-        height = _height
+//        width = _width
+//        height = _height
         pathVisualizer.repaint()
     }
 }
