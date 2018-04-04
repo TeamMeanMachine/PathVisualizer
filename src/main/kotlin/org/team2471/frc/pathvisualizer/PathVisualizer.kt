@@ -1,3 +1,5 @@
+package org.team2471.frc.pathvisualizer
+
 import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Application
 import javafx.scene.Scene
@@ -26,11 +28,9 @@ import java.text.DecimalFormat
 import javafx.stage.FileChooser
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
-import org.team2471.frc.pathvisualizer.*
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
-import kotlin.math.max
 
 // todo: main application class ////////////////////////////////////////////////////////////////////////////////////////
 
