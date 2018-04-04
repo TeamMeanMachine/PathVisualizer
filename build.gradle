@@ -34,7 +34,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.team2471.frc.pathvisualizer.MainKt'
+        attributes 'Main-Class': 'org.team2471.frc.pathvisualizer.PathVisualizer'
     }
 
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }

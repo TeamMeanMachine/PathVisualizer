@@ -1,3 +1,5 @@
+package org.team2471.frc.pathvisualizer
+
 import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Application
 import javafx.scene.Scene
@@ -26,11 +28,9 @@ import java.text.DecimalFormat
 import javafx.stage.FileChooser
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
-import org.team2471.frc.pathvisualizer.*
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
-import kotlin.math.max
 
 // todo: main application class ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -158,6 +158,16 @@ class PathVisualizer : Application() {
         testAuto.putPath(EightFootCircle)
         testAuto.putPath(FourFootCircle)
         testAuto.putPath(TwoFootCircle)
+
+        val testEaseAuto = autonomi.get("Near Scale Near Switch Scale")
+        if (testEaseAuto != null) {
+            val testEasePath = testEaseAuto.get("Start To Near Scale")
+            if (testEasePath != null) {
+                testEasePath.easeCurve.headKey.magnitude = 0.2
+                testEasePath.easeCurve.tailKey.magnitude = 5.0
+//                testEasePath.easeCurve.storeValueSlopeAndMagnitude(4.5 / 2.0, 0.5, 1.0 / 4.5 * 0.8, 1.0)
+            }
+        }
 
         // setup the layout
         val buttonsBox = VBox()
@@ -314,10 +324,10 @@ class PathVisualizer : Application() {
         val pathLengthUnits = Text("   Feet")
         miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
-        mirroredCheckBox.isSelected = if (selectedPath != null) selectedPath!!.isMirrored else false
+        mirroredCheckBox.isSelected = if (selectedAutonomous != null) selectedAutonomous!!.isMirrored else false
         mirroredCheckBox.setOnAction { _: ActionEvent ->
             if (!refreshing) {
-                selectedPath?.isMirrored = mirroredCheckBox.isSelected
+                selectedAutonomous?.isMirrored = mirroredCheckBox.isSelected
                 repaint()
             }
         }
@@ -720,7 +730,7 @@ class PathVisualizer : Application() {
         refreshAutoCombo(autoComboBox)
         refreshpathListView(pathListView)
         if (selectedPath != null) {
-            mirroredCheckBox.isSelected = selectedPath!!.isMirrored
+            mirroredCheckBox.isSelected = selectedAutonomous!!.isMirrored
             robotDirectionBox.value = if (selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
             secondsText.text = selectedPath!!.duration.format(1)
             speedText.text = selectedPath!!.speed.format(1)
@@ -920,7 +930,7 @@ class PathVisualizer : Application() {
         var deltaT = 1.0 / 50.0
         var t = deltaT
         var prevPosition = selectedPath!!.xyCurve.getPositionAtDistance(0.0)
-        var prevVelocity = Vector2(0.0,0.0)
+        var prevVelocity = Vector2(0.0, 0.0)
         var ease = 0.0
 
 /*
@@ -960,18 +970,38 @@ class PathVisualizer : Application() {
         var y = (1.0 - ease) * gc.canvas.height
         var pos = Vector2(x, y)
         var prevPos = pos
+        var prevSpeed = 0.0
+        var prevAccel = 0.0
         t = deltaT
         while (t <= selectedPath!!.durationWithSpeed) {
             ease = selectedPath!!.easeCurve.getValue(t)
             x = t / selectedPath!!.durationWithSpeed * gc.canvas.width
-            y = (1.0 - ease) * gc.canvas.height
+            y = (1.0 - ease)
             pos = Vector2(x, y)
             gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
-            //drawPathLine(gc, prevPos, pos)
-            gc.strokeLine(prevPos.x, prevPos.y, pos.x, pos.y)
+            drawEaseLine(gc, prevPos, pos, gc.canvas.height)
+
+            var speed = 15.0 - Math.abs(pos.y - prevPos.y) * selectedPath!!.length / deltaT
+            println("Speed: $speed")
+            gc.stroke = Color.WHITE
+            val speedVec1 = Vector2(pos.x, speed)
+            val speedVec2 = Vector2(prevPos.x, prevSpeed)
+            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height / 15.0)
+/*
+            var accel = (speed - prevSpeed) / deltaT
+            val accelVec1 = Vector2(pos.x, accel)
+            val accelVec2 = Vector2(prevPos.x, prevAccel)
+            gc.stroke = Color.BLACK
+            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height/100.0)
+*/
+            prevSpeed = speed
             prevPos = pos
             t += deltaT
         }
+    }
+
+    private fun drawEaseLine(gc: GraphicsContext, p1: Vector2, p2: Vector2, yScale: Double) {
+        gc.strokeLine(p1.x, p1.y * yScale, p2.x, p2.y * yScale)
     }
 
     // todo: mouse functions ///////////////////////////////////////////////////////////////////////////////////////////////
