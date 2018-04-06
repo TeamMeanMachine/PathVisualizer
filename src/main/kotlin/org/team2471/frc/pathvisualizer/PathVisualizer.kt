@@ -159,13 +159,14 @@ class PathVisualizer : Application() {
         testAuto.putPath(FourFootCircle)
         testAuto.putPath(TwoFootCircle)
 
-        val testEaseAuto = autonomi.get("Near Scale Near Switch Scale")
+        val testEaseAuto = autonomi.get("All Far Scale")
         if (testEaseAuto != null) {
-            val testEasePath = testEaseAuto.get("Start To Near Scale")
+            val testEasePath = testEaseAuto.get("Start To Far Scale")
             if (testEasePath != null) {
-                testEasePath.easeCurve.headKey.magnitude = 0.2
+                testEasePath.easeCurve.headKey.magnitude = 2.5
                 testEasePath.easeCurve.tailKey.magnitude = 5.0
-//                testEasePath.easeCurve.storeValueSlopeAndMagnitude(4.5 / 2.0, 0.5, 1.0 / 4.5 * 0.8, 1.0)
+                //val easeValue = testEasePath.easeCurve.getValue(3.0)
+                testEasePath.easeCurve.storeValueSlopeAndMagnitude( 3.3, 0.47, 3.5 / 7.5 * 0.15, 8.0)
             }
         }
 
