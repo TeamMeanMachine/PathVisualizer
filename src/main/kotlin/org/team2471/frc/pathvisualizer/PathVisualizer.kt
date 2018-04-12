@@ -164,9 +164,9 @@ class PathVisualizer : Application() {
             val testEasePath = testEaseAuto.get("Start To Far Scale")
             if (testEasePath != null) {
                 testEasePath.easeCurve.headKey.magnitude = 2.5
-                testEasePath.easeCurve.tailKey.magnitude = 5.0
+                testEasePath.easeCurve.tailKey.magnitude = 7.0
                 //val easeValue = testEasePath.easeCurve.getValue(3.0)
-                testEasePath.easeCurve.storeValueSlopeAndMagnitude( 3.3, 0.47, 3.5 / 7.5 * 0.15, 8.0)
+                testEasePath.easeCurve.storeValueSlopeAndMagnitude( 3.3, 0.47, 3.5 / 7.5 * 0.25, 8.0)
             }
         }
 
