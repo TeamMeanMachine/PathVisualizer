@@ -2,35 +2,35 @@ package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Application
-import javafx.scene.Scene
-import javafx.scene.layout.HBox
-import javafx.stage.Stage
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
+import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
-import javafx.scene.image.Image
-import javafx.scene.layout.VBox
-import javafx.scene.paint.Color
-import org.team2471.frc.lib.vector.Vector2
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.*
-import javafx.scene.text.Text
-import org.team2471.frc.lib.motion_profiling.Path2D
-import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import kotlin.math.round
-import javafx.scene.layout.StackPane
+import javafx.scene.image.Image
 import javafx.scene.input.*
-import java.text.DecimalFormat
+import javafx.scene.layout.HBox
+import javafx.scene.layout.StackPane
+import javafx.scene.layout.VBox
+import javafx.scene.paint.Color
+import javafx.scene.text.Text
 import javafx.stage.FileChooser
+import javafx.stage.Stage
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
+import org.team2471.frc.lib.motion_profiling.Path2D
+import org.team2471.frc.lib.motion_profiling.Path2DPoint
+import org.team2471.frc.lib.vector.Vector2
 import java.io.File
 import java.io.PrintWriter
+import java.text.DecimalFormat
 import java.util.prefs.Preferences
+import kotlin.math.round
 
 // todo: main application class ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -159,14 +159,50 @@ class PathVisualizer : Application() {
         testAuto.putPath(FourFootCircle)
         testAuto.putPath(TwoFootCircle)
 
-        val testEaseAuto = autonomi.get("All Far Scale")
-        if (testEaseAuto != null) {
-            val testEasePath = testEaseAuto.get("Start To Far Scale")
-            if (testEasePath != null) {
-                testEasePath.easeCurve.headKey.magnitude = 2.5
-                testEasePath.easeCurve.tailKey.magnitude = 7.0
-                //val easeValue = testEasePath.easeCurve.getValue(3.0)
-                testEasePath.easeCurve.storeValueSlopeAndMagnitude( 3.3, 0.47, 3.5 / 7.5 * 0.25, 8.0)
+        autonomi["All Far Scale"]?.apply {
+            this["Start To Far Scale"]?.apply {
+                easeCurve.headKey.magnitude = 7.0
+                easeCurve.tailKey.magnitude = 14.0
+
+                val headKey = easeCurve.headKey
+                val tailKey = easeCurve.tailKey
+                easeCurve.removeAllPoints()
+                easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(2.6, 0.47, 3.5 / 7.5 * 0.25, 7.0)
+            }
+
+            this["Far Scale To Cube1"]?.apply {
+                easeCurve.headKey.magnitude = 3.5
+                easeCurve.tailKey.magnitude = 3.0
+            }
+            this["Cube1 To Far Scale"]?.apply {
+                easeCurve.headKey.magnitude = 2.0
+                easeCurve.tailKey.magnitude = 7.0
+            }
+
+            this["Far Scale To Cube2"]?.apply {
+                easeCurve.headKey.magnitude = 3.5
+                easeCurve.tailKey.magnitude = 3.0
+            }
+            this["Cube2 To Far Scale"]?.apply {
+                easeCurve.headKey.magnitude = 2.0
+                easeCurve.tailKey.magnitude = 10.0
+            }
+        }
+
+        autonomi["All Far Scale Mean Machine"]?.apply {
+            this["Start To Far Platform"]?.apply {
+                easeCurve.headKey.magnitude = 7.0
+                easeCurve.tailKey.magnitude = 14.0
+
+                val headKey = easeCurve.headKey
+                val tailKey = easeCurve.tailKey
+                easeCurve.removeAllPoints()
+                easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(3.0, 0.5, 3.5 / 7.5 * 0.3, 7.0)
+
             }
         }
 
