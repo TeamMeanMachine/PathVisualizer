@@ -212,8 +212,8 @@ class PathVisualizer : Application() {
 
         autonomi["All Near Scale"]?.apply {
             this["Start To Near Scale"]?.apply {
-                easeCurve.headKey.magnitude = 3.0
-                easeCurve.tailKey.magnitude = 9.0
+                easeCurve.headKey.magnitude = 9.0
+                easeCurve.tailKey.magnitude = 7.0
                 val headKey = easeCurve.headKey
                 val tailKey = easeCurve.tailKey
                 easeCurve.removeAllPoints()
