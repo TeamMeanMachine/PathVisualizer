@@ -602,13 +602,13 @@ class PathVisualizer : Application() {
         val openButton = Button("Open")
         openButton.setOnAction { _: ActionEvent ->
             val fileChooser = FileChooser()
-            fileChooser.setTitle("Open Autonomi File...")
+            fileChooser.title = "Open Autonomi File..."
             fileChooser.extensionFilters.add(FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json"))
             fileChooser.initialDirectory = File(System.getProperty("user.dir"))
             fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
             val file = fileChooser.showOpenDialog(stage)
             if (file != null) {
-                fileName = file.name
+                fileName = file.absolutePath
                 openFile(file)
             }
         }
@@ -700,22 +700,28 @@ class PathVisualizer : Application() {
     }
 
     private fun openFile(file: File) {
-        var json: String = file.readText()
-        autonomi = Autonomi.fromJsonString(json)
-        userPref.put(userFilenameKey, file.name);
+        try {
+            val json = file.readText()
+            autonomi = Autonomi.fromJsonString(json)
+            userPref.put(userFilenameKey, file.absolutePath)
+        } catch (e: Exception) {
+            System.err.println("Failed to find file ${file.absolutePath}")
+            autonomi = Autonomi()
+        }
         refreshAll()
     }
 
     private fun saveAs() {
         val fileChooser = FileChooser()
-        fileChooser.setTitle("Save Autonomi File As...")
+        fileChooser.title = "Save Autonomi File As..."
         val extFilter = FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json")
         fileChooser.extensionFilters.add(extFilter)
         fileChooser.initialDirectory = File(System.getProperty("user.dir"))
         fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
         val file = fileChooser.showSaveDialog(stage)
         if (file != null) {
-            fileName = file.name
+            userPref.put(userFilenameKey, file.absolutePath)
+            fileName = file.absolutePath
             val json = autonomi.toJsonString()
             val writer = PrintWriter(file)
             writer.append(json)
