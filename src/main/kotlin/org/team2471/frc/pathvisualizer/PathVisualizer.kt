@@ -18,13 +18,11 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
+import javafx.scene.text.FontSmoothingType
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.stage.Stage
-import org.team2471.frc.lib.motion_profiling.Autonomi
-import org.team2471.frc.lib.motion_profiling.Autonomous
-import org.team2471.frc.lib.motion_profiling.Path2D
-import org.team2471.frc.lib.motion_profiling.Path2DPoint
+import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.vector.Vector2
 import java.io.File
 import java.io.PrintWriter
@@ -1034,6 +1032,43 @@ class PathVisualizer : Application() {
             prevSpeed = speed
             prevPos = pos
             t += deltaT
+        }
+
+        // circles and lines for handles
+        var point: MotionKey? = selectedPath!!.easeCurve.headKey
+        while (point != null) {
+//            if (point === selectedPoint && pointType == PointType.POINT)
+//                gc.stroke = Color.LIMEGREEN
+//            else
+                gc.stroke = Color.WHITE
+
+            val tPoint = Vector2(point.time/selectedPath!!.durationWithSpeed*easeCanvas.width, (1.0 - point.value)*easeCanvas.height)
+            gc.strokeOval( tPoint.x - drawCircleSize / 2, tPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
+            if (point.prevKey != null) {
+//                if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
+//                    gc.stroke = Color.LIMEGREEN
+//                else
+                    gc.stroke = Color.WHITE
+                var tanPoint = Vector2.subtract(point.timeAndValue, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor))
+                tanPoint.set(tanPoint.x/selectedPath!!.durationWithSpeed*easeCanvas.width, (1.0 - tanPoint.y)*easeCanvas.height)
+                gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
+                gc.lineWidth = 2.0
+                gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
+            }
+
+            if (point.nextKey != null) {
+//                if (point === selectedPoint && pointType == PointType.NEXT_TANGENT)
+//                    gc.stroke = Color.LIMEGREEN
+//                else
+                    gc.stroke = Color.WHITE
+                val tanPoint = Vector2.add(point.timeAndValue, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor))
+                tanPoint.set(tanPoint.x/selectedPath!!.durationWithSpeed*easeCanvas.width, (1.0 - tanPoint.y)*easeCanvas.height)
+                gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
+                gc.lineWidth = 2.0
+                gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
+            }
+
+            point = point.nextKey
         }
     }
 
