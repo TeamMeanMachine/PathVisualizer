@@ -205,7 +205,7 @@ class PathVisualizer : Application() {
                 easeCurve.removeAllPoints()
                 easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
                 easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
-                easeCurve.storeValueSlopeAndMagnitude(3.0, 0.5, 3.5 / 7.5 * 0.3, 7.0)
+                easeCurve.storeValueSlopeAndMagnitude(2.8, 0.5, 3.5 / 7.5 * 0.3, 7.0)
 
             }
         }
@@ -213,7 +213,7 @@ class PathVisualizer : Application() {
         autonomi["All Near Scale"]?.apply {
             this["Start To Near Scale"]?.apply {
                 easeCurve.headKey.magnitude = 9.0
-                easeCurve.tailKey.magnitude = 7.0
+                easeCurve.tailKey.magnitude = 9.0
                 val headKey = easeCurve.headKey
                 val tailKey = easeCurve.tailKey
                 easeCurve.removeAllPoints()
@@ -222,7 +222,7 @@ class PathVisualizer : Application() {
 //                easeCurve.storeValueSlopeAndMagnitude(2.25, 0.9, 0.25, 3.0)
             }
             this["Near Scale To Cube1"]?.apply {
-                easeCurve.headKey.magnitude = 4.0
+                easeCurve.headKey.magnitude = 4.5
                 easeCurve.tailKey.magnitude = 3.0
             }
             this["Cube1 To Near Scale"]?.apply {
