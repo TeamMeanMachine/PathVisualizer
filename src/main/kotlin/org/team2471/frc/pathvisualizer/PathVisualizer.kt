@@ -160,14 +160,14 @@ class PathVisualizer : Application() {
         autonomi["All Far Scale"]?.apply {
             this["Start To Far Scale"]?.apply {
                 easeCurve.headKey.magnitude = 7.0
-                easeCurve.tailKey.magnitude = 14.0
+                easeCurve.tailKey.magnitude = 12.0
 
                 val headKey = easeCurve.headKey
                 val tailKey = easeCurve.tailKey
                 easeCurve.removeAllPoints()
                 easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
                 easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
-                easeCurve.storeValueSlopeAndMagnitude(2.6, 0.47, 3.5 / 7.5 * 0.25, 7.0)
+                easeCurve.storeValueSlopeAndMagnitude(2.7, 0.45, 3.5 / 7.5 * 0.3, 7.5)
             }
 
             this["Far Scale To Cube1"]?.apply {
@@ -187,20 +187,70 @@ class PathVisualizer : Application() {
                 easeCurve.headKey.magnitude = 2.0
                 easeCurve.tailKey.magnitude = 10.0
             }
+            this["Far Scale To Cube3"]?.apply {
+                easeCurve.headKey.magnitude = 4.0
+                easeCurve.tailKey.magnitude = 2.5
+            }
         }
 
         autonomi["All Far Scale Mean Machine"]?.apply {
             this["Start To Far Platform"]?.apply {
                 easeCurve.headKey.magnitude = 7.0
-                easeCurve.tailKey.magnitude = 14.0
+                easeCurve.tailKey.magnitude = 8.0
 
                 val headKey = easeCurve.headKey
                 val tailKey = easeCurve.tailKey
                 easeCurve.removeAllPoints()
                 easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
                 easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
-                easeCurve.storeValueSlopeAndMagnitude(3.0, 0.5, 3.5 / 7.5 * 0.3, 7.0)
+                easeCurve.storeValueSlopeAndMagnitude(3.4, 0.57, 3.5 / 7.5 * 0.275, 8.0)
+            }
+            this["Far Platform To Cube1"]?.apply {
+                easeCurve.headKey.magnitude = 7.0
+                easeCurve.tailKey.magnitude = 8.0
 
+                val headKey = easeCurve.headKey
+                val tailKey = easeCurve.tailKey
+                easeCurve.removeAllPoints()
+                easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time/2, 0.5, 0.5/tailKey.time, 8.0)            }
+        }
+
+        autonomi["All Near Scale"]?.apply {
+            this["Start To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 9.0
+                easeCurve.tailKey.magnitude = 9.0
+                val headKey = easeCurve.headKey
+                val tailKey = easeCurve.tailKey
+                easeCurve.removeAllPoints()
+                easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
+//                easeCurve.storeValueSlopeAndMagnitude(2.25, 0.9, 0.25, 3.0)
+            }
+            this["Near Scale To Cube1"]?.apply {
+                easeCurve.headKey.magnitude = 4.5
+                easeCurve.tailKey.magnitude = 3.0
+            }
+            this["Cube1 To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 1.0
+                easeCurve.tailKey.magnitude = 7.0
+            }
+            this["Near Scale To Cube2"]?.apply {
+                easeCurve.headKey.magnitude = 4.0
+                easeCurve.tailKey.magnitude = 3.0
+            }
+            this["Cube2 To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 1.0
+                easeCurve.tailKey.magnitude = 7.0
+            }
+            this["Near Scale To Cube3"]?.apply {
+                easeCurve.headKey.magnitude = 4.0
+                easeCurve.tailKey.magnitude = 3.5
+            }
+            this["Cube3 To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 1.0
+                easeCurve.tailKey.magnitude = 7.0
             }
         }
 
@@ -559,13 +609,13 @@ class PathVisualizer : Application() {
         val openButton = Button("Open")
         openButton.setOnAction { _: ActionEvent ->
             val fileChooser = FileChooser()
-            fileChooser.setTitle("Open Autonomi File...")
+            fileChooser.title = "Open Autonomi File..."
             fileChooser.extensionFilters.add(FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json"))
             fileChooser.initialDirectory = File(System.getProperty("user.dir"))
             fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
             val file = fileChooser.showOpenDialog(stage)
             if (file != null) {
-                fileName = file.name
+                fileName = file.absolutePath
                 openFile(file)
             }
         }
@@ -657,22 +707,28 @@ class PathVisualizer : Application() {
     }
 
     private fun openFile(file: File) {
-        var json: String = file.readText()
-        autonomi = Autonomi.fromJsonString(json)
-        userPref.put(userFilenameKey, file.name);
+        try {
+            val json = file.readText()
+            autonomi = Autonomi.fromJsonString(json)
+            userPref.put(userFilenameKey, file.absolutePath)
+        } catch (e: Exception) {
+            System.err.println("Failed to find file ${file.absolutePath}")
+            autonomi = Autonomi()
+        }
         refreshAll()
     }
 
     private fun saveAs() {
         val fileChooser = FileChooser()
-        fileChooser.setTitle("Save Autonomi File As...")
+        fileChooser.title = "Save Autonomi File As..."
         val extFilter = FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json")
         fileChooser.extensionFilters.add(extFilter)
         fileChooser.initialDirectory = File(System.getProperty("user.dir"))
         fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
         val file = fileChooser.showSaveDialog(stage)
         if (file != null) {
-            fileName = file.name
+            userPref.put(userFilenameKey, file.absolutePath)
+            fileName = file.absolutePath
             val json = autonomi.toJsonString()
             val writer = PrintWriter(file)
             writer.append(json)
