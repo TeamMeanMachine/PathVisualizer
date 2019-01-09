@@ -287,12 +287,16 @@ class PathVisualizer : Application() {
         repaint()
         stage.show()
 
-        fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
-        fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
-        fieldCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onFieldMousePressed(it) }
+        fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onFieldMouseDragged(it) }
+        fieldCanvas.onMouseReleased = EventHandler<MouseEvent> { onFieldMouseReleased() }
         fieldCanvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
         fieldCanvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
         fieldCanvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
+
+        easeCanvas.onMousePressed = EventHandler<MouseEvent> { onGraphMousePressed(it) }
+        easeCanvas.onMouseDragged = EventHandler<MouseEvent> { onGraphMouseDragged(it) }
+        easeCanvas.onMouseReleased = EventHandler<MouseEvent> { onGraphMouseReleased() }
     }
 
 // todo: stop - this happens when the app shuts down ////////////////////////////////////////////////////////////////////
@@ -653,7 +657,9 @@ class PathVisualizer : Application() {
         }
 
         val robotHBox = HBox()
+        val easeCurveFuntions = HBox()
         val sendToRobotButton = Button("Send To Robot")
+        val playButton = Button(" Play ")
         sendToRobotButton.setOnAction { _: ActionEvent ->
             autonomi.publishToNetworkTables(networkTableInstance)
         }
@@ -667,6 +673,8 @@ class PathVisualizer : Application() {
         })
         connect(defaultAddress)
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
+        easeCurveFuntions.children.addAll(playButton)
+
 
         buttonsBox.children.addAll(
                 autoComboHBox,
@@ -688,7 +696,8 @@ class PathVisualizer : Application() {
                 lengthHBox,
                 Separator(),
                 filesBox,
-                robotHBox
+                robotHBox,
+                easeCurveFuntions
         )
 
         refreshAll()
@@ -1029,6 +1038,7 @@ class PathVisualizer : Application() {
         gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
         gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
         gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+
     }
 
     fun getWheelPositions(time: Double): Array<Vector2> {  // offset can be positive or negative (half the width of the robot)
@@ -1179,6 +1189,9 @@ class PathVisualizer : Application() {
         val currentTimeX = currentTime / selectedPath!!.durationWithSpeed * easeCanvas.width
         gc.stroke = Color.YELLOW
         gc.strokeLine(currentTimeX, 0.0, currentTimeX, easeCanvas.height)
+        gc.stroke = Color.BLACK
+        gc.strokeOval(currentTimeX-5.0, easeCanvas.height - 10.0, drawCircleSize,drawCircleSize)
+
 
 
     }
@@ -1191,7 +1204,7 @@ class PathVisualizer : Application() {
     var startMouse = Vector2(0.0, 0.0)
     var oCoord: Vector2 = Vector2(0.0, 0.0)
 
-    fun onMousePressed(e: MouseEvent) {
+    fun onFieldMousePressed(e: MouseEvent) {
         if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
             fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
@@ -1247,7 +1260,7 @@ class PathVisualizer : Application() {
                             selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
                     } else {  // first point on a path?
                         //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
-                        //                selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), path2DPoint)
+                        //                selectedPoint = selectedPaath?.addVector2After(screen2World(mouseVec), path2DPoint)
                         selectedPath?.addVector2(screen2World(mouseVec))
                     }
                 }
@@ -1262,7 +1275,7 @@ class PathVisualizer : Application() {
         }
     }
 
-    fun onMouseDragged(e: MouseEvent) {
+    fun onFieldMouseDragged(e: MouseEvent) {
         when (mouseMode) {
             MouseMode.EDIT -> {
                 if (editPoint != null) {
@@ -1287,7 +1300,7 @@ class PathVisualizer : Application() {
         }
     }
 
-    fun onMouseReleased() {
+    fun onFieldMouseReleased() {
         when (mouseMode) {
             MouseMode.EDIT -> editPoint = null  // no longer editing
             MouseMode.PAN -> mouseMode = MouseMode.EDIT
@@ -1296,6 +1309,17 @@ class PathVisualizer : Application() {
         fieldCanvas.requestFocus()
     }
 
+    fun onGraphMousePressed(e: MouseEvent){
+
+    }
+
+    fun onGraphMouseDragged(e: MouseEvent) {
+
+    }
+
+    fun onGraphMouseReleased() {
+
+    }
 
     fun onZoom(e: ZoomEvent) {
         zoom /= e.zoomFactor
