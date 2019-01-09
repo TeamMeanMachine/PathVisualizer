@@ -1279,7 +1279,6 @@ class PathVisualizer : Application() {
                 }
             }
             MouseMode.PAN -> {
-                //println("${offset.x} and ${offset.y}")
                 offset.x = e.x - oCoord.x
                 offset.y = e.y - oCoord.y
                 repaint()
@@ -1298,7 +1297,7 @@ class PathVisualizer : Application() {
 
 
     fun onZoom(e: ZoomEvent) {
-        zoom /= e.zoomFactor
+        zoom *= e.zoomFactor
         repaint()
     }
 
@@ -1351,7 +1350,7 @@ class PathVisualizer : Application() {
 
     fun onScroll(e: ScrollEvent) {
         if (mouseMode != MouseMode.PAN) {
-            zoom += e.deltaY / 25
+            zoom += e.deltaY / 25 * -1
             repaint()
         }
     }
@@ -1438,16 +1437,16 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : draw ease curve in bottom panel, use another SplitPane horizontal
 // : remember last loaded/saved file in registry and automatically load it at startup
 
+// todo: editing of ease curve and heading curve
 // todo: Be able to create wheel paths for swerves
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
 // todo: New field drawing
-// todo: playback of robot travel - this should be broken into sub tasks
-// todo: editing of ease curve
+// todo: playback of robot travel
 // todo: add rename button beside auto and path combos to edit their names -- Duy
 // todo: add delete buttons beside auto and path for deleting them
 
-
+// todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane
 // todo: place edit box for magnitude of ease curve (or one for each end)
 // todo: add edit box for what speed is colored maximum green
