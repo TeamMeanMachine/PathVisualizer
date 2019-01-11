@@ -364,7 +364,18 @@ class PathVisualizer : Application() {
                 refreshAll()
             }
         })
-        pathListViewHBox.children.addAll(pathListViewName, pathListView)
+
+        val deletePathButton = Button("Delete Path")
+        deletePathButton.setOnAction { _: ActionEvent ->
+            if (selectedPath != null && selectedAutonomous != null){
+                selectedAutonomous!!.paths.remove(selectedPath!!.name, selectedPath)
+                refreshAll()
+            }
+        }
+
+        val renamePathButton = Button("Rename Path")
+
+        pathListViewHBox.children.addAll(pathListViewName, pathListView, deletePathButton, renamePathButton)
 
         // autonomous combo box
         val autoComboHBox = HBox()
@@ -400,7 +411,17 @@ class PathVisualizer : Application() {
                 repaint()
             }
         })
-        autoComboHBox.children.addAll(autoComboName, autoComboBox)
+
+        val renameAutoButton = Button("Rename Auto")
+        val deleteAutoButton = Button("Delete Auto")
+        deletePathButton.setOnAction { _: ActionEvent ->
+            if (selectedAutonomous != null){
+                autonomi.mapAutonomous.remove(selectedAutonomous!!.name, selectedAutonomous)
+                refreshAll()
+            }
+        }
+
+        autoComboHBox.children.addAll(autoComboName, autoComboBox, deleteAutoButton, renameAutoButton)
 
         val miscHBox = HBox()
         val deletePoint = Button("Delete Point")
@@ -1461,14 +1482,14 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : draw ease curve in bottom panel, use another SplitPane horizontal
 // : remember last loaded/saved file in registry and automatically load it at startup
 
-// todo: editing of ease curve and heading curve
+// todo: editing of ease curve and heading curve - Julian
 // todo: Be able to create wheel paths for swerves
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
 // todo: New field drawing
 // todo: playback of robot travel
-// todo: add rename button beside auto and path combos to edit their names -- Duy
-// todo: add delete buttons beside auto and path for deleting them
+// todo: add rename button beside auto and path combos to edit their names - James
+// todo: add delete buttons beside auto and path for deleting them - James
 
 // todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane
