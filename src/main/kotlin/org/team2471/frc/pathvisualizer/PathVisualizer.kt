@@ -619,7 +619,7 @@ class PathVisualizer : Application() {
         val widthName = Text("Robot Width:  ")
         widthText.textProperty().addListener({ _, _, newText ->
             if (!refreshing) {
-                selectedAutonomous?.robotWidth = (newText.toDouble()) / 12.0
+                selectedAutonomous?.robotWidth = newText.toDouble() / 12.0
                 //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
                 repaint()
             }
@@ -631,12 +631,12 @@ class PathVisualizer : Application() {
         val lengthName = Text("Robot Length:  ")
         lengthText.textProperty().addListener({ _, _, newText ->
             if (!refreshing) {
-                selectedAutonomous?.robotLength = newText.toDouble()
+                selectedAutonomous?.robotLength = newText.toDouble() / 12.0
                 //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
                 repaint()
             }
         })
-        val lengthUnit = Text("inches")
+        val lengthUnit = Text(" inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
         val filesBox = HBox()
