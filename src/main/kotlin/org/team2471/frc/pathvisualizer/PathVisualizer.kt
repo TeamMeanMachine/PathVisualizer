@@ -20,6 +20,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
+import javafx.stage.Screen
 import javafx.stage.Stage
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.vector.Vector2
@@ -45,7 +46,7 @@ class PathVisualizer : Application() {
     // javaFX state which needs saved around
     private val fieldCanvas = ResizableCanvas(this)
     private val easeCanvas = ResizableCanvas(this)
-    private val image = Image("assets/2018Field.PNG")
+    private val image = Image("assets/2019Field.png")
     private var stage: Stage? = null
     private val userPref = Preferences.userRoot()
     private val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
@@ -59,9 +60,9 @@ class PathVisualizer : Application() {
     private var currentTime = 0.0
 
     // image stuff - measure your image with paint and enter these first 3
-    private val upperLeftOfFieldPixels = Vector2(86.0, 103.0)
-    private val lowerRightOfFieldPixels = Vector2(990.0, 1000.0)
-    private val zoomPivot = Vector2(535.0, 1000.0)  // the location in the image where the zoom origin will originate
+    private val upperLeftOfFieldPixels = Vector2(79.0, 0.0)
+    private val lowerRightOfFieldPixels = Vector2(1421.0, 1352.0)
+    private val zoomPivot = Vector2(750.0, 1352.0)  // the location in the image where the zoom origin will originate
     private val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     private val fieldDimensionFeet = Vector2(27.0, 27.0)
 
@@ -276,7 +277,7 @@ class PathVisualizer : Application() {
         easeCanvas.heightProperty().bind(easeStackPane.heightProperty())
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, buttonsBox)
-        horizontalSplitPane.setDividerPositions(0.7)
+        horizontalSplitPane.setDividerPositions(0.68)
 
 /*
         val menuBar = MenuBar()
@@ -286,8 +287,13 @@ class PathVisualizer : Application() {
         topVBox.children.addAll(menuBar, horizontalSplitPane)
 */
 
-        stage.scene = Scene(horizontalSplitPane, 1600.0, 900.0)
+        val screen = Screen.getPrimary()
+        val bounds = screen.visualBounds
+
+        stage.scene = Scene(horizontalSplitPane, bounds.width, bounds.height)
         stage.sizeToScene()
+        stage.isMaximized = true
+
         repaint()
         stage.show()
 
@@ -334,6 +340,7 @@ class PathVisualizer : Application() {
         // path combo box
         pathListView.prefHeight = 180.0
         val pathListViewHBox = HBox()
+        pathListViewHBox.spacing = 10.0
         val pathListViewName = Text("Path:  ")
         refreshpathListView(pathListView)
         pathListView.getSelectionModel().selectedItemProperty().addListener({ _, _, newText ->
@@ -373,7 +380,9 @@ class PathVisualizer : Application() {
         deletePathButton.setOnAction { _: ActionEvent ->
             if (selectedPath != null && selectedAutonomous != null){
                 selectedAutonomous!!.paths.remove(selectedPath!!.name, selectedPath)
+                selectedPath = null
                 refreshAll()
+                repaint()
             }
         }
 
@@ -383,6 +392,7 @@ class PathVisualizer : Application() {
 
         // autonomous combo box
         val autoComboHBox = HBox()
+        autoComboHBox.spacing = 10.0
         val autoComboName = Text("Auto:  ")
         refreshAutoCombo(autoComboBox)
         autoComboBox.valueProperty().addListener({ _, _, newText ->
@@ -417,11 +427,15 @@ class PathVisualizer : Application() {
         })
 
         val renameAutoButton = Button("Rename Auto")
+
         val deleteAutoButton = Button("Delete Auto")
-        deletePathButton.setOnAction { _: ActionEvent ->
+        deleteAutoButton.setOnAction { _: ActionEvent ->
             if (selectedAutonomous != null){
                 autonomi.mapAutonomous.remove(selectedAutonomous!!.name, selectedAutonomous)
+                selectedAutonomous = null
+                selectedPath = null
                 refreshAll()
+                repaint()
             }
         }
 
@@ -1153,23 +1167,6 @@ class PathVisualizer : Application() {
             gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
             drawEaseLine(gc, prevPos, pos, gc.canvas.height)
 
-/*
-            var speed = 15.0 - Math.abs(pos.y - prevPos.y) * selectedPath!!.length / deltaT
-            println("Speed: $speed")
-            gc.stroke = Color.WHITE
-            val speedVec1 = Vector2(pos.x, speed)
-            val speedVec2 = Vector2(prevPos.x, prevSpeed)
-            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height / 15.0)
-*/
-/*
-            var accel = (speed - prevSpeed) / deltaT
-            val accelVec1 = Vector2(pos.x, accel)
-            val accelVec2 = Vector2(prevPos.x, prevAccel)
-            gc.stroke = Color.BLACK
-            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height/100.0)
-            prevSpeed = speed
-
-*/
             prevPos = pos
             t += deltaT
         }
