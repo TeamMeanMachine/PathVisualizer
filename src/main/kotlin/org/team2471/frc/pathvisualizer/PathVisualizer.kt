@@ -20,6 +20,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
+import javafx.stage.Screen
 import javafx.stage.Stage
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.vector.Vector2
@@ -276,7 +277,7 @@ class PathVisualizer : Application() {
         easeCanvas.heightProperty().bind(easeStackPane.heightProperty())
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, buttonsBox)
-        horizontalSplitPane.setDividerPositions(0.7)
+        horizontalSplitPane.setDividerPositions(0.68)
 
 /*
         val menuBar = MenuBar()
@@ -286,8 +287,13 @@ class PathVisualizer : Application() {
         topVBox.children.addAll(menuBar, horizontalSplitPane)
 */
 
-        stage.scene = Scene(horizontalSplitPane, 1600.0, 900.0)
+        val screen = Screen.getPrimary()
+        val bounds = screen.visualBounds
+
+        stage.scene = Scene(horizontalSplitPane, bounds.width, bounds.height)
         stage.sizeToScene()
+        stage.isMaximized = true
+
         repaint()
         stage.show()
 
