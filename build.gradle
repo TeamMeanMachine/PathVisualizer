@@ -7,6 +7,8 @@ apply plugin: 'application'
 
 sourceCompatibility = 1.8
 
+def mainClass = 'org.team2471.frc.pathvisualizer.PathVisualizer'
+
 buildscript {
     ext.kotlin_version = '1.2.30'
     repositories {
@@ -35,14 +37,14 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.team2471.frc.pathvisualizer.PathVisualizer'
+        attributes 'Main-Class': mainClass
     }
 
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 run {
-    main = 'org.team2471.frc.pathvisualizer.PathVisualizer'
+    main = mainClass
 }
 
 compileKotlin {
