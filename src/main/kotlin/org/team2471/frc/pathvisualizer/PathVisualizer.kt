@@ -334,6 +334,7 @@ class PathVisualizer : Application() {
         // path combo box
         pathListView.prefHeight = 180.0
         val pathListViewHBox = HBox()
+        pathListViewHBox.spacing = 10.0
         val pathListViewName = Text("Path:  ")
         refreshpathListView(pathListView)
         pathListView.getSelectionModel().selectedItemProperty().addListener({ _, _, newText ->
@@ -373,7 +374,9 @@ class PathVisualizer : Application() {
         deletePathButton.setOnAction { _: ActionEvent ->
             if (selectedPath != null && selectedAutonomous != null){
                 selectedAutonomous!!.paths.remove(selectedPath!!.name, selectedPath)
+                selectedPath = null
                 refreshAll()
+                repaint()
             }
         }
 
@@ -383,6 +386,7 @@ class PathVisualizer : Application() {
 
         // autonomous combo box
         val autoComboHBox = HBox()
+        autoComboHBox.spacing = 10.0
         val autoComboName = Text("Auto:  ")
         refreshAutoCombo(autoComboBox)
         autoComboBox.valueProperty().addListener({ _, _, newText ->
@@ -417,11 +421,15 @@ class PathVisualizer : Application() {
         })
 
         val renameAutoButton = Button("Rename Auto")
+
         val deleteAutoButton = Button("Delete Auto")
-        deletePathButton.setOnAction { _: ActionEvent ->
+        deleteAutoButton.setOnAction { _: ActionEvent ->
             if (selectedAutonomous != null){
                 autonomi.mapAutonomous.remove(selectedAutonomous!!.name, selectedAutonomous)
+                selectedAutonomous = null
+                selectedPath = null
                 refreshAll()
+                repaint()
             }
         }
 
