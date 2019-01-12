@@ -1497,15 +1497,15 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : add path length field for measuring the field drawing, etc...
 // : draw ease curve in bottom panel, use another SplitPane horizontal
 // : remember last loaded/saved file in registry and automatically load it at startup
+// : New field drawing 2019 - thanks SERT
 
+// todo: playback of robot travel
 // todo: editing of ease curve and heading curve - Julian
-// todo: Be able to create wheel paths for swerves
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
-// todo: New field drawing
-// todo: playback of robot travel
 // todo: add rename button beside auto and path combos to edit their names - James
 // todo: add delete buttons beside auto and path for deleting them - James
+// todo: Be able to create wheel paths for swerves
 
 // todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane
