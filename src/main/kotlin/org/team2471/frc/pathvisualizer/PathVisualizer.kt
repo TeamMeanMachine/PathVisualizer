@@ -418,8 +418,8 @@ class PathVisualizer : Application() {
 
         val renameAutoButton = Button("Rename Auto")
         val deleteAutoButton = Button("Delete Auto")
-        deletePathButton.setOnAction { _: ActionEvent ->
-            if (selectedAutonomous != null){
+        deleteAutoButton.setOnAction { _: ActionEvent ->
+            if (selectedAutonomous != null) {
                 autonomi.mapAutonomous.remove(selectedAutonomous!!.name, selectedAutonomous)
                 refreshAll()
             }
