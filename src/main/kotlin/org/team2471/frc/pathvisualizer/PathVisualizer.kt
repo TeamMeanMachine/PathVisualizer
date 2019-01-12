@@ -18,7 +18,6 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.FontSmoothingType
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.stage.Stage
@@ -57,6 +56,7 @@ class PathVisualizer : Application() {
     private var autonomi = Autonomi()
     var selectedAutonomous: Autonomous? = null
     private var selectedPath: Path2D? = null
+    private var currentTime = 0.0
 
     // image stuff - measure your image with paint and enter these first 3
     private val upperLeftOfFieldPixels = Vector2(86.0, 103.0)
@@ -81,6 +81,9 @@ class PathVisualizer : Application() {
     // point editing
     private var editPoint: Path2DPoint? = null
     private var selectedPoint: Path2DPoint? = null
+
+    private var editGraphPoint: Path2DPoint? = null
+    private var selectedGraphPoint: Path2DPoint? = null
 
     private val networkTableInstance = NetworkTableInstance.create()
 
@@ -161,14 +164,14 @@ class PathVisualizer : Application() {
         autonomi["All Far Scale"]?.apply {
             this["Start To Far Scale"]?.apply {
                 easeCurve.headKey.magnitude = 7.0
-                easeCurve.tailKey.magnitude = 14.0
+                easeCurve.tailKey.magnitude = 12.0
 
                 val headKey = easeCurve.headKey
                 val tailKey = easeCurve.tailKey
                 easeCurve.removeAllPoints()
                 easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
                 easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
-                easeCurve.storeValueSlopeAndMagnitude(2.6, 0.47, 3.5 / 7.5 * 0.25, 7.0)
+                easeCurve.storeValueSlopeAndMagnitude(2.7, 0.45, 3.5 / 7.5 * 0.3, 7.5)
             }
 
             this["Far Scale To Cube1"]?.apply {
@@ -188,20 +191,71 @@ class PathVisualizer : Application() {
                 easeCurve.headKey.magnitude = 2.0
                 easeCurve.tailKey.magnitude = 10.0
             }
+            this["Far Scale To Cube3"]?.apply {
+                easeCurve.headKey.magnitude = 4.0
+                easeCurve.tailKey.magnitude = 2.5
+            }
         }
 
         autonomi["All Far Scale Mean Machine"]?.apply {
             this["Start To Far Platform"]?.apply {
                 easeCurve.headKey.magnitude = 7.0
-                easeCurve.tailKey.magnitude = 14.0
+                easeCurve.tailKey.magnitude = 8.0
 
                 val headKey = easeCurve.headKey
                 val tailKey = easeCurve.tailKey
                 easeCurve.removeAllPoints()
                 easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
                 easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
-                easeCurve.storeValueSlopeAndMagnitude(3.0, 0.5, 3.5 / 7.5 * 0.3, 7.0)
+                easeCurve.storeValueSlopeAndMagnitude(3.4, 0.57, 3.5 / 7.5 * 0.275, 8.0)
+            }
+            this["Far Platform To Cube1"]?.apply {
+                easeCurve.headKey.magnitude = 7.0
+                easeCurve.tailKey.magnitude = 8.0
 
+                val headKey = easeCurve.headKey
+                val tailKey = easeCurve.tailKey
+                easeCurve.removeAllPoints()
+                easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time / 2, 0.5, 0.5 / tailKey.time, 8.0)
+            }
+        }
+
+        autonomi["All Near Scale"]?.apply {
+            this["Start To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 9.0
+                easeCurve.tailKey.magnitude = 9.0
+                val headKey = easeCurve.headKey
+                val tailKey = easeCurve.tailKey
+                easeCurve.removeAllPoints()
+                easeCurve.storeValueSlopeAndMagnitude(headKey.time, headKey.value, 0.0, headKey.magnitude)
+                easeCurve.storeValueSlopeAndMagnitude(tailKey.time, tailKey.value, 0.0, tailKey.magnitude)
+//                easeCurve.storeValueSlopeAndMagnitude(2.25, 0.9, 0.25, 3.0)
+            }
+            this["Near Scale To Cube1"]?.apply {
+                easeCurve.headKey.magnitude = 4.5
+                easeCurve.tailKey.magnitude = 3.0
+            }
+            this["Cube1 To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 1.0
+                easeCurve.tailKey.magnitude = 7.0
+            }
+            this["Near Scale To Cube2"]?.apply {
+                easeCurve.headKey.magnitude = 4.0
+                easeCurve.tailKey.magnitude = 3.0
+            }
+            this["Cube2 To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 1.0
+                easeCurve.tailKey.magnitude = 7.0
+            }
+            this["Near Scale To Cube3"]?.apply {
+                easeCurve.headKey.magnitude = 4.0
+                easeCurve.tailKey.magnitude = 3.5
+            }
+            this["Cube3 To Near Scale"]?.apply {
+                easeCurve.headKey.magnitude = 1.0
+                easeCurve.tailKey.magnitude = 7.0
             }
         }
 
@@ -237,12 +291,16 @@ class PathVisualizer : Application() {
         repaint()
         stage.show()
 
-        fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
-        fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
-        fieldCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onFieldMousePressed(it) }
+        fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onFieldMouseDragged(it) }
+        fieldCanvas.onMouseReleased = EventHandler<MouseEvent> { onFieldMouseReleased() }
         fieldCanvas.onZoom = EventHandler<ZoomEvent> { onZoom(it) }
         fieldCanvas.onKeyPressed = EventHandler<KeyEvent> { onKeyPressed(it) }
         fieldCanvas.onScroll = EventHandler<ScrollEvent> { onScroll(it) }
+
+        easeCanvas.onMousePressed = EventHandler<MouseEvent> { onGraphMousePressed(it) }
+        easeCanvas.onMouseDragged = EventHandler<MouseEvent> { onGraphMouseDragged(it) }
+        easeCanvas.onMouseReleased = EventHandler<MouseEvent> { onGraphMouseReleased() }
     }
 
 // todo: stop - this happens when the app shuts down ////////////////////////////////////////////////////////////////////
@@ -269,6 +327,7 @@ class PathVisualizer : Application() {
     private val slopeModeCombo = ComboBox<String>()
     private val pathLengthText = TextField()
     private var refreshing = false
+    private val currentTimeText = TextField()
 
     private fun addControlsToButtonsBox(buttonsBox: VBox) {
 
@@ -309,7 +368,18 @@ class PathVisualizer : Application() {
                 refreshAll()
             }
         })
-        pathListViewHBox.children.addAll(pathListViewName, pathListView)
+
+        val deletePathButton = Button("Delete Path")
+        deletePathButton.setOnAction { _: ActionEvent ->
+            if (selectedPath != null && selectedAutonomous != null){
+                selectedAutonomous!!.paths.remove(selectedPath!!.name, selectedPath)
+                refreshAll()
+            }
+        }
+
+        val renamePathButton = Button("Rename Path")
+
+        pathListViewHBox.children.addAll(pathListViewName, pathListView, deletePathButton, renamePathButton)
 
         // autonomous combo box
         val autoComboHBox = HBox()
@@ -345,7 +415,17 @@ class PathVisualizer : Application() {
                 repaint()
             }
         })
-        autoComboHBox.children.addAll(autoComboName, autoComboBox)
+
+        val renameAutoButton = Button("Rename Auto")
+        val deleteAutoButton = Button("Delete Auto")
+        deletePathButton.setOnAction { _: ActionEvent ->
+            if (selectedAutonomous != null){
+                autonomi.mapAutonomous.remove(selectedAutonomous!!.name, selectedAutonomous)
+                refreshAll()
+            }
+        }
+
+        autoComboHBox.children.addAll(autoComboName, autoComboBox, deleteAutoButton, renameAutoButton)
 
         val miscHBox = HBox()
         val deletePoint = Button("Delete Point")
@@ -383,6 +463,7 @@ class PathVisualizer : Application() {
 
         val secondsHBox = HBox()
         val secondsName = Text("Seconds:  ")
+        val currentTimeName = Text("Current Path Time:  ")
         // this is java code to try to create a
 //        val pattern = Pattern.compile("\\d*|\\d+\\,\\d*");
 //        val formatter = TextFormatter(UnaryOperator<TextFormatter.Change>) change -> {
@@ -395,7 +476,14 @@ class PathVisualizer : Application() {
                 repaint()
             }
         })
-        secondsHBox.children.addAll(secondsName, secondsText)
+
+        currentTimeText.textProperty().addListener({ _, _, newText ->
+            if (!refreshing) {
+                currentTime = newText.toDouble()
+                repaint()
+            }
+        })
+        secondsHBox.children.addAll(secondsName, secondsText, currentTimeName, currentTimeText)
 
         val speedHBox = HBox()
         val speedName = Text("Speed Multiplier:  ")
@@ -560,13 +648,13 @@ class PathVisualizer : Application() {
         val openButton = Button("Open")
         openButton.setOnAction { _: ActionEvent ->
             val fileChooser = FileChooser()
-            fileChooser.setTitle("Open Autonomi File...")
+            fileChooser.title = "Open Autonomi File..."
             fileChooser.extensionFilters.add(FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json"))
             fileChooser.initialDirectory = File(System.getProperty("user.dir"))
             fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
             val file = fileChooser.showOpenDialog(stage)
             if (file != null) {
-                fileName = file.name
+                fileName = file.absolutePath
                 openFile(file)
             }
         }
@@ -594,7 +682,9 @@ class PathVisualizer : Application() {
         }
 
         val robotHBox = HBox()
+        val easeCurveFuntions = HBox()
         val sendToRobotButton = Button("Send To Robot")
+        val playButton = Button(" Play ")
         sendToRobotButton.setOnAction { _: ActionEvent ->
             autonomi.publishToNetworkTables(networkTableInstance)
         }
@@ -608,6 +698,8 @@ class PathVisualizer : Application() {
         })
         connect(defaultAddress)
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
+        easeCurveFuntions.children.addAll(playButton)
+
 
         buttonsBox.children.addAll(
                 autoComboHBox,
@@ -629,7 +721,8 @@ class PathVisualizer : Application() {
                 lengthHBox,
                 Separator(),
                 filesBox,
-                robotHBox
+                robotHBox,
+                easeCurveFuntions
         )
 
         refreshAll()
@@ -658,22 +751,28 @@ class PathVisualizer : Application() {
     }
 
     private fun openFile(file: File) {
-        var json: String = file.readText()
-        autonomi = Autonomi.fromJsonString(json)
-        userPref.put(userFilenameKey, file.name);
+        try {
+            val json = file.readText()
+            autonomi = Autonomi.fromJsonString(json)
+            userPref.put(userFilenameKey, file.absolutePath)
+        } catch (e: Exception) {
+            System.err.println("Failed to find file ${file.absolutePath}")
+            autonomi = Autonomi()
+        }
         refreshAll()
     }
 
     private fun saveAs() {
         val fileChooser = FileChooser()
-        fileChooser.setTitle("Save Autonomi File As...")
+        fileChooser.title = "Save Autonomi File As..."
         val extFilter = FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json")
         fileChooser.extensionFilters.add(extFilter)
         fileChooser.initialDirectory = File(System.getProperty("user.dir"))
         fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
         val file = fileChooser.showSaveDialog(stage)
         if (file != null) {
-            fileName = file.name
+            userPref.put(userFilenameKey, file.absolutePath)
+            fileName = file.absolutePath
             val json = autonomi.toJsonString()
             val writer = PrintWriter(file)
             writer.append(json)
@@ -778,6 +877,8 @@ class PathVisualizer : Application() {
             lengthText.text = (selectedAutonomous!!.robotLength * 12.0).format(1)
             scrubFactorText.text = selectedAutonomous!!.scrubFactor.format(3)
         }
+
+        currentTimeText.text = currentTime.format(1)
         refreshPoint()
         refreshing = false
     }
@@ -946,6 +1047,41 @@ class PathVisualizer : Application() {
             }
             point = point.nextPoint
         }
+
+        drawRobot(gc)
+    }
+
+    fun drawRobot(gc: GraphicsContext) {
+        gc.stroke = Color.YELLOW
+        var corners = getWheelPositions(currentTime)
+        corners[0] = world2ScreenWithMirror(corners[0], selectedPath!!.isMirrored)
+        corners[1] = world2ScreenWithMirror(corners[1], selectedPath!!.isMirrored)
+        corners[2] = world2ScreenWithMirror(corners[2], selectedPath!!.isMirrored)
+        corners[3] = world2ScreenWithMirror(corners[3], selectedPath!!.isMirrored)
+
+        gc.strokeLine(corners[0].x, corners[0].y, corners[1].x, corners[1].y)
+        gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
+        gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
+        gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+
+    }
+
+    fun getWheelPositions(time: Double): Array<Vector2> {  // offset can be positive or negative (half the width of the robot)
+        val centerPosition = selectedPath!!.getPosition(time)
+        var tangent = selectedPath!!.getTangent(time)
+        tangent = Vector2.normalize(tangent!!)
+        var perpendicularToPath = Vector2.perpendicular(tangent)
+        val robotLength = selectedAutonomous!!.robotLength / 2.0
+        tangent *= robotLength
+        val robotWidth = selectedAutonomous!!.robotWidth / 2.0
+        perpendicularToPath *= robotWidth
+
+        return arrayOf(
+                centerPosition + tangent + perpendicularToPath,
+                centerPosition + tangent - perpendicularToPath,
+                centerPosition - tangent - perpendicularToPath,
+                centerPosition - tangent + perpendicularToPath
+        )
     }
 
     fun drawEaseCurve(gc: GraphicsContext) {
@@ -1017,20 +1153,23 @@ class PathVisualizer : Application() {
             gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
             drawEaseLine(gc, prevPos, pos, gc.canvas.height)
 
+/*
             var speed = 15.0 - Math.abs(pos.y - prevPos.y) * selectedPath!!.length / deltaT
             println("Speed: $speed")
             gc.stroke = Color.WHITE
             val speedVec1 = Vector2(pos.x, speed)
             val speedVec2 = Vector2(prevPos.x, prevSpeed)
             drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height / 15.0)
+*/
 /*
             var accel = (speed - prevSpeed) / deltaT
             val accelVec1 = Vector2(pos.x, accel)
             val accelVec2 = Vector2(prevPos.x, prevAccel)
             gc.stroke = Color.BLACK
             drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height/100.0)
-*/
             prevSpeed = speed
+
+*/
             prevPos = pos
             t += deltaT
         }
@@ -1041,17 +1180,17 @@ class PathVisualizer : Application() {
 //            if (point === selectedPoint && pointType == PointType.POINT)
 //                gc.stroke = Color.LIMEGREEN
 //            else
-                gc.stroke = Color.WHITE
+            gc.stroke = Color.WHITE
 
-            val tPoint = Vector2(point.time/selectedPath!!.durationWithSpeed*easeCanvas.width, (1.0 - point.value)*easeCanvas.height)
-            gc.strokeOval( tPoint.x - drawCircleSize / 2, tPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
+            val tPoint = Vector2(point.time / selectedPath!!.durationWithSpeed * easeCanvas.width, (1.0 - point.value) * easeCanvas.height)
+            gc.strokeOval(tPoint.x - drawCircleSize / 2, tPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
             if (point.prevKey != null) {
 //                if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
 //                    gc.stroke = Color.LIMEGREEN
 //                else
-                    gc.stroke = Color.WHITE
+                gc.stroke = Color.WHITE
                 var tanPoint = Vector2.subtract(point.timeAndValue, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor))
-                tanPoint.set(tanPoint.x/selectedPath!!.durationWithSpeed*easeCanvas.width, (1.0 - tanPoint.y)*easeCanvas.height)
+                tanPoint.set(tanPoint.x / selectedPath!!.durationWithSpeed * easeCanvas.width, (1.0 - tanPoint.y) * easeCanvas.height)
                 gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
                 gc.lineWidth = 2.0
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
@@ -1061,9 +1200,9 @@ class PathVisualizer : Application() {
 //                if (point === selectedPoint && pointType == PointType.NEXT_TANGENT)
 //                    gc.stroke = Color.LIMEGREEN
 //                else
-                    gc.stroke = Color.WHITE
+                gc.stroke = Color.WHITE
                 val tanPoint = Vector2.add(point.timeAndValue, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor))
-                tanPoint.set(tanPoint.x/selectedPath!!.durationWithSpeed*easeCanvas.width, (1.0 - tanPoint.y)*easeCanvas.height)
+                tanPoint.set(tanPoint.x / selectedPath!!.durationWithSpeed * easeCanvas.width, (1.0 - tanPoint.y) * easeCanvas.height)
                 gc.strokeOval(tanPoint.x - drawCircleSize / 2, tanPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
                 gc.lineWidth = 2.0
                 gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
@@ -1071,6 +1210,15 @@ class PathVisualizer : Application() {
 
             point = point.nextKey
         }
+
+        val currentTimeX = currentTime / selectedPath!!.durationWithSpeed * easeCanvas.width
+        gc.stroke = Color.YELLOW
+        gc.strokeLine(currentTimeX, 0.0, currentTimeX, easeCanvas.height)
+        gc.stroke = Color.BLACK
+        gc.strokeOval(currentTimeX-5.0, easeCanvas.height - 10.0, drawCircleSize,drawCircleSize)
+
+
+
     }
 
     private fun drawEaseLine(gc: GraphicsContext, p1: Vector2, p2: Vector2, yScale: Double) {
@@ -1081,66 +1229,68 @@ class PathVisualizer : Application() {
     var startMouse = Vector2(0.0, 0.0)
     var oCoord: Vector2 = Vector2(0.0, 0.0)
 
-    fun onMousePressed(e: MouseEvent) {
-        if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
+    fun onFieldMousePressed(e: MouseEvent) {
+        val mouseVec = Vector2(e.x, e.y)
+        startMouse = mouseVec
+
+        var shortestDistance = 10000.0
+        var closestPoint: Path2DPoint? = null
+
+        //Find closest point
+        var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
+        while (point != null) {
+            val tPoint = world2ScreenWithMirror(point.position, selectedPath!!.isMirrored)
+            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+            if (dist <= shortestDistance) {
+                shortestDistance = dist
+                closestPoint = point
+                pointType = PointType.POINT
+            }
+
+            if (point.prevPoint != null) {
+                val tanPoint1 = world2ScreenWithMirror(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
+                dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
+                if (dist <= shortestDistance) {
+                    shortestDistance = dist
+                    closestPoint = point
+                    pointType = PointType.PREV_TANGENT
+                }
+            }
+
+            if (point.nextPoint != null) {
+                val tanPoint2 = world2ScreenWithMirror(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
+                dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
+                if (dist <= shortestDistance) {
+                    shortestDistance = dist
+                    closestPoint = point
+                    pointType = PointType.NEXT_TANGENT
+                }
+            }
+            point = point.nextPoint
+            // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
+        }
+        if (shortestDistance <= hitTestCircleSize / 2) {
+            selectedPoint = closestPoint
+        } else {
+            if (closestPoint != null) {
+                if (shortestDistance > hitTestCircleSize * 2) // trying to deselect?
+                    selectedPoint = null
+                else
+                    selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+            } else {  // first point on a path?
+                //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
+                //                selectedPoint = selectedPaath?.addVector2After(screen2World(mouseVec), path2DPoint)
+                selectedPath?.addVector2(screen2World(mouseVec))
+            }
+        }
+
+        if ((e.isMiddleButtonDown || e.isPrimaryButtonDown) && shortestDistance >= hitTestCircleSize * 2) {
             fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
+
         when (mouseMode) {
             MouseMode.EDIT -> {
-                val mouseVec = Vector2(e.x, e.y)
-                startMouse = mouseVec
-
-                var shortestDistance = 10000.0
-                var closestPoint: Path2DPoint? = null
-
-                //Find closest point
-                var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
-                while (point != null) {
-                    val tPoint = world2ScreenWithMirror(point.position, selectedPath!!.isMirrored)
-                    var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
-                    if (dist <= shortestDistance) {
-                        shortestDistance = dist
-                        closestPoint = point
-                        pointType = PointType.POINT
-                    }
-
-                    if (point.prevPoint != null) {
-                        val tanPoint1 = world2ScreenWithMirror(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
-                        dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
-                        if (dist <= shortestDistance) {
-                            shortestDistance = dist
-                            closestPoint = point
-                            pointType = PointType.PREV_TANGENT
-                        }
-                    }
-
-                    if (point.nextPoint != null) {
-                        val tanPoint2 = world2ScreenWithMirror(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
-                        dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
-                        if (dist <= shortestDistance) {
-                            shortestDistance = dist
-                            closestPoint = point
-                            pointType = PointType.NEXT_TANGENT
-                        }
-                    }
-                    point = point.nextPoint
-                    // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
-                }
-                if (shortestDistance <= hitTestCircleSize / 2) {
-                    selectedPoint = closestPoint
-                } else {
-                    if (closestPoint != null) {
-                        if (shortestDistance > hitTestCircleSize * 2) // trying to deselect?
-                            selectedPoint = null
-                        else
-                            selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
-                    } else {  // first point on a path?
-                        //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
-                        //                selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), path2DPoint)
-                        selectedPath?.addVector2(screen2World(mouseVec))
-                    }
-                }
                 editPoint = selectedPoint
                 refreshPoint()
                 repaint()
@@ -1152,7 +1302,7 @@ class PathVisualizer : Application() {
         }
     }
 
-    fun onMouseDragged(e: MouseEvent) {
+    fun onFieldMouseDragged(e: MouseEvent) {
         when (mouseMode) {
             MouseMode.EDIT -> {
                 if (editPoint != null) {
@@ -1169,7 +1319,6 @@ class PathVisualizer : Application() {
                 }
             }
             MouseMode.PAN -> {
-                //println("${offset.x} and ${offset.y}")
                 offset.x = e.x - oCoord.x
                 offset.y = e.y - oCoord.y
                 repaint()
@@ -1177,7 +1326,7 @@ class PathVisualizer : Application() {
         }
     }
 
-    fun onMouseReleased() {
+    fun onFieldMouseReleased() {
         when (mouseMode) {
             MouseMode.EDIT -> editPoint = null  // no longer editing
             MouseMode.PAN -> mouseMode = MouseMode.EDIT
@@ -1186,9 +1335,20 @@ class PathVisualizer : Application() {
         fieldCanvas.requestFocus()
     }
 
+    fun onGraphMousePressed(e: MouseEvent){
+
+    }
+
+    fun onGraphMouseDragged(e: MouseEvent) {
+
+    }
+
+    fun onGraphMouseReleased() {
+
+    }
 
     fun onZoom(e: ZoomEvent) {
-        zoom /= e.zoomFactor
+        zoom *= e.zoomFactor
         repaint()
     }
 
@@ -1206,6 +1366,8 @@ class PathVisualizer : Application() {
             }
             //zoomAdjust.text = zoom.toString()
         }
+
+        //monitoring keyboard input for "p", if pressed, will enable pan ability
         when (e.text) {
             "p" -> {
                 fieldCanvas.cursor = ImageCursor.CROSSHAIR
@@ -1241,7 +1403,7 @@ class PathVisualizer : Application() {
 
     fun onScroll(e: ScrollEvent) {
         if (mouseMode != MouseMode.PAN) {
-            zoom += e.deltaY / 25
+            zoom += e.deltaY / 25 * -1
             repaint()
         }
     }
@@ -1325,21 +1487,25 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : arrow keys to nudge selected path points
 // : upres or repaint a new high res field image
 // : add path length field for measuring the field drawing, etc...
+// : draw ease curve in bottom panel, use another SplitPane horizontal
+// : remember last loaded/saved file in registry and automatically load it at startup
 
-// todo: draw ease curve in bottom panel, use another SplitPane horizontal
+// todo: editing of ease curve and heading curve - Julian
+// todo: Be able to create wheel paths for swerves
+// todo: Be able to type heading of robot
+// todo: Be able to turn Robot heading on field
+// todo: New field drawing
+// todo: playback of robot travel
+// todo: add rename button beside auto and path combos to edit their names - James
+// todo: add delete buttons beside auto and path for deleting them - James
+
+// todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane
 // todo: place edit box for magnitude of ease curve (or one for each end)
-// todo: remember last loaded/saved file in registry and automatically load it at startup
-
-// todo: add rename button beside auto and path combos to edit their names -- Duy
-// todo: add delete buttons beside auto and path for deleting them
 // todo: add edit box for what speed is colored maximum green
 // todo: clicking on path should select it
 
-// todo: playback of robot travel - this should be broken into sub tasks
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
-// todo: editing of ease curve
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
-// todo: write autonomous or path to the network tables as a single json key/value pair instead of autonomi root - maybe/maybe not?
