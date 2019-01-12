@@ -156,6 +156,7 @@ class PathVisualizer : Application() {
         testAuto.putPath(EightFootCircle)
         testAuto.putPath(FourFootCircle)
         testAuto.putPath(TwoFootCircle)
+        testAuto.putPath(AngleAndMagnitudeBug)
 
         autonomi["All Far Scale"]?.apply {
             this["Start To Far Scale"]?.apply {
@@ -1158,8 +1159,8 @@ class PathVisualizer : Application() {
                     val worldPoint = screen2WorldWithMirror(Vector2(e.x, e.y), selectedPath!!.isMirrored)
                     when (pointType) {
                         PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
-                        PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), -tangentLengthDrawFactor)
-                        PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = Vector2.multiply(Vector2.subtract(worldPoint, editPoint!!.position), tangentLengthDrawFactor)
+                        PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = (worldPoint - editPoint!!.position) * -tangentLengthDrawFactor
+                        PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = (worldPoint - editPoint!!.position) * tangentLengthDrawFactor
                         else -> {
                         }
                     }
