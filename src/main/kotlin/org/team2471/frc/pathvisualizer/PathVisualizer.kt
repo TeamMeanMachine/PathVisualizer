@@ -1283,7 +1283,7 @@ class PathVisualizer : Application() {
             }
         }
 
-        if ((e.isMiddleButtonDown || e.isPrimaryButtonDown) && shortestDistance >= hitTestCircleSize * 2) {
+        if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= hitTestCircleSize * 2) {
             fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
