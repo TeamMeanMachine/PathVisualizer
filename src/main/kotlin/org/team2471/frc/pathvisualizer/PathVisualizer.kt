@@ -45,7 +45,7 @@ class PathVisualizer : Application() {
     // javaFX state which needs saved around
     private val fieldCanvas = ResizableCanvas(this)
     private val easeCanvas = ResizableCanvas(this)
-    private val image = Image("assets/2018Field.PNG")
+    private val image = Image("assets/2019Field.png")
     private var stage: Stage? = null
     private val userPref = Preferences.userRoot()
     private val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
@@ -59,9 +59,9 @@ class PathVisualizer : Application() {
     private var currentTime = 0.0
 
     // image stuff - measure your image with paint and enter these first 3
-    private val upperLeftOfFieldPixels = Vector2(86.0, 103.0)
-    private val lowerRightOfFieldPixels = Vector2(990.0, 1000.0)
-    private val zoomPivot = Vector2(535.0, 1000.0)  // the location in the image where the zoom origin will originate
+    private val upperLeftOfFieldPixels = Vector2(79.0, 0.0)
+    private val lowerRightOfFieldPixels = Vector2(1421.0, 1352.0)
+    private val zoomPivot = Vector2(750.0, 1352.0)  // the location in the image where the zoom origin will originate
     private val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     private val fieldDimensionFeet = Vector2(27.0, 27.0)
 
