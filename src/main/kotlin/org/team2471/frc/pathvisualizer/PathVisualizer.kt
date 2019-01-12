@@ -22,6 +22,9 @@ import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.stage.Screen
 import javafx.stage.Stage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.vector.Vector2
 import java.io.File
@@ -668,7 +671,7 @@ class PathVisualizer : Application() {
         val widthName = Text("Robot Width:  ")
         widthText.textProperty().addListener({ _, _, newText ->
             if (!refreshing) {
-                selectedAutonomous?.robotWidth = (newText.toDouble()) / 12.0
+                selectedAutonomous?.robotWidth = newText.toDouble() / 12.0
                 //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
                 repaint()
             }
@@ -680,12 +683,12 @@ class PathVisualizer : Application() {
         val lengthName = Text("Robot Length:  ")
         lengthText.textProperty().addListener({ _, _, newText ->
             if (!refreshing) {
-                selectedAutonomous?.robotLength = newText.toDouble()
+                selectedAutonomous?.robotLength = newText.toDouble() / 12.0
                 //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
                 repaint()
             }
         })
-        val lengthUnit = Text("inches")
+        val lengthUnit = Text(" inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
         val filesBox = HBox()
@@ -773,20 +776,28 @@ class PathVisualizer : Application() {
         refreshAll()
     }
 
+    private var connectionJob: Job? = null
     private fun connect(address: String) {
         println("Connecting to address $address")
-        // shut down previous server
-        networkTableInstance.stopDSClient()
-        networkTableInstance.stopClient()
-        networkTableInstance.deleteAllEntries()
 
-        // reconnect with new address
-        networkTableInstance.setNetworkIdentity("PathVisualizer")
+        connectionJob?.cancel()
 
-        if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
-            networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
-        } else {
-            networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+        connectionJob = GlobalScope.launch {
+            // shut down previous server, if connected
+            if (networkTableInstance.isConnected) {
+                networkTableInstance.stopDSClient()
+                networkTableInstance.stopClient()
+                networkTableInstance.deleteAllEntries()
+            }
+
+            // reconnect with new address
+            networkTableInstance.setNetworkIdentity("PathVisualizer")
+
+            if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
+                networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
+            } else {
+                networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+            }
         }
     }
 
@@ -1312,7 +1323,7 @@ class PathVisualizer : Application() {
             }
         }
 
-        if ((e.isMiddleButtonDown || e.isPrimaryButtonDown) && shortestDistance >= hitTestCircleSize * 2) {
+        if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= hitTestCircleSize * 2) {
             fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
