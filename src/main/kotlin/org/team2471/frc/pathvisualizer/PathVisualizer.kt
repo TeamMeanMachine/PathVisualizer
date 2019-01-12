@@ -21,6 +21,9 @@ import javafx.scene.paint.Color
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.stage.Stage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.vector.Vector2
 import java.io.File
@@ -724,20 +727,28 @@ class PathVisualizer : Application() {
         refreshAll()
     }
 
+    private var connectionJob: Job? = null
     private fun connect(address: String) {
         println("Connecting to address $address")
-        // shut down previous server
-        networkTableInstance.stopDSClient()
-        networkTableInstance.stopClient()
-        networkTableInstance.deleteAllEntries()
 
-        // reconnect with new address
-        networkTableInstance.setNetworkIdentity("PathVisualizer")
+        connectionJob?.cancel()
 
-        if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
-            networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
-        } else {
-            networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+        connectionJob = GlobalScope.launch {
+            // shut down previous server, if connected
+            if (networkTableInstance.isConnected) {
+                networkTableInstance.stopDSClient()
+                networkTableInstance.stopClient()
+                networkTableInstance.deleteAllEntries()
+            }
+
+            // reconnect with new address
+            networkTableInstance.setNetworkIdentity("PathVisualizer")
+
+            if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
+                networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
+            } else {
+                networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+            }
         }
     }
 
