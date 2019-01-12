@@ -320,6 +320,7 @@ class PathVisualizer : Application() {
 
     // todo: javaFX UI controls //////////////////////////////////////////////////////////////////////////////////////////////////////
     private val autoComboBox = ComboBox<String>()
+    private val renameComboBox = ComboBox<String> ()
     private val pathListView = ListView<String>()
     private val mirroredCheckBox = CheckBox("Mirrored")
     private val robotDirectionBox = ComboBox<String>()
@@ -390,6 +391,21 @@ class PathVisualizer : Application() {
         }
 
         val renamePathButton = Button("Rename Path")
+        renamePathButton.setOnAction { _: ActionEvent ->
+            if (selectedPath != null) {
+                val dialog = TextInputDialog(selectedPath!!.name)
+                dialog.title = "Path Name"
+                dialog.headerText = "Enter the name for your path"
+                dialog.contentText = "Path name:"
+                val result = dialog.showAndWait()
+                if (result.isPresent) {
+                    selectedAutonomous?.paths?.remove(selectedPath!!.name)
+                    selectedAutonomous?.paths?.put(result.get(), selectedPath)
+                    selectedPath!!.name = result.get()
+                    refreshAll()
+                }
+            }
+        }
 
         pathListViewHBox.children.addAll(pathListViewName, pathListView, deletePathButton, renamePathButton)
 
@@ -430,6 +446,21 @@ class PathVisualizer : Application() {
         })
 
         val renameAutoButton = Button("Rename Auto")
+        renameAutoButton.setOnAction { _: ActionEvent ->
+            if (selectedAutonomous != null) {
+                val dialog = TextInputDialog(selectedAutonomous!!.name)
+                dialog.title = "Auto Name"
+                dialog.headerText = "Enter the name for your autonomous"
+                dialog.contentText = "Auto name:"
+                val result = dialog.showAndWait()
+                if (result.isPresent) {
+                    autonomi.mapAutonomous.remove(selectedAutonomous!!.name)
+                    autonomi.mapAutonomous.put(result.get(), selectedAutonomous)
+                    selectedAutonomous!!.name = result.get()
+                    refreshAll()
+                }
+            }
+        }
 
         val deleteAutoButton = Button("Delete Auto")
         deleteAutoButton.setOnAction { _: ActionEvent ->
@@ -1498,13 +1529,14 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : draw ease curve in bottom panel, use another SplitPane horizontal
 // : remember last loaded/saved file in registry and automatically load it at startup
 // : New field drawing 2019 - thanks SERT
+// : add delete buttons beside auto and path for deleting them - James
+// : add rename button beside auto and path combos to edit their names - Qui and Jonah
+
 
 // todo: playback of robot travel
 // todo: editing of ease curve and heading curve - Julian
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
-// todo: add rename button beside auto and path combos to edit their names - James
-// todo: add delete buttons beside auto and path for deleting them - James
 // todo: Be able to create wheel paths for swerves
 
 // todo: navigation for graph panel
