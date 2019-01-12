@@ -82,6 +82,9 @@ class PathVisualizer : Application() {
     private var editPoint: Path2DPoint? = null
     private var selectedPoint: Path2DPoint? = null
 
+    private var editGraphPoint: Path2DPoint? = null
+    private var selectedGraphPoint: Path2DPoint? = null
+
     private val networkTableInstance = NetworkTableInstance.create()
 
     // custom types
@@ -1226,65 +1229,67 @@ class PathVisualizer : Application() {
     var oCoord: Vector2 = Vector2(0.0, 0.0)
 
     fun onFieldMousePressed(e: MouseEvent) {
-        if (e.isMiddleButtonDown || e.isSecondaryButtonDown) {
+        val mouseVec = Vector2(e.x, e.y)
+        startMouse = mouseVec
+
+        var shortestDistance = 10000.0
+        var closestPoint: Path2DPoint? = null
+
+        //Find closest point
+        var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
+        while (point != null) {
+            val tPoint = world2ScreenWithMirror(point.position, selectedPath!!.isMirrored)
+            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+            if (dist <= shortestDistance) {
+                shortestDistance = dist
+                closestPoint = point
+                pointType = PointType.POINT
+            }
+
+            if (point.prevPoint != null) {
+                val tanPoint1 = world2ScreenWithMirror(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
+                dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
+                if (dist <= shortestDistance) {
+                    shortestDistance = dist
+                    closestPoint = point
+                    pointType = PointType.PREV_TANGENT
+                }
+            }
+
+            if (point.nextPoint != null) {
+                val tanPoint2 = world2ScreenWithMirror(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
+                dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
+                if (dist <= shortestDistance) {
+                    shortestDistance = dist
+                    closestPoint = point
+                    pointType = PointType.NEXT_TANGENT
+                }
+            }
+            point = point.nextPoint
+            // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
+        }
+        if (shortestDistance <= hitTestCircleSize / 2) {
+            selectedPoint = closestPoint
+        } else {
+            if (closestPoint != null) {
+                if (shortestDistance > hitTestCircleSize * 2) // trying to deselect?
+                    selectedPoint = null
+                else
+                    selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+            } else {  // first point on a path?
+                //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
+                //                selectedPoint = selectedPaath?.addVector2After(screen2World(mouseVec), path2DPoint)
+                selectedPath?.addVector2(screen2World(mouseVec))
+            }
+        }
+
+        if ((e.isMiddleButtonDown || e.isPrimaryButtonDown) && shortestDistance >= hitTestCircleSize * 2) {
             fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = MouseMode.PAN
         }
+
         when (mouseMode) {
             MouseMode.EDIT -> {
-                val mouseVec = Vector2(e.x, e.y)
-                startMouse = mouseVec
-
-                var shortestDistance = 10000.0
-                var closestPoint: Path2DPoint? = null
-
-                //Find closest point
-                var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
-                while (point != null) {
-                    val tPoint = world2ScreenWithMirror(point.position, selectedPath!!.isMirrored)
-                    var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
-                    if (dist <= shortestDistance) {
-                        shortestDistance = dist
-                        closestPoint = point
-                        pointType = PointType.POINT
-                    }
-
-                    if (point.prevPoint != null) {
-                        val tanPoint1 = world2ScreenWithMirror(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
-                        dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
-                        if (dist <= shortestDistance) {
-                            shortestDistance = dist
-                            closestPoint = point
-                            pointType = PointType.PREV_TANGENT
-                        }
-                    }
-
-                    if (point.nextPoint != null) {
-                        val tanPoint2 = world2ScreenWithMirror(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor)), selectedPath!!.isMirrored)
-                        dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
-                        if (dist <= shortestDistance) {
-                            shortestDistance = dist
-                            closestPoint = point
-                            pointType = PointType.NEXT_TANGENT
-                        }
-                    }
-                    point = point.nextPoint
-                    // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
-                }
-                if (shortestDistance <= hitTestCircleSize / 2) {
-                    selectedPoint = closestPoint
-                } else {
-                    if (closestPoint != null) {
-                        if (shortestDistance > hitTestCircleSize * 2) // trying to deselect?
-                            selectedPoint = null
-                        else
-                            selectedPoint = selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
-                    } else {  // first point on a path?
-                        //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
-                        //                selectedPoint = selectedPaath?.addVector2After(screen2World(mouseVec), path2DPoint)
-                        selectedPath?.addVector2(screen2World(mouseVec))
-                    }
-                }
                 editPoint = selectedPoint
                 refreshPoint()
                 repaint()
@@ -1360,6 +1365,8 @@ class PathVisualizer : Application() {
             }
             //zoomAdjust.text = zoom.toString()
         }
+
+        //monitoring keyboard input for "p", if pressed, will enable pan ability
         when (e.text) {
             "p" -> {
                 fieldCanvas.cursor = ImageCursor.CROSSHAIR
