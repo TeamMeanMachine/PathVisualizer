@@ -22,7 +22,6 @@ class PathVisualizer : Application() {
         }
     }
 
-    // image stuff - measure your image with paint and enter these first 3
     enum class PointType {
         POINT, PREV_TANGENT, NEXT_TANGENT
     }
@@ -50,7 +49,7 @@ class PathVisualizer : Application() {
         verticalSplitPane.setDividerPositions(0.85)
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, ControlPanel)
-        horizontalSplitPane.setDividerPositions(0.7)
+        horizontalSplitPane.setDividerPositions(0.68)
 
         stage.scene = Scene(horizontalSplitPane, 1600.0, 900.0)
         FieldPane.draw()
@@ -104,15 +103,16 @@ class PathVisualizer : Application() {
 // : add path length field for measuring the field drawing, etc...
 // : draw ease curve in bottom panel, use another SplitPane horizontal
 // : remember last loaded/saved file in registry and automatically load it at startup
+// : New field drawing 2019 - thanks SERT
+// : add delete buttons beside auto and path for deleting them - James
+// : add rename button beside auto and path combos to edit their names - Qui and Jonah
 
+
+// todo: playback of robot travel
 // todo: editing of ease curve and heading curve - Julian
-// todo: Be able to create wheel paths for swerves
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
-// todo: New field drawing
-// todo: playback of robot travel
-// todo: add rename button beside auto and path combos to edit their names - James
-// todo: add delete buttons beside auto and path for deleting them - James
+// todo: Be able to create wheel paths for swerves
 
 // todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane
