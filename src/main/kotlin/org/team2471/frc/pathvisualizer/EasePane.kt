@@ -106,23 +106,6 @@ object EasePane : StackPane() {
             gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
             drawEaseLine(gc, prevPos, pos, gc.canvas.height)
 
-/*
-            var speed = 15.0 - Math.abs(pos.y - prevPos.y) * selectedPath!!.length / deltaT
-            println("Speed: $speed")
-            gc.stroke = Color.WHITE
-            val speedVec1 = Vector2(pos.x, speed)
-            val speedVec2 = Vector2(prevPos.x, prevSpeed)
-            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height / 15.0)
-*/
-/*
-            var accel = (speed - prevSpeed) / deltaT
-            val accelVec1 = Vector2(pos.x, accel)
-            val accelVec2 = Vector2(prevPos.x, prevAccel)
-            gc.stroke = Color.BLACK
-            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height/100.0)
-            prevSpeed = speed
-
-*/
             prevPos = pos
             t += deltaT
         }

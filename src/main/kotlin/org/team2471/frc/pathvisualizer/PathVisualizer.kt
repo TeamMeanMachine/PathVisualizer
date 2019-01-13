@@ -4,10 +4,12 @@ import javafx.application.Application
 import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.*
+import javafx.stage.Screen
 import javafx.stage.Stage
 import org.team2471.frc.lib.motion_profiling.*
 
 class PathVisualizer : Application() {
+
     companion object {
         // drawing
         const val DRAW_CIRCLE_SIZE = 10.0
@@ -51,9 +53,13 @@ class PathVisualizer : Application() {
         val horizontalSplitPane = SplitPane(verticalSplitPane, ControlPanel)
         horizontalSplitPane.setDividerPositions(0.68)
 
-        stage.scene = Scene(horizontalSplitPane, 1600.0, 900.0)
+        val screen = Screen.getPrimary()
+        val bounds = screen.visualBounds
+
+        stage.scene = Scene(horizontalSplitPane, bounds.width, bounds.height)
         FieldPane.draw()
         stage.sizeToScene()
+        stage.isMaximized = true
         stage.show()
         ControlPanel.refresh()
     }
@@ -112,7 +118,6 @@ class PathVisualizer : Application() {
 // todo: editing of ease curve and heading curve - Julian
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
-// todo: Be able to create wheel paths for swerves
 
 // todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane

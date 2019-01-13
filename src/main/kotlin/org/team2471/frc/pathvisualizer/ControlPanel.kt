@@ -8,6 +8,9 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
 import org.team2471.frc.lib.motion_profiling.Path2D
@@ -36,9 +39,11 @@ object ControlPanel : VBox() {
     private var refreshing = false
     private val currentTimeText = TextField()
     private val userPref = Preferences.userRoot()
-    private val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
+    private const val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
     private var fileName = userPref.get(userFilenameKey, "")
     private val networkTableInstance = NetworkTableInstance.create()
+
+    private var connectionJob: Job? = null
 
     var autonomi = Autonomi()
         private set
@@ -63,6 +68,7 @@ object ControlPanel : VBox() {
 
         pathListView.prefHeight = 180.0
         val pathListViewHBox = HBox()
+        pathListViewHBox.spacing = 10.0
         val pathListViewName = Text("Path:  ")
 
         pathListView.selectionModel.selectedItemProperty().addListener { _, _, pathName ->
@@ -73,16 +79,29 @@ object ControlPanel : VBox() {
         val deletePathButton = Button("Delete Path")
         deletePathButton.setOnAction {
             if (FieldPane.selectedPath != null && selectedAutonomous != null) {
-                deletePath()
+                deleteSelectedPath()
             }
         }
 
         val renamePathButton = Button("Rename Path")
+        renamePathButton.setOnAction {
+            val selectedPath = FieldPane.selectedPath ?: return@setOnAction
+
+            val dialog = TextInputDialog(selectedPath.name)
+            dialog.title = "Path Name"
+            dialog.headerText = "Enter the name for your path"
+            dialog.contentText = "Path name:"
+            val result = dialog.showAndWait()
+            if (result.isPresent) {
+                renamePath(selectedPath, result.get())
+            }
+        }
 
         pathListViewHBox.children.addAll(pathListViewName, pathListView, deletePathButton, renamePathButton)
 
         // autonomous combo box
         val autoComboHBox = HBox()
+        autoComboHBox.spacing = 10.0
         val autoComboName = Text("Auto:  ")
 
         autoComboBox.valueProperty().addListener { _, _, newText ->
@@ -92,10 +111,22 @@ object ControlPanel : VBox() {
         }
 
         val renameAutoButton = Button("Rename Auto")
+        renameAutoButton.setOnAction {
+            val auto = selectedAutonomous ?: return@setOnAction
+            val dialog = TextInputDialog(auto.name)
+            dialog.title = "Auto Name"
+            dialog.headerText = "Enter the name for your autonomous"
+            dialog.contentText = "Auto name:"
+            val result = dialog.showAndWait()
+            if (result.isPresent) {
+                renameAuto(auto, result.get())
+            }
+        }
+
         val deleteAutoButton = Button("Delete Auto")
-        deletePathButton.setOnAction {
+        deleteAutoButton.setOnAction {
             if (selectedAutonomous != null) {
-                deleteSelectedPath()
+                deleteSelectedAuto()
             }
         }
 
@@ -228,7 +259,7 @@ object ControlPanel : VBox() {
         val widthName = Text("Robot Width:  ")
         widthText.textProperty().addListener { _, _, newText ->
             if (!refreshing) {
-                selectedAutonomous?.robotWidth = (newText.toDouble()) / 12.0
+                selectedAutonomous?.robotWidth = newText.toDouble() / 12.0
                 //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
                 FieldPane.draw()
             }
@@ -240,12 +271,11 @@ object ControlPanel : VBox() {
         val lengthName = Text("Robot Length:  ")
         lengthText.textProperty().addListener { _, _, newText ->
             if (!refreshing) {
-                selectedAutonomous?.robotLength = newText.toDouble()
-                //lengthText.text = (selectedPath!!.robotLength * 12.0).format(1)
+                selectedAutonomous?.robotLength = newText.toDouble() / 12.0
                 FieldPane.draw()
             }
         }
-        val lengthUnit = Text("inches")
+        val lengthUnit = Text(" inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
         val filesBox = HBox()
@@ -331,18 +361,25 @@ object ControlPanel : VBox() {
 
     private fun connect(address: String) {
         println("Connecting to address $address")
-        // shut down previous server
-        networkTableInstance.stopDSClient()
-        networkTableInstance.stopClient()
-        networkTableInstance.deleteAllEntries()
 
-        // reconnect with new address
-        networkTableInstance.setNetworkIdentity("PathVisualizer")
+        connectionJob?.cancel()
 
-        if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
-            networkTableInstance.startClientTeam(Integer.parseInt(address), NetworkTableInstance.kDefaultPort)
-        } else {
-            networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+        connectionJob = GlobalScope.launch {
+            // shut down previous server, if connected
+            if (networkTableInstance.isConnected) {
+                networkTableInstance.stopDSClient()
+                networkTableInstance.stopClient()
+                networkTableInstance.deleteAllEntries()
+            }
+
+            // reconnect with new address
+            networkTableInstance.setNetworkIdentity("PathVisualizer")
+
+            if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
+                networkTableInstance.startClientTeam(address.toInt(), NetworkTableInstance.kDefaultPort)
+            } else {
+                networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+            }
         }
     }
 
@@ -376,14 +413,30 @@ object ControlPanel : VBox() {
         }
     }
 
-
     private fun deleteSelectedPath() {
-        autonomi.mapAutonomous.remove(selectedAutonomous!!.name, selectedAutonomous)
+        selectedAutonomous!!.paths.remove(FieldPane.selectedPath!!.name, FieldPane.selectedPath)
+        FieldPane.selectedPath = null
         refresh()
     }
 
-    private fun deletePath() {
-        selectedAutonomous!!.paths.remove(FieldPane.selectedPath!!.name, FieldPane.selectedPath)
+    private fun deleteSelectedAuto() {
+        autonomi.mapAutonomous.remove(selectedAutonomous!!.name)
+        selectedAutonomous = null
+        FieldPane.selectedPath = null
+        refresh()
+    }
+
+    private fun renamePath(path: Path2D, newName: String) {
+        selectedAutonomous?.paths?.remove(path.name)
+        path.name = newName
+        selectedAutonomous?.paths?.put(newName, path)
+        refresh()
+    }
+
+    private fun renameAuto(autonomous: Autonomous, newName: String) {
+        autonomi.mapAutonomous.remove(autonomous.name)
+        autonomous.name = newName
+        autonomi.mapAutonomous[newName] = autonomous
         refresh()
     }
 

@@ -15,11 +15,11 @@ import kotlin.math.round
 
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
-    private val image = Image("assets/2018Field.PNG")
-    private val upperLeftOfFieldPixels = Vector2(86.0, 103.0)
-    private val lowerRightOfFieldPixels = Vector2(990.0, 1000.0)
+    private val image = Image("assets/2019Field.PNG")
+    private val upperLeftOfFieldPixels = Vector2(79.0, 0.0)
+    private val lowerRightOfFieldPixels = Vector2(1421.0, 1352.0)
 
-    val zoomPivot = Vector2(535.0, 1000.0)  // the location in the image where the zoom origin will originate
+    val zoomPivot = Vector2(750.0, 1352.0)  // the location in the image where the zoom origin will originate
     val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     val fieldDimensionFeet = Vector2(27.0, 27.0)
 
@@ -211,7 +211,7 @@ object FieldPane : StackPane() {
             }
         }
 
-        if ((e.isMiddleButtonDown || e.isPrimaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
+        if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
             canvas.cursor = Cursor.CROSSHAIR
             mouseMode = PathVisualizer.MouseMode.PAN
         }
