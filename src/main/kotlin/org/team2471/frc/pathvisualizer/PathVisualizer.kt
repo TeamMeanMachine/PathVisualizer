@@ -70,7 +70,7 @@ class PathVisualizer : Application() {
     private val fieldDimensionFeet = Vector2(27.0, 27.0)
 
     // view settings
-    private var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1
+    private var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
     var offset = Vector2(0.0, 0.0)
 
     // location of image extremes in world units
@@ -107,6 +107,7 @@ class PathVisualizer : Application() {
 // todo: helper functions //////////////////////////////////////////////////////////////////////////////////////////////
 
     fun feetToPixels(feet: Double): Double = feet * fieldDimensionPixels.x / fieldDimensionFeet.x
+    fun PixelsToFeet(pixels: Double): Double = pixels * fieldDimensionFeet.x / fieldDimensionPixels.x
 
     inline fun <T : Any, R> whenNotNull(input: T?, callback: (T) -> R): R? {
         return input?.let(callback)
@@ -299,6 +300,10 @@ class PathVisualizer : Application() {
 
         repaint()
         stage.show()
+
+        zoom = fieldCanvas.width / PixelsToFeet(image.width) // zoom fit
+        offset.x = -upperLeftOfFieldPixels.x
+        repaint()
 
         fieldCanvas.onMousePressed = EventHandler<MouseEvent> { onFieldMousePressed(it) }
         fieldCanvas.onMouseDragged = EventHandler<MouseEvent> { onFieldMouseDragged(it) }
@@ -748,7 +753,6 @@ class PathVisualizer : Application() {
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
         easeCurveFuntions.children.addAll(playButton)
 
-
         buttonsBox.children.addAll(
                 autoComboHBox,
                 pathListViewHBox,
@@ -1190,7 +1194,6 @@ class PathVisualizer : Application() {
         }
 */
 
-
         deltaT = selectedPath!!.durationWithSpeed / gc.canvas.width
         t = 0.0
         ease = selectedPath!!.easeCurve.getValue(t)
@@ -1216,17 +1219,11 @@ class PathVisualizer : Application() {
         // circles and lines for handles
         var point: MotionKey? = selectedPath!!.easeCurve.headKey
         while (point != null) {
-//            if (point === selectedPoint && pointType == PointType.POINT)
-//                gc.stroke = Color.LIMEGREEN
-//            else
             gc.stroke = Color.WHITE
 
             val tPoint = Vector2(point.time / selectedPath!!.durationWithSpeed * easeCanvas.width, (1.0 - point.value) * easeCanvas.height)
             gc.strokeOval(tPoint.x - drawCircleSize / 2, tPoint.y - drawCircleSize / 2, drawCircleSize, drawCircleSize)
             if (point.prevKey != null) {
-//                if (point === selectedPoint && pointType == PointType.PREV_TANGENT)
-//                    gc.stroke = Color.LIMEGREEN
-//                else
                 gc.stroke = Color.WHITE
                 var tanPoint = Vector2.subtract(point.timeAndValue, Vector2.multiply(point.prevTangent, 1.0 / tangentLengthDrawFactor))
                 tanPoint.set(tanPoint.x / selectedPath!!.durationWithSpeed * easeCanvas.width, (1.0 - tanPoint.y) * easeCanvas.height)
@@ -1236,9 +1233,6 @@ class PathVisualizer : Application() {
             }
 
             if (point.nextKey != null) {
-//                if (point === selectedPoint && pointType == PointType.NEXT_TANGENT)
-//                    gc.stroke = Color.LIMEGREEN
-//                else
                 gc.stroke = Color.WHITE
                 val tanPoint = Vector2.add(point.timeAndValue, Vector2.multiply(point.nextTangent, 1.0 / tangentLengthDrawFactor))
                 tanPoint.set(tanPoint.x / selectedPath!!.durationWithSpeed * easeCanvas.width, (1.0 - tanPoint.y) * easeCanvas.height)
@@ -1255,9 +1249,6 @@ class PathVisualizer : Application() {
         gc.strokeLine(currentTimeX, 0.0, currentTimeX, easeCanvas.height)
         gc.stroke = Color.BLACK
         gc.strokeOval(currentTimeX-5.0, easeCanvas.height - 10.0, drawCircleSize,drawCircleSize)
-
-
-
     }
 
     private fun drawEaseLine(gc: GraphicsContext, p1: Vector2, p2: Vector2, yScale: Double) {
@@ -1361,6 +1352,7 @@ class PathVisualizer : Application() {
                 offset.x = e.x - oCoord.x
                 offset.y = e.y - oCoord.y
                 repaint()
+                println("Offset: ${offset.x}, ${offset.y}, zoom: $zoom")
             }
         }
     }
@@ -1532,20 +1524,22 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : add delete buttons beside auto and path for deleting them - James
 // : add rename button beside auto and path combos to edit their names - Qui and Jonah
 
-
 // todo: playback of robot travel
 // todo: editing of ease curve and heading curve - Julian
 // todo: Be able to type heading of robot
 // todo: Be able to turn Robot heading on field
-// todo: Be able to create wheel paths for swerves
+// todo: Be able to create wheel paths for swerves - use swerve modules
 
 // todo: navigation for graph panel
 // todo: place path duration in bottom corner of ease canvas using StackPane
-// todo: place edit box for magnitude of ease curve (or one for each end)
+// todo: place edit box for magnitude of ease curve - just share the same one for points
 // todo: add edit box for what speed is colored maximum green
 // todo: clicking on path should select it
+// todo: make an add mode for adding a new point to a path
 
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
 // todo: decide what properties should be saved locally and save them to the registry or local folder
+
+// todo: create robot and derivatives for abstaction of drive trains - arcade, curvature, swerve, mecanum, kiwi
