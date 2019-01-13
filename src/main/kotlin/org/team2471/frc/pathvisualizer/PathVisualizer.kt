@@ -398,7 +398,7 @@ class PathVisualizer : Application() {
                 dialog.headerText = "Enter the name for your path"
                 dialog.contentText = "Path name:"
                 val result = dialog.showAndWait()
-                if (result.isPresent && !selectedAutonomous!!.paths!!.containsKey(result.get())) {
+                if (result.isPresent) {
                     selectedAutonomous?.paths?.remove(selectedPath!!.name)
                     selectedAutonomous?.paths?.put(result.get(), selectedPath)
                     selectedPath!!.name = result.get()
@@ -453,7 +453,7 @@ class PathVisualizer : Application() {
                 dialog.headerText = "Enter the name for your autonomous"
                 dialog.contentText = "Auto name:"
                 val result = dialog.showAndWait()
-                if (result.isPresent && !autonomi!!.mapAutonomous!!.containsKey(result.get())) {
+                if (result.isPresent) {
                     autonomi.mapAutonomous.remove(selectedAutonomous!!.name)
                     autonomi.mapAutonomous.put(result.get(), selectedAutonomous)
                     selectedAutonomous!!.name = result.get()
@@ -1529,7 +1529,7 @@ class ResizableCanvas(pv: PathVisualizer) : Canvas() {
 // : draw ease curve in bottom panel, use another SplitPane horizontal
 // : remember last loaded/saved file in registry and automatically load it at startup
 // : add delete buttons beside auto and path for deleting them - James
-// : add rename button beside auto and path combos to edit their names - Jonah
+// : add rename button beside auto and path combos to edit their names - Qui and Jonah
 
 
 // todo: editing of ease curve and heading curve - Julian
