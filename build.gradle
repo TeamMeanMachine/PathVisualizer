@@ -26,6 +26,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "edu.wpi.first.ntcore:ntcore-java:2019.2.1"
     compile "edu.wpi.first.ntcore:ntcore-jni:2019.2.1:all"
+    compile "edu.wpi.first.wpiutil:wpiutil-java:2019.2.1"
     compile project("meanlib")
     compile 'com.squareup.moshi:moshi:1.5.0'
     compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
