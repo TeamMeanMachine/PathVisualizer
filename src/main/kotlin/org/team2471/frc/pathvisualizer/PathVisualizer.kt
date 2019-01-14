@@ -60,10 +60,9 @@ class PathVisualizer : Application() {
         FieldPane.draw()
         stage.sizeToScene()
         stage.isMaximized = true
-        FieldPane.zoom = FieldPane.width / PixelsToFeet(FieldPane.image.width) // zoom fit
-        FieldPane.offset.x = -FieldPane.upperLeftOfFieldPixels.x
         stage.show()
         ControlPanel.refresh()
+        FieldPane.zoomFit()
     }
 }
 

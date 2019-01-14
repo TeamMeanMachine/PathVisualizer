@@ -158,5 +158,4 @@ object EasePane : StackPane() {
     private fun drawEaseLine(gc: GraphicsContext, p1: Vector2, p2: Vector2, yScale: Double) {
         gc.strokeLine(p1.x, p1.y * yScale, p2.x, p2.y * yScale)
     }
-
 }
