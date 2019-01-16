@@ -1,6 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.networktables.NetworkTableInstance
+import javafx.application.Platform
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.control.*
@@ -166,7 +167,7 @@ object ControlPanel : VBox() {
         val secondsName = Text("Seconds:  ")
         val currentTimeName = Text("Current Path Time:  ")
         secondsText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
+            if (!refreshing && newText.toDoubleOrNull() ?: 0.0 > 0.0) {
                 val seconds = newText.toDoubleOrNull() ?: return@addListener
                 FieldPane.setSelectedPathDuration(seconds)
             }
@@ -333,19 +334,21 @@ object ControlPanel : VBox() {
 
         val playButton = Button(" Play ")
         playButton.setOnAction {
-            if (selectedPath!=null) {
+            if (selectedPath != null) {
                 val timer = Timer()
                 timer.start()
                 thread {
                     while (timer.get() < selectedPath!!.durationWithSpeed) {
-                        currentTime = timer.get()
-                  //      draw()
-                  //      refresh()
-                   //     println("time: $currentTime")
+                        Platform.runLater {
+                            currentTime = timer.get()
+                            draw()
+                            refresh()
+                        }
+
+                        // Playback @ approx 30fps (1000ms/30fps = 33ms)
+                        Thread.sleep(1000L / 30L)
                     }
-
                 }
-
             }
         }
 
@@ -511,6 +514,8 @@ object ControlPanel : VBox() {
         if (selectedAutonomous != null) {
             FieldPane.selectedPath = selectedAutonomous!![newPathName]
         }
+
+        currentTime = 0.0
         pathListView.selectionModel.select(newPathName)
         refresh()
         FieldPane.draw()
