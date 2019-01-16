@@ -29,7 +29,7 @@ class PathVisualizer : Application() {
     }
 
     enum class MouseMode {
-        EDIT, PAN
+        EDIT, PAN, ADD, DRAG_TIME
     }
 
     override fun start(stage: Stage) {

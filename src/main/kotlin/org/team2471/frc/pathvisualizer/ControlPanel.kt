@@ -18,6 +18,9 @@ import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
+import org.team2471.frc.pathvisualizer.FieldPane.draw
+import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
+import sun.misc.Timer
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -314,7 +317,6 @@ object ControlPanel : VBox() {
         val robotHBox = HBox()
         val easeCurveFuntions = HBox()
         val sendToRobotButton = Button("Send To Robot")
-        val playButton = Button(" Play ")
         sendToRobotButton.setOnAction { _: ActionEvent ->
             autonomi.publishToNetworkTables(networkTableInstance)
         }
@@ -327,6 +329,23 @@ object ControlPanel : VBox() {
             }
         }
         connect(defaultAddress)
+
+        val playButton = Button(" Play ")
+        playButton.setOnAction {
+            if (selectedPath!=null) {
+                //val timer = Timer()
+                //timer.start()
+
+                while (false) { //timer.get() < selectedPath!!.durationWithSpeed) {
+                    //currentTime = timer.get()
+                    draw()
+                    refresh()
+                    println("time: $currentTime")
+                }
+                //timer.stop()
+            }
+        }
+
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
         easeCurveFuntions.children.addAll(playButton)
 

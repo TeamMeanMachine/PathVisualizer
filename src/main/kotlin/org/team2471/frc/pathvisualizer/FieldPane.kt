@@ -295,11 +295,12 @@ object FieldPane : StackPane() {
     }
 
     private fun onKeyPressed(e: KeyEvent) {
-        if (e.isControlDown) {
-        }
 
         //monitoring keyboard input for "p", if pressed, will enable pan ability
         when (e.text) {
+            "a" -> {
+                mouseMode = PathVisualizer.MouseMode.ADD
+            }
             "p" -> {
                 canvas.cursor = ImageCursor.CROSSHAIR
                 mouseMode = PathVisualizer.MouseMode.PAN
@@ -308,11 +309,18 @@ object FieldPane : StackPane() {
                 zoomFit()
             }
             "=" -> {
-                zoom++
-
+                if (e.isControlDown)
+                    zoom*=1.01
+                else
+                    zoom*=1.10
+                draw()
             }
             "-" -> {
-                zoom--
+                if (e.isControlDown)
+                    zoom/=1.01
+                else
+                    zoom/=1.10
+                draw()
             }
         }
         if (selectedPoint != null && e.isControlDown) {
