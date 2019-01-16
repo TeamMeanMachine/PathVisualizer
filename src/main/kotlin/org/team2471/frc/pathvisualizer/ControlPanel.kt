@@ -15,12 +15,13 @@ import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
+import org.team2471.frc.lib.util.Timer
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
-import sun.misc.Timer
+import kotlin.concurrent.thread
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -333,16 +334,18 @@ object ControlPanel : VBox() {
         val playButton = Button(" Play ")
         playButton.setOnAction {
             if (selectedPath!=null) {
-                //val timer = Timer()
-                //timer.start()
+                val timer = Timer()
+                timer.start()
+                thread {
+                    while (timer.get() < selectedPath!!.durationWithSpeed) {
+                        currentTime = timer.get()
+                  //      draw()
+                  //      refresh()
+                   //     println("time: $currentTime")
+                    }
 
-                while (false) { //timer.get() < selectedPath!!.durationWithSpeed) {
-                    //currentTime = timer.get()
-                    draw()
-                    refresh()
-                    println("time: $currentTime")
                 }
-                //timer.stop()
+
             }
         }
 

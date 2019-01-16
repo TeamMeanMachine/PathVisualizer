@@ -9,6 +9,7 @@ import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.vector.Vector2
 import org.team2471.frc.pathvisualizer.ControlPanel.refresh
+import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 
 object EasePane : StackPane() {
@@ -43,7 +44,7 @@ object EasePane : StackPane() {
             PathVisualizer.MouseMode.DRAG_TIME -> {
                 ControlPanel.currentTime = e.x * selectedPath!!.durationWithSpeed / canvas.width
                 refresh()
-                drawEaseCurve(selectedPath)
+                draw()
             }
         }
     }
