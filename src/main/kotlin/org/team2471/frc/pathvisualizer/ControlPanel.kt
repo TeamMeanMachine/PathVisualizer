@@ -11,6 +11,8 @@ import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
@@ -22,7 +24,6 @@ import java.io.PrintWriter
 import java.util.prefs.Preferences
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
-import kotlin.concurrent.thread
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -333,13 +334,18 @@ object ControlPanel : VBox() {
         connect(defaultAddress)
 
         val playButton = Button(" Play ")
+        var animationJob: Job? = null
         playButton.setOnAction {
             if (selectedPath != null) {
+                animationJob?.cancel()
+
                 val timer = Timer()
                 timer.start()
 
-                thread {
+                animationJob = GlobalScope.launch {
                     while (timer.get() < selectedPath!!.durationWithSpeed) {
+                        if (!isActive) return@launch
+
                         Platform.runLater {
                             currentTime = timer.get()
                             draw()
@@ -347,7 +353,7 @@ object ControlPanel : VBox() {
                         }
 
                         // Playback @ approx 30fps (1000ms/30fps = 33ms)
-                        Thread.sleep(1000L / 30L)
+                        delay(1000L / 30L)
                     }
 
                     Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
