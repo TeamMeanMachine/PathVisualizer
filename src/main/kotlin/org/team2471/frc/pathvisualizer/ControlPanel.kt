@@ -337,6 +337,7 @@ object ControlPanel : VBox() {
             if (selectedPath != null) {
                 val timer = Timer()
                 timer.start()
+
                 thread {
                     while (timer.get() < selectedPath!!.durationWithSpeed) {
                         Platform.runLater {
@@ -348,6 +349,8 @@ object ControlPanel : VBox() {
                         // Playback @ approx 30fps (1000ms/30fps = 33ms)
                         Thread.sleep(1000L / 30L)
                     }
+
+                    Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
                 }
             }
         }
