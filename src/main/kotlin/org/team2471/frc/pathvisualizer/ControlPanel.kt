@@ -1,6 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.networktables.NetworkTableInstance
+import javafx.application.Platform
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.control.*
@@ -10,17 +11,19 @@ import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
+import org.team2471.frc.lib.util.Timer
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
-import sun.misc.Timer
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -165,7 +168,7 @@ object ControlPanel : VBox() {
         val secondsName = Text("Seconds:  ")
         val currentTimeName = Text("Current Path Time:  ")
         secondsText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
+            if (!refreshing && newText.toDoubleOrNull() ?: 0.0 > 0.0) {
                 val seconds = newText.toDoubleOrNull() ?: return@addListener
                 FieldPane.setSelectedPathDuration(seconds)
             }
@@ -331,18 +334,30 @@ object ControlPanel : VBox() {
         connect(defaultAddress)
 
         val playButton = Button(" Play ")
+        var animationJob: Job? = null
         playButton.setOnAction {
-            if (selectedPath!=null) {
-                //val timer = Timer()
-                //timer.start()
+            if (selectedPath != null) {
+                animationJob?.cancel()
 
-                while (false) { //timer.get() < selectedPath!!.durationWithSpeed) {
-                    //currentTime = timer.get()
-                    draw()
-                    refresh()
-                    println("time: $currentTime")
+                val timer = Timer()
+                timer.start()
+
+                animationJob = GlobalScope.launch {
+                    while (timer.get() < selectedPath!!.durationWithSpeed) {
+                        if (!isActive) return@launch
+
+                        Platform.runLater {
+                            currentTime = timer.get()
+                            draw()
+                            refresh()
+                        }
+
+                        // Playback @ approx 30fps (1000ms/30fps = 33ms)
+                        delay(1000L / 30L)
+                    }
+
+                    Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
                 }
-                //timer.stop()
             }
         }
 
@@ -508,6 +523,8 @@ object ControlPanel : VBox() {
         if (selectedAutonomous != null) {
             FieldPane.selectedPath = selectedAutonomous!![newPathName]
         }
+
+        currentTime = 0.0
         pathListView.selectionModel.select(newPathName)
         refresh()
         FieldPane.draw()
