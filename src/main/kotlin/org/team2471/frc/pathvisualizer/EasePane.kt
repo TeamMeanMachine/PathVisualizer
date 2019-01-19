@@ -8,9 +8,13 @@ import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.vector.Vector2
+import org.team2471.frc.pathvisualizer.ControlPanel.refresh
+import org.team2471.frc.pathvisualizer.FieldPane.draw
+import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 
 object EasePane : StackPane() {
     private val canvas = ResizableCanvas()
+    private var mouseMode = PathVisualizer.MouseMode.EDIT
 
     init {
         children.add(canvas)
@@ -23,15 +27,34 @@ object EasePane : StackPane() {
     }
 
     private fun onMousePressed(e: MouseEvent) {
-
+        if (selectedPath!=null) {
+            val mouseVec = Vector2(e.x, e.y)
+            val currentTimeX = ControlPanel.currentTime / selectedPath!!.durationWithSpeed * canvas.width
+            val topTimeKnob = Vector2(currentTimeX, 5.0)
+            val bottomTimeKnob = Vector2(currentTimeX, canvas.height - 5.0)
+            if (Vector2.length(mouseVec - topTimeKnob) < PathVisualizer.CLICK_CIRCLE_SIZE ||
+                    Vector2.length(mouseVec - bottomTimeKnob) < PathVisualizer.CLICK_CIRCLE_SIZE) {
+                mouseMode = PathVisualizer.MouseMode.DRAG_TIME
+            }
+        }
     }
 
     private fun onMouseDragged(e: MouseEvent) {
-
+        when (mouseMode) {
+            PathVisualizer.MouseMode.DRAG_TIME -> {
+                ControlPanel.currentTime = e.x * selectedPath!!.durationWithSpeed / canvas.width
+                refresh()
+                draw()
+            }
+        }
     }
 
     private fun onMouseReleased() {
-
+        when (mouseMode) {
+            PathVisualizer.MouseMode.DRAG_TIME -> {
+                mouseMode = PathVisualizer.MouseMode.EDIT
+            }
+        }
     }
 
     fun drawEaseCurve(path: Path2D?) {
@@ -58,36 +81,6 @@ object EasePane : StackPane() {
         var prevVelocity = Vector2(0.0, 0.0)
         var ease = 0.0
 
-/*
-        while (t <= selectedPath!!.durationWithSpeed) {
-            ease = selectedPath!!.easeCurve.getValue(t)
-            var distance = ease * pathLength
-            var position = selectedPath!!.xyCurve.getPositionAtDistance(distance)
-            var velocity = (position - prevPosition) / deltaT
-            var acceleration = (velocity - prevVelocity) / deltaT
-
-            var newEase = false
-            if (Vector2.length(acceleration) > maxAcceleration) {
-                acceleration = Vector2.normalize(acceleration) * maxAcceleration
-                velocity = prevVelocity + acceleration * deltaT
-                newEase = true
-            }
-            if (Vector2.length(velocity) > maxVelocity) {
-                velocity = Vector2.normalize(velocity) * maxVelocity
-                newEase = true
-            }
-            if (newEase) {
-                position = prevPosition + velocity * deltaT
-                distance = Vector2.length(position - prevPosition)
-                ease = distance / pathLength
-                selectedPath!!.easeCurve.storeValue(t,ease)
-            }
-            t += deltaT
-            prevVelocity = velocity
-        }
-*/
-
-
         deltaT = selectedPath.durationWithSpeed / gc.canvas.width
         t = 0.0
         ease = selectedPath.easeCurve.getValue(t)
@@ -106,23 +99,6 @@ object EasePane : StackPane() {
             gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
             drawEaseLine(gc, prevPos, pos, gc.canvas.height)
 
-/*
-            var speed = 15.0 - Math.abs(pos.y - prevPos.y) * selectedPath!!.length / deltaT
-            println("Speed: $speed")
-            gc.stroke = Color.WHITE
-            val speedVec1 = Vector2(pos.x, speed)
-            val speedVec2 = Vector2(prevPos.x, prevSpeed)
-            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height / 15.0)
-*/
-/*
-            var accel = (speed - prevSpeed) / deltaT
-            val accelVec1 = Vector2(pos.x, accel)
-            val accelVec2 = Vector2(prevPos.x, prevAccel)
-            gc.stroke = Color.BLACK
-            drawEaseLine(gc, speedVec1, speedVec2, gc.canvas.height/100.0)
-            prevSpeed = speed
-
-*/
             prevPos = pos
             t += deltaT
         }
@@ -166,14 +142,12 @@ object EasePane : StackPane() {
 
         val currentTimeX = ControlPanel.currentTime / selectedPath.durationWithSpeed * canvas.width
         gc.stroke = Color.YELLOW
-        gc.strokeLine(currentTimeX, 0.0, currentTimeX, canvas.height)
-        gc.stroke = Color.BLACK
+        gc.strokeLine(currentTimeX, 10.0, currentTimeX, canvas.height-10.0)
+        gc.strokeOval(currentTimeX - 5.0, 0.0, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
         gc.strokeOval(currentTimeX - 5.0, canvas.height - 10.0, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
-
     }
 
     private fun drawEaseLine(gc: GraphicsContext, p1: Vector2, p2: Vector2, yScale: Double) {
         gc.strokeLine(p1.x, p1.y * yScale, p2.x, p2.y * yScale)
     }
-
 }

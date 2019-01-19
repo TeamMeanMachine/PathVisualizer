@@ -6,6 +6,7 @@ import org.team2471.frc.lib.vector.Vector2
 import java.text.DecimalFormat
 
 fun feetToPixels(feet: Double): Double = feet * FieldPane.fieldDimensionPixels.x / FieldPane.fieldDimensionFeet.x
+fun PixelsToFeet(pixels: Double): Double = pixels * FieldPane.fieldDimensionFeet.x / FieldPane.fieldDimensionPixels.x
 
 inline fun <T : Any, R> whenNotNull(input: T?, callback: (T) -> R): R? {
     return input?.let(callback)

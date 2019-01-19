@@ -15,18 +15,16 @@ import kotlin.math.round
 
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
-    private val image = Image("assets/2018Field.PNG")
-    private val upperLeftOfFieldPixels = Vector2(86.0, 103.0)
-    private val lowerRightOfFieldPixels = Vector2(990.0, 1000.0)
+    private val image = Image("assets/2019Field.PNG")
+    private val upperLeftOfFieldPixels = Vector2(79.0, 0.0)
+    private val lowerRightOfFieldPixels = Vector2(1421.0, 1352.0)
 
-    val zoomPivot = Vector2(535.0, 1000.0)  // the location in the image where the zoom origin will originate
+    val zoomPivot = Vector2(750.0, 1352.0)  // the location in the image where the zoom origin will originate
     val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     val fieldDimensionFeet = Vector2(27.0, 27.0)
 
     // view settings
-    var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1
-        private set
-
+    var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
 
     var selectedPointType = PathVisualizer.PointType.POINT
         private set
@@ -60,6 +58,24 @@ object FieldPane : StackPane() {
         canvas.onZoom = EventHandler<ZoomEvent>(::onZoom)
         canvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
         canvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
+    }
+
+    fun zoomFit() {
+        val hZoom = width / PixelsToFeet(image.width)
+        val vZoom = height / PixelsToFeet(image.height)
+
+        zoom = 1.0
+        zoom = Math.min(hZoom, vZoom)
+        offset = Vector2(0.0, 0.0)
+
+        val upperLeftPixels = world2Screen(upperLeftFeet)
+        val lowerRightPixels = world2Screen(lowerRightFeet)
+        val centerPixels = (upperLeftPixels + lowerRightPixels) / 2.0
+        val centerOfCanvas = Vector2(canvas.width, canvas.height) / 2.0
+
+        offset = centerOfCanvas - centerPixels
+
+        draw()
     }
 
     fun setSelectedPathMirrored(mirrored: Boolean) {
@@ -211,7 +227,7 @@ object FieldPane : StackPane() {
             }
         }
 
-        if ((e.isMiddleButtonDown || e.isPrimaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
+        if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
             canvas.cursor = Cursor.CROSSHAIR
             mouseMode = PathVisualizer.MouseMode.PAN
         }
@@ -279,24 +295,32 @@ object FieldPane : StackPane() {
     }
 
     private fun onKeyPressed(e: KeyEvent) {
-        if (e.isControlDown) {
-            when (e.text) {
-                "=" -> {
-                    zoom++
-
-                }
-                "-" -> {
-                    zoom--
-                }
-            }
-            //zoomAdjust.text = zoom.toString()
-        }
 
         //monitoring keyboard input for "p", if pressed, will enable pan ability
         when (e.text) {
+            "a" -> {
+                mouseMode = PathVisualizer.MouseMode.ADD
+            }
             "p" -> {
                 canvas.cursor = ImageCursor.CROSSHAIR
                 mouseMode = PathVisualizer.MouseMode.PAN
+            }
+            "f" -> {
+                zoomFit()
+            }
+            "=" -> {
+                if (e.isControlDown)
+                    zoom*=1.01
+                else
+                    zoom*=1.10
+                draw()
+            }
+            "-" -> {
+                if (e.isControlDown)
+                    zoom/=1.01
+                else
+                    zoom/=1.10
+                draw()
             }
         }
         if (selectedPoint != null && e.isControlDown) {

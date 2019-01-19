@@ -152,5 +152,4 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
-
 }
