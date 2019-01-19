@@ -113,23 +113,21 @@ class PathVisualizer : Application() {
 // : New field drawing 2019 - thanks SERT
 // : add delete buttons beside auto and path for deleting them - James
 // : add rename button beside auto and path combos to edit their names - Qui and Jonah
+// : playback of robot travel
 
-// todo: playback of robot travel
 // todo: editing of ease curve and heading curve - Julian
 // todo: Be able to type heading of robot
+// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to turn Robot heading on field
 // todo: Be able to create wheel paths for swerves - use swerve modules
 
-// todo: navigation for graph panel
-// todo: place path duration in bottom corner of ease canvas using StackPane
-// todo: place edit box for magnitude of ease curve - just share the same one for points
-// todo: add edit box for what speed is colored maximum green
+// todo: navigation for graph panel - pan and zoom
+// todo: connect edit box for position, angle, magnitude of ease curve - just share the same one for points
 // todo: clicking on path should select it
-// todo: make an add mode for adding a new point to a path
+// todo: make an add mode for adding a new point to a path or graph
 
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
-// todo: decide what properties should be saved locally and save them to the registry or local folder
 
-// todo: create robot and derivatives for abstaction of drive trains - arcade, curvature, swerve, mecanum, kiwi
+// todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
