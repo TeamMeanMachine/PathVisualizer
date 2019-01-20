@@ -40,6 +40,14 @@ fun screen2WorldWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
     return temp / FieldPane.zoom
 }
 
+private fun easeWorld2Screen(point: Vector2): Vector2 {
+    return Vector2(point.x / FieldPane.selectedPath!!.durationWithSpeed * EasePane.width, (1.0 - point.y) * EasePane.height)
+}
+
+private fun easeScreen2World(point: Vector2): Vector2 {
+    return Vector2(point.x * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width, -1 * (point.y / EasePane.height - 1))
+}
+
 fun Double.format(fracDigits: Int): String {
     val fd = DecimalFormat()
     fd.maximumFractionDigits = fracDigits
