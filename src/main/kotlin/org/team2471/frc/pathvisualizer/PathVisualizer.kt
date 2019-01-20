@@ -120,6 +120,7 @@ class PathVisualizer : Application() {
 // todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to turn Robot heading on field
 // todo: Be able to create wheel paths for swerves - use swerve modules
+// todo: Add buttons for new auto and new path, remove list items - Jonah
 
 // todo: navigation for graph panel - pan and zoom
 // todo: connect edit box for position, angle, magnitude of ease curve - just share the same one for points
