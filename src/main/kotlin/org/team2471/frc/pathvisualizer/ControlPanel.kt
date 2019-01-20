@@ -84,6 +84,11 @@ object ControlPanel : VBox() {
             setSelectedPath(pathName)
         }
 
+        val newPathButton = Button("New Path")
+        newPathButton.setOnAction {
+
+        }
+
         val deletePathButton = Button("Delete Path")
         deletePathButton.setOnAction {
             if (FieldPane.selectedPath != null && selectedAutonomous != null) {
