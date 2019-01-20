@@ -129,5 +129,6 @@ class PathVisualizer : Application() {
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
+// todo: undo operations
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
