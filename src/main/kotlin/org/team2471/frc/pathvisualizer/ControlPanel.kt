@@ -44,6 +44,8 @@ object ControlPanel : VBox() {
     private val pathLengthText = TextField()
     private var refreshing = false
     private val currentTimeText = TextField()
+    private val headingAngleText = TextField()
+    private val easePositionText = TextField()
     private val userPref = Preferences.userRoot()
     private const val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
     private var fileName = userPref.get(userFilenameKey, "")
@@ -164,22 +166,7 @@ object ControlPanel : VBox() {
         }
         robotDirectionHBox.children.addAll(robotDirectionName, robotDirectionBox)
 
-        val secondsHBox = HBox()
-        val secondsName = Text("Seconds:  ")
-        val currentTimeName = Text("Current Path Time:  ")
-        secondsText.textProperty().addListener { _, _, newText ->
-            if (!refreshing && newText.toDoubleOrNull() ?: 0.0 > 0.0) {
-                val seconds = newText.toDoubleOrNull() ?: return@addListener
-                FieldPane.setSelectedPathDuration(seconds)
-            }
-        }
 
-        currentTimeText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
-                currentTime = newText.toDouble()
-            }
-        }
-        secondsHBox.children.addAll(secondsName, secondsText, currentTimeName, currentTimeText)
 
         val speedHBox = HBox()
         val speedName = Text("Speed Multiplier:  ")
@@ -362,7 +349,54 @@ object ControlPanel : VBox() {
         }
 
         robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
-        easeCurveFuntions.children.addAll(playButton)
+
+        val secondsHBox = HBox()
+        secondsHBox.spacing = 10.0
+        val secondsName = Text("Path Duration:  ")
+        val currentTimeName = Text("Current Path Time:  ")
+        secondsText.textProperty().addListener { _, _, newText ->
+            if (!refreshing && newText.toDoubleOrNull() ?: 0.0 > 0.0) {
+                val seconds = newText.toDoubleOrNull() ?: return@addListener
+                FieldPane.setSelectedPathDuration(seconds)
+            }
+        }
+
+        currentTimeText.textProperty().addListener { _, _, newText ->
+            if (!refreshing) {
+                currentTime = newText.toDouble()
+                refresh()
+            }
+
+        }
+
+        secondsHBox.children.addAll( currentTimeName, currentTimeText, playButton,  secondsName, secondsText)
+
+
+
+        val easeAndHeadingHBox = HBox()
+        secondsHBox.spacing = 10.0
+        val easeValue = Text("Current Ease Value: ")
+        val headingValue = Text("Current Heading value: ")
+
+        easePositionText.textProperty().addListener { _, _, newText ->
+            println(" Test ")
+
+            if (!refreshing && selectedPath!= null) {
+
+                selectedPath!!.getEaseCurve().storeValue(currentTime, newText.toDouble()/100.0 )
+                println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
+                draw()
+            }
+        }
+
+        headingAngleText.textProperty().addListener { _, _, newText ->
+            if (!refreshing && selectedPath!= null && !newText.isEmpty()) {
+                selectedPath!!.getHeadingCurve().storeValue(currentTime, newText.toDouble() )
+                draw()
+            }
+        }
+
+        easeAndHeadingHBox.children.addAll(easeValue, easePositionText, headingValue, headingAngleText)
 
 
         children.addAll(
@@ -371,7 +405,6 @@ object ControlPanel : VBox() {
                 miscHBox,
                 Separator(),
                 mirroredCheckBox,
-                secondsHBox,
                 speedHBox,
                 robotDirectionHBox,
                 Separator(),
@@ -386,7 +419,9 @@ object ControlPanel : VBox() {
                 Separator(),
                 filesBox,
                 robotHBox,
-                easeCurveFuntions
+                Separator(),
+                secondsHBox,
+                easeAndHeadingHBox
         )
 
         refresh()
@@ -578,6 +613,11 @@ object ControlPanel : VBox() {
         }
 
         currentTimeText.text = currentTime.format(1)
+        if (selectedPath != null) {
+            easePositionText.text = (selectedPath!!.getEaseCurve().getValue(currentTime) * 100.0).format(1)
+            headingAngleText.text = selectedPath!!.getHeadingCurve().getValue(currentTime).format(1)
+        }
+
         refreshPoints()
         FieldPane.draw()
         refreshing = false

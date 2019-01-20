@@ -362,6 +362,9 @@ object FieldPane : StackPane() {
         val centerPosition = selectedPath!!.getPosition(time)
         var tangent = selectedPath!!.getTangent(time)
         tangent = Vector2.normalize(tangent!!)
+        val heading = selectedPath!!.headingCurve.getValue(time)
+        tangent.rotateDegrees(-heading)
+
         var perpendicularToPath = Vector2.perpendicular(tangent)
         val robotLength = ControlPanel.selectedAutonomous!!.robotLength / 2.0
         tangent *= robotLength
