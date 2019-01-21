@@ -3,14 +3,13 @@ package org.team2471.frc.pathvisualizer
 import javafx.event.EventHandler
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
-import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import org.team2471.frc.lib.vector.Vector2
+import org.team2471.frc.lib.math.Vector2
 import kotlin.math.round
 
 object FieldPane : StackPane() {
@@ -162,7 +161,7 @@ object FieldPane : StackPane() {
     }
 
 
-    fun deleteSelectedPoint(){
+    fun deleteSelectedPoint() {
         if (selectedPoint != null && selectedPath != null) {
             FieldPane.selectedPath?.removePoint(selectedPoint)
             selectedPoint = null
@@ -182,7 +181,7 @@ object FieldPane : StackPane() {
         var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
         while (point != null) {
             val tPoint = world2ScreenWithMirror(point.position, selectedPath!!.isMirrored)
-            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+            var dist = (tPoint - mouseVec).length
             if (dist <= shortestDistance) {
                 shortestDistance = dist
                 closestPoint = point
@@ -190,8 +189,9 @@ object FieldPane : StackPane() {
             }
 
             if (point.prevPoint != null) {
-                val tanPoint1 = world2ScreenWithMirror(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent, 1.0 / PathVisualizer.TANGENT_DRAW_FACTOR)), selectedPath!!.isMirrored)
-                dist = Vector2.length(Vector2.subtract(tanPoint1, mouseVec))
+                val tanPoint1 = world2ScreenWithMirror(point.position -
+                        point.prevTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), selectedPath!!.isMirrored)
+                dist = (tanPoint1 - mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
@@ -200,8 +200,9 @@ object FieldPane : StackPane() {
             }
 
             if (point.nextPoint != null) {
-                val tanPoint2 = world2ScreenWithMirror(Vector2.add(point.position, Vector2.multiply(point.nextTangent, 1.0 / PathVisualizer.TANGENT_DRAW_FACTOR)), selectedPath!!.isMirrored)
-                dist = Vector2.length(Vector2.subtract(tanPoint2, mouseVec))
+                val tanPoint2 = world2ScreenWithMirror(point.position +
+                        point.nextTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), selectedPath!!.isMirrored)
+                dist = (tanPoint2 - mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
@@ -309,17 +310,17 @@ object FieldPane : StackPane() {
                 zoomFit()
             }
             "=" -> {
-                if (e.isControlDown)
-                    zoom*=1.01
+                zoom *= if (e.isControlDown)
+                    1.01
                 else
-                    zoom*=1.10
+                    1.10
                 draw()
             }
             "-" -> {
-                if (e.isControlDown)
-                    zoom/=1.01
+                zoom /= if (e.isControlDown)
+                    1.01
                 else
-                    zoom/=1.10
+                    1.10
                 draw()
             }
         }
@@ -361,11 +362,11 @@ object FieldPane : StackPane() {
     fun getWheelPositions(time: Double): Array<Vector2> {  // offset can be positive or negative (half the width of the robot)
         val centerPosition = selectedPath!!.getPosition(time)
         var tangent = selectedPath!!.getTangent(time)
-        tangent = Vector2.normalize(tangent!!)
+        tangent = tangent!!.normalize()
         val heading = selectedPath!!.headingCurve.getValue(time)
         tangent.rotateDegrees(-heading)
 
-        var perpendicularToPath = Vector2.perpendicular(tangent)
+        var perpendicularToPath = tangent.perpendicular()
         val robotLength = ControlPanel.selectedAutonomous!!.robotLength / 2.0
         tangent *= robotLength
         val robotWidth = ControlPanel.selectedAutonomous!!.robotWidth / 2.0

@@ -1,8 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
-import javafx.scene.canvas.GraphicsContext
-import javafx.scene.paint.Color
-import org.team2471.frc.lib.vector.Vector2
+import org.team2471.frc.lib.math.Vector2
 import java.text.DecimalFormat
 
 fun feetToPixels(feet: Double): Double = feet * FieldPane.fieldDimensionPixels.x / FieldPane.fieldDimensionFeet.x
@@ -13,14 +11,12 @@ inline fun <T : Any, R> whenNotNull(input: T?, callback: (T) -> R): R? {
 }
 
 fun world2Screen(vector2: Vector2): Vector2 {
-    val temp = vector2 * FieldPane.zoom
-    temp.y = -temp.y
+    val temp = (vector2 * FieldPane.zoom).mirrorYAxis()
     return temp + FieldPane.zoomPivot + FieldPane.offset
 }
 
 fun screen2World(vector2: Vector2): Vector2 {
-    val temp = vector2 - FieldPane.offset - FieldPane.zoomPivot
-    temp.y = -temp.y
+    val temp = (vector2 - FieldPane.offset - FieldPane.zoomPivot).mirrorYAxis()
     return temp / FieldPane.zoom
 }
 

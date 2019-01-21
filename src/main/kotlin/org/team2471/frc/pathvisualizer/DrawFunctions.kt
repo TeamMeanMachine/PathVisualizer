@@ -4,7 +4,8 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import org.team2471.frc.lib.vector.Vector2
+import org.team2471.frc.lib.math.Vector2
+import org.team2471.frc.lib.motion_profiling.following.ArcadePath
 
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
@@ -21,24 +22,23 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
     drawSelectedPath(gc, selectedPath, selectedPoint, selectedPointType)
 }
 
-private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
-    if (path2D == null || path2D.duration == 0.0)
+private fun drawPath(gc: GraphicsContext, path: Path2D?) {
+    if (path == null || path.duration == 0.0)
         return
-    path2D.resetDistances()
-    val deltaT = path2D.durationWithSpeed / 200.0
-    val prevPos = path2D.getPosition(0.0)
+    val deltaT = path.durationWithSpeed / 200.0
+    var prevPos = path.getPosition(0.0)
     var pos: Vector2
 
     gc.stroke = Color.WHITE
     var t = deltaT
-    while (t <= path2D.durationWithSpeed) {
-        val ease = t / path2D.durationWithSpeed
-        pos = path2D.getPosition(t)
+    while (t <= path.durationWithSpeed) {
+        val ease = t / path.durationWithSpeed
+        pos = path.getPosition(t)
 
         // center line
         gc.stroke = Color(ease * Color.WHITE.red, ease * Color.WHITE.green, ease * Color.WHITE.blue, 1.0)
         drawPathLine(gc, prevPos, pos)
-        prevPos.set(pos.x, pos.y)
+        prevPos = Vector2(pos.x, pos.y)
         t += deltaT
     }
 }
@@ -46,26 +46,29 @@ private fun drawPath(gc: GraphicsContext, path2D: Path2D?) {
 private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: Path2DPoint?, selectedPointType: PathVisualizer.PointType?) {
     if (path == null || !path.hasPoints())
         return
+
+    val arcadePath = ArcadePath(path, (ControlPanel.selectedAutonomous?.trackWidth ?: 12.0) *
+            (ControlPanel.selectedAutonomous?.scrubFactor ?: 1.0))
+
     if (path.durationWithSpeed > 0.0) {
         val deltaT = path.durationWithSpeed / 200.0
-        var prevLeftPos = path.getLeftPosition(0.0)
-        var prevRightPos = path.getRightPosition(0.0)
-        var pos: Vector2
+        var prevLeftPos = arcadePath.getLeftPosition(0.0)
+        var prevRightPos = arcadePath.getRightPosition(0.0)
         var leftPos: Vector2
         var rightPos: Vector2
-        val MAX_SPEED = 8.0
+        val maxSpeed = 8.0
         var t = deltaT
-        path.resetDistances()
+        arcadePath.resetDistances()
         while (t <= path.durationWithSpeed) {
-            val ease = t / path.durationWithSpeed
-            leftPos = path.getLeftPosition(t)
-            rightPos = path.getRightPosition(t)
+//            val ease = t / path.durationWithSpeed
+            leftPos = arcadePath.getLeftPosition(t)
+            rightPos = arcadePath.getRightPosition(t)
 
             // left wheel
-            var leftSpeed = Vector2.length(Vector2.subtract(leftPos, prevLeftPos)) / deltaT
-            leftSpeed /= MAX_SPEED  // MAX_SPEED is full GREEN, 0 is full red.
+            var leftSpeed = (leftPos - prevLeftPos).length / deltaT
+            leftSpeed /= maxSpeed  // MAX_SPEED is full GREEN, 0 is full red.
             leftSpeed = Math.min(1.0, leftSpeed)
-            val leftDelta = path.getLeftPositionDelta(t)
+            val leftDelta = arcadePath.getLeftPositionDelta(t)
             if (leftDelta >= 0) {
                 gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)
                 //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
@@ -77,9 +80,9 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
             drawPathLine(gc, prevLeftPos, leftPos)
 
             // right wheel
-            var rightSpeed = Vector2.length(Vector2.subtract(rightPos, prevRightPos)) / deltaT / MAX_SPEED
+            var rightSpeed = (rightPos - prevRightPos).length / deltaT / maxSpeed
             rightSpeed = Math.min(1.0, rightSpeed)
-            val rightDelta = path.getRightPositionDelta(t)
+            val rightDelta = arcadePath.getRightPositionDelta(t)
             if (rightDelta >= 0) {
                 gc.stroke = Color(1.0 - rightSpeed, rightSpeed, 0.0, 1.0)
                 //gc.stroke = Color(ease * Color.RED.red, ease * Color.RED.green, ease * Color.RED.blue, 1.0)
@@ -113,8 +116,7 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
                 gc.stroke = Color.LIMEGREEN
             else
                 gc.stroke = Color.WHITE
-            val tanPoint = world2ScreenWithMirror(Vector2.subtract(point.position, Vector2.multiply(point.prevTangent,
-                    1.0 / PathVisualizer.TANGENT_DRAW_FACTOR)), path.isMirrored)
+            val tanPoint = world2ScreenWithMirror(point.position - point.prevTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), path.isMirrored)
             gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
                     tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
                     PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
@@ -126,8 +128,8 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
                 gc.stroke = Color.LIMEGREEN
             else
                 gc.stroke = Color.WHITE
-            val tanPoint = world2ScreenWithMirror(Vector2.add(point.position, Vector2.multiply(point.nextTangent,
-                    1.0 / PathVisualizer.TANGENT_DRAW_FACTOR)), path.isMirrored)
+            val tanPoint = world2ScreenWithMirror(point.position + point.nextTangent *
+                    1.0 / PathVisualizer.TANGENT_DRAW_FACTOR, path.isMirrored)
             gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
                     tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
                     PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
