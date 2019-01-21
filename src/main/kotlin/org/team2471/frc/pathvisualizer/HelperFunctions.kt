@@ -36,6 +36,38 @@ fun screen2WorldWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
     return temp / FieldPane.zoom
 }
 
+fun easeWorld2ScreenX(xPoint: Double): Double {
+    return xPoint / FieldPane.selectedPath!!.durationWithSpeed * EasePane.width
+}
+
+fun easeWorld2ScreenY(yPoint: Double): Double {
+    return (1.0 - yPoint) * EasePane.height
+}
+
+fun easeScreen2WorldX(xPoint: Double): Double {
+    return xPoint * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width
+}
+
+fun easeScreen2WorldY(yPoint: Double): Double {
+    return -1 * (yPoint / EasePane.height - 1)
+}
+
+fun compressAngle(prevAngle: Double) : Double {
+    var angle = prevAngle
+    if (angle < -Math.PI / 2) {
+        while (angle < -Math.PI / 2) {
+            angle += Math.PI / 2
+        }
+    }
+    if (angle > Math.PI / 2) {
+        while (angle > Math.PI / 2) {
+            angle -= Math.PI / 2
+        }
+    }
+    return angle
+}
+
+
 fun Double.format(fracDigits: Int): String {
     val fd = DecimalFormat()
     fd.maximumFractionDigits = fracDigits
