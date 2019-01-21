@@ -47,7 +47,7 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
     if (path == null || !path.hasPoints())
         return
 
-    val arcadePath = ArcadePath(path, (ControlPanel.selectedAutonomous?.trackWidth ?: 12.0) *
+    val arcadePath = ArcadePath(path, (ControlPanel.selectedAutonomous?.trackWidth ?: 25.0/12.0) *
             (ControlPanel.selectedAutonomous?.scrubFactor ?: 1.0))
 
     if (path.durationWithSpeed > 0.0) {
@@ -70,10 +70,10 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
             leftSpeed = Math.min(1.0, leftSpeed)
             val leftDelta = arcadePath.getLeftPositionDelta(t)
             if (leftDelta >= 0) {
-                gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)
+                gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)  // green fast, red slow
                 //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
             } else {
-                gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)
+                gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)  // blue fast, red slow
                 //gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
                 //gc.stroke = Color(ease*Color.LIMEGREEN.red, ease*Color.LIMEGREEN.green, ease*Color.LIMEGREEN.blue, 1.0)
             }
