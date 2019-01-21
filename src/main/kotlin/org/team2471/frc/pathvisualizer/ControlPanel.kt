@@ -24,6 +24,9 @@ import java.io.PrintWriter
 import java.util.prefs.Preferences
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
+import javafx.scene.input.KeyCode
+
+
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -175,9 +178,9 @@ object ControlPanel : VBox() {
 
         val speedHBox = HBox()
         val speedName = Text("Speed Multiplier:  ")
-        speedText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
-                val speed = newText.toDoubleOrNull() ?: return@addListener
+        speedText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                val speed = speedText.text.toDouble()
                 FieldPane.setSelectedPathSpeed(speed)
             }
         }
@@ -185,30 +188,34 @@ object ControlPanel : VBox() {
 
         val pointPosHBox = HBox()
         val posLabel = Text("Position:  ")
-        xPosText.textProperty().addListener { _, _, newText ->
-            if (refreshing) return@addListener
-            FieldPane.setSelectedPointX(newText.toDouble())
-            refreshPoints()
+        xPosText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                FieldPane.setSelectedPointX(xPosText.text.toDouble())
+                refreshPoints()
+            }
         }
-        yPosText.textProperty().addListener { _, _, newText ->
-            if (refreshing) return@addListener
-            FieldPane.setSelectedPointY(newText.toDouble())
-            refreshPoints()
+        yPosText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                FieldPane.setSelectedPointY(yPosText.text.toDouble())
+                refreshPoints()
+            }
         }
         val posUnit = Text(" feet")
         pointPosHBox.children.addAll(posLabel, xPosText, yPosText, posUnit)
 
         val tangentHBox = HBox()
         val tangentLabel = Text("Tangent:  ")
-        angleText.textProperty().addListener { _, _, newText ->
-            if (refreshing) return@addListener
-            FieldPane.setSelectedPointAngle(newText.toDouble())
-            refreshPoints()
+        angleText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                FieldPane.setSelectedPointAngle(angleText.text.toDouble())
+                refreshPoints()
+            }
         }
-        magnitudeText.textProperty().addListener { _, _, newText ->
-            if (refreshing) return@addListener
-            FieldPane.setSelectedPointMagnitude(newText.toDouble())
-            refreshPoints()
+        magnitudeText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                FieldPane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
+                refreshPoints()
+            }
         }
         val angleUnit = Text(" degrees")
         val magnitudeUnit = Text(" magnitude")
@@ -233,10 +240,10 @@ object ControlPanel : VBox() {
 
         val trackWidthHBox = HBox()
         val trackWidthName = Text("Track Width:  ")
-        trackWidthText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
+        trackWidthText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
                 ControlPanel.trackWidthText.text = (ControlPanel.selectedAutonomous!!.trackWidth * 12.0).format(1)
-                ControlPanel.selectedAutonomous?.trackWidth = (newText.toDouble()) / 12.0
+                ControlPanel.selectedAutonomous?.trackWidth = (trackWidthText.text.toDouble()) / 12.0
                 FieldPane.draw()
             }
         }
@@ -245,9 +252,9 @@ object ControlPanel : VBox() {
 
         val scrubFactorHBox = HBox()
         val scrubFactorName = Text("Width Scrub Factor:  ")
-        scrubFactorText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
-                selectedAutonomous?.scrubFactor = newText.toDouble()
+        scrubFactorText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                selectedAutonomous?.scrubFactor = scrubFactorText.text.toDouble()
                 FieldPane.draw()
             }
         }
@@ -255,10 +262,9 @@ object ControlPanel : VBox() {
 
         val widthHBox = HBox()
         val widthName = Text("Robot Width:  ")
-        widthText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
-                selectedAutonomous?.robotWidth = newText.toDouble() / 12.0
-                //widthText.text = (selectedPath!!.robotWidth * 12.0).format(1)
+        widthText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                selectedAutonomous?.robotWidth = widthText.text.toDouble() / 12.0
                 FieldPane.draw()
             }
         }
@@ -267,9 +273,9 @@ object ControlPanel : VBox() {
 
         val lengthHBox = HBox()
         val lengthName = Text("Robot Length:  ")
-        lengthText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
-                selectedAutonomous?.robotLength = newText.toDouble() / 12.0
+        lengthText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                selectedAutonomous?.robotLength = lengthText.text.toDouble() / 12.0
                 FieldPane.draw()
             }
         }
@@ -315,15 +321,16 @@ object ControlPanel : VBox() {
         sendToRobotButton.setOnAction { _: ActionEvent ->
             autonomi.publishToNetworkTables(networkTableInstance)
         }
-        val addressName = Text("  IP Address:  ")
-        val defaultAddress = "10.24.71.2"
-        val addressText = TextField(defaultAddress)
-        addressText.textProperty().addListener { _, _, address ->
-            if (!refreshing) {
-                connect(address)
+        val addressName = Text("  IP Address:  ")  // this is a great candidate to be saved in the registry, so that other teams only have to change it once
+        var ipAddress = "10.24.71.2"
+        val addressText = TextField(ipAddress)
+        addressText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                ipAddress = addressText.text
+                connect(ipAddress)
             }
         }
-        connect(defaultAddress)
+        connect(ipAddress)
 
         val playButton = Button(" Play ")
         var animationJob: Job? = null
@@ -358,51 +365,47 @@ object ControlPanel : VBox() {
         val secondsHBox = HBox()
         secondsHBox.spacing = 10.0
         val secondsName = Text("Path Duration:  ")
-        val currentTimeName = Text("Current Path Time:  ")
-        secondsText.textProperty().addListener { _, _, newText ->
-            if (!refreshing && newText.toDoubleOrNull() ?: 0.0 > 0.0) {
-                val seconds = newText.toDoubleOrNull() ?: return@addListener
+        val currentTimeName = Text("Current Time:  ")
+        secondsText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                val seconds = secondsText.text.toDouble()
                 FieldPane.setSelectedPathDuration(seconds)
             }
         }
-
-        currentTimeText.textProperty().addListener { _, _, newText ->
-            if (!refreshing) {
-                currentTime = newText.toDouble()
+        currentTimeText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                currentTime = currentTimeText.text.toDouble()
                 refresh()
             }
-
         }
 
         secondsHBox.children.addAll( currentTimeName, currentTimeText, playButton,  secondsName, secondsText)
-
-
 
         val easeAndHeadingHBox = HBox()
         secondsHBox.spacing = 10.0
         val easeValue = Text("Current Ease Value: ")
         val headingValue = Text("Current Heading value: ")
 
-        easePositionText.textProperty().addListener { _, _, newText ->
-            println(" Test ")
-
-            if (!refreshing && selectedPath!= null) {
-
-                selectedPath!!.getEaseCurve().storeValue(currentTime, newText.toDouble()/100.0 )
-                println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
-                draw()
+        easePositionText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                if (selectedPath!= null) {
+                    selectedPath!!.getEaseCurve().storeValue(currentTime, easePositionText.text.toDouble()/100.0 )
+                    println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
+                    draw()
+                }
             }
         }
 
-        headingAngleText.textProperty().addListener { _, _, newText ->
-            if (!refreshing && selectedPath!= null && !newText.isEmpty()) {
-                selectedPath!!.getHeadingCurve().storeValue(currentTime, newText.toDouble() )
-                draw()
+        headingAngleText.setOnKeyPressed { event ->
+            if (event.code === KeyCode.ENTER) {
+                if (selectedPath!= null && !headingAngleText.text.isEmpty()) {
+                    selectedPath!!.getHeadingCurve().storeValue(currentTime, headingAngleText.text.toDouble() )
+                    draw()
+                }
             }
         }
 
         easeAndHeadingHBox.children.addAll(easeValue, easePositionText, headingValue, headingAngleText)
-
 
         children.addAll(
                 autoComboHBox,
@@ -676,5 +679,4 @@ object ControlPanel : VBox() {
         }
         refreshing = false
     }
-
 }
