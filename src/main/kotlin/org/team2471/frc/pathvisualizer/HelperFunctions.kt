@@ -40,13 +40,26 @@ fun screen2WorldWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
     return temp / FieldPane.zoom
 }
 
-private fun easeWorld2Screen(point: Vector2): Vector2 {
-    return Vector2(point.x / FieldPane.selectedPath!!.durationWithSpeed * EasePane.width, (1.0 - point.y) * EasePane.height)
+fun easeWorld2ScreenX(xPoint: Double): Double {
+    return xPoint / FieldPane.selectedPath!!.durationWithSpeed * EasePane.width
 }
 
-private fun easeScreen2World(point: Vector2): Vector2 {
+fun easeWorld2ScreenY(yPoint: Double): Double {
+    return (1.0 - yPoint) * EasePane.height
+}
+
+fun easeScreen2WorldX(xPoint: Double): Double {
+    return xPoint * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width
+}
+
+fun easeScreen2WorldY(yPoint: Double): Double {
+    return -1 * (yPoint / EasePane.height - 1)
+}
+
+fun graphScreen2World(point: Vector2): Vector2 {
     return Vector2(point.x * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width, -1 * (point.y / EasePane.height - 1))
 }
+
 
 fun Double.format(fracDigits: Int): String {
     val fd = DecimalFormat()

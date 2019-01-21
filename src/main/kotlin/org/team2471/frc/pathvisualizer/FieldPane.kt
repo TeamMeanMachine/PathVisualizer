@@ -285,7 +285,6 @@ object FieldPane : StackPane() {
         val dimensions = lowerRightPixels - upperLeftPixels
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
         EasePane.drawEaseCurve(selectedPath)
-
         drawPaths(gc, ControlPanel.selectedAutonomous?.paths?.values, selectedPath, selectedPoint, selectedPointType)
     }
 
