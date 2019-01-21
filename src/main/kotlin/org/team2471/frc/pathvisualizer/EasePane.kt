@@ -129,6 +129,43 @@ object EasePane : StackPane() {
                 refresh()
                 draw()
             }
+           PathVisualizer.MouseMode.EDIT -> {
+                if (editPoint != null) {
+                    val worldPoint = Vector2(easeScreen2WorldX(e.x), easeScreen2WorldY(e.y))
+                    if (editPoint == selectedPath!!.easeCurve.headKey || editPoint == selectedPath!!.easeCurve.tailKey) {
+                        when (selectedPointType) {
+                            PathVisualizer.PointType.POINT -> {
+                                editPoint?.timeAndValue = worldPoint
+                            }
+                            PathVisualizer.PointType.PREV_TANGENT -> {
+                                editPoint!!.magnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.6
+                                //editPoint!!.magnitude = (worldPoint.x - editPoint!!.time) * -PathVisualizer.TANGENT_DRAW_FACTOR
+                            }
+                            PathVisualizer.PointType.NEXT_TANGENT -> {
+                                editPoint!!.magnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 1.8
+                                //editPoint!!.magnitude = (worldPoint.x - editPoint!!.time) * PathVisualizer.TANGENT_DRAW_FACTOR
+                            }
+                        }
+                    }
+                    else {
+                        when (selectedPointType) {
+                            PathVisualizer.PointType.POINT -> {
+                                editPoint?.timeAndValue = worldPoint
+                            }
+                            PathVisualizer.PointType.PREV_TANGENT -> {
+                                editPoint!!.prevMagnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 9
+                                editPoint!!.angle = (Math.atan(compressAngle(worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+                            }
+                            PathVisualizer.PointType.NEXT_TANGENT -> {
+                                editPoint!!.nextMagnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 9
+                                editPoint!!.angle = (Math.atan(compressAngle(worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+
+                            }
+                        }
+                    }
+                    draw()
+                }
+            }
         }
     }
 

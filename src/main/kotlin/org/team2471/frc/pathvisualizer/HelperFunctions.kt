@@ -56,8 +56,19 @@ fun easeScreen2WorldY(yPoint: Double): Double {
     return -1 * (yPoint / EasePane.height - 1)
 }
 
-fun graphScreen2World(point: Vector2): Vector2 {
-    return Vector2(point.x * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width, -1 * (point.y / EasePane.height - 1))
+fun compressAngle(prevAngle: Double) : Double {
+    var angle = prevAngle
+    if (angle < -Math.PI / 2) {
+        while (angle < -Math.PI / 2) {
+            angle += Math.PI / 2
+        }
+    }
+    if (angle > Math.PI / 2) {
+        while (angle > Math.PI / 2) {
+            angle -= Math.PI / 2
+        }
+    }
+    return angle
 }
 
 
