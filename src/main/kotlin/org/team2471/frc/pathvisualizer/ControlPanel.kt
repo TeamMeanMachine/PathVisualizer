@@ -332,7 +332,7 @@ object ControlPanel : VBox() {
         }
         connect(ipAddress)
 
-        val playButton = Button(" Play ")
+        val playButton = Button("Play")
         var animationJob: Job? = null
         playButton.setOnAction {
             if (selectedPath != null) {

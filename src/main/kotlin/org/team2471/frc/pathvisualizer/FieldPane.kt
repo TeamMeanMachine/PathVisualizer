@@ -101,15 +101,16 @@ object FieldPane : StackPane() {
     fun setSelectedPointX(x: Double) {
         when (selectedPointType) {
             PathVisualizer.PointType.POINT -> {
-                selectedPoint?.position?.x = x
+                selectedPoint!!.position.x = x
             }
             PathVisualizer.PointType.PREV_TANGENT -> {
-                selectedPoint?.prevTangent?.x = x * -PathVisualizer.TANGENT_DRAW_FACTOR
+                selectedPoint!!.prevTangent = Vector2(x * -PathVisualizer.TANGENT_DRAW_FACTOR, selectedPoint!!.prevTangent.y)
             }
             PathVisualizer.PointType.NEXT_TANGENT -> {
-                selectedPoint?.nextTangent?.x = x * PathVisualizer.TANGENT_DRAW_FACTOR
+                selectedPoint!!.nextTangent = Vector2(x * PathVisualizer.TANGENT_DRAW_FACTOR, selectedPoint!!.nextTangent.y)
             }
         }
+
         selectedPoint?.onPositionChanged()
         draw()
     }
@@ -120,10 +121,10 @@ object FieldPane : StackPane() {
                 selectedPoint?.position?.y = y
             }
             PathVisualizer.PointType.PREV_TANGENT -> {
-                selectedPoint?.prevTangent?.y = y * -PathVisualizer.TANGENT_DRAW_FACTOR
+                selectedPoint!!.prevTangent = Vector2(selectedPoint!!.prevTangent.x, y * -PathVisualizer.TANGENT_DRAW_FACTOR)
             }
             PathVisualizer.PointType.NEXT_TANGENT -> {
-                selectedPoint?.nextTangent?.y = y * PathVisualizer.TANGENT_DRAW_FACTOR
+                selectedPoint!!.nextTangent = Vector2(selectedPoint!!.nextTangent.x, y * PathVisualizer.TANGENT_DRAW_FACTOR)
             }
         }
         selectedPoint?.onPositionChanged()
@@ -134,10 +135,10 @@ object FieldPane : StackPane() {
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (selectedPointType) {
             PathVisualizer.PointType.PREV_TANGENT -> {
-                selectedPoint?.prevAngleAndMagnitude?.x = angle
+                selectedPoint!!.prevAngleAndMagnitude = Vector2(angle, selectedPoint!!.prevMagnitude)
             }
             PathVisualizer.PointType.NEXT_TANGENT -> {
-                selectedPoint?.nextAngleAndMagnitude?.x = angle
+                selectedPoint!!.nextAngleAndMagnitude = Vector2(angle, selectedPoint!!.nextMagnitude)
             }
         }
         draw()
@@ -147,10 +148,10 @@ object FieldPane : StackPane() {
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (selectedPointType) {
             PathVisualizer.PointType.PREV_TANGENT -> {
-                selectedPoint?.nextAngleAndMagnitude?.y = magnitude
+                selectedPoint!!.prevAngleAndMagnitude = Vector2(selectedPoint!!.prevAngle, magnitude)
             }
             PathVisualizer.PointType.NEXT_TANGENT -> {
-                selectedPoint?.prevAngleAndMagnitude?.y = magnitude
+                selectedPoint!!.nextAngleAndMagnitude = Vector2(selectedPoint!!.nextAngle, magnitude)
             }
         }
         draw()
