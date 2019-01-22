@@ -60,22 +60,17 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
         var t = deltaT
         arcadePath.resetDistances()
         while (t <= path.durationWithSpeed) {
-//            val ease = t / path.durationWithSpeed
             leftPos = arcadePath.getLeftPosition(t)
             rightPos = arcadePath.getRightPosition(t)
 
             // left wheel
-            var leftSpeed = (leftPos - prevLeftPos).length / deltaT
-            leftSpeed /= maxSpeed  // MAX_SPEED is full GREEN, 0 is full red.
-            leftSpeed = Math.min(1.0, leftSpeed)
+            var leftSpeed = (leftPos - prevLeftPos).length / deltaT / maxSpeed
+            leftSpeed = Math.max(Math.min(1.0, leftSpeed),0.0)
             val leftDelta = arcadePath.getLeftPositionDelta(t)
             if (leftDelta >= 0) {
                 gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)  // green fast, red slow
-                //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
             } else {
                 gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)  // blue fast, red slow
-                //gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
-                //gc.stroke = Color(ease*Color.LIMEGREEN.red, ease*Color.LIMEGREEN.green, ease*Color.LIMEGREEN.blue, 1.0)
             }
             drawPathLine(gc, prevLeftPos, leftPos)
 
