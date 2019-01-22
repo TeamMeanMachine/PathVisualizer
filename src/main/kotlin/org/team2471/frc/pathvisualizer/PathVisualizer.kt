@@ -114,13 +114,15 @@ class PathVisualizer : Application() {
 // : add delete buttons beside auto and path for deleting them - James
 // : add rename button beside auto and path combos to edit their names - Qui and Jonah
 // : playback of robot travel
+// : Be able to type heading of robot
+// : Add buttons for new auto and new path, remove list items - Jonah
+// : playback of entire autonomous
 
 // todo: editing of ease curve and heading curve - Julian
-// todo: Be able to type heading of robot
 // todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to turn Robot heading on field
 // todo: Be able to create wheel paths for swerves - use swerve modules
-// todo: Add buttons for new auto and new path, remove list items - Jonah
+// todo: Be able to add a point anywhere on a path by clicking on it
 
 // todo: navigation for graph panel - pan and zoom
 // todo: connect edit box for position, angle, magnitude of ease curve - just share the same one for points
@@ -130,6 +132,7 @@ class PathVisualizer : Application() {
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
-// todo: undo operations
+// todo: add a file and edit menu for open, save, save as, undo and redo
+// todo: undo operations - Ryan
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
