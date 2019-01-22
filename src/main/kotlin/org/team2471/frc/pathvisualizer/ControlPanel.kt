@@ -364,14 +364,16 @@ object ControlPanel : VBox() {
 
         val secondsHBox = HBox()
         secondsHBox.spacing = 10.0
-        val secondsName = Text("Path Duration:  ")
-        val currentTimeName = Text("Current Time:  ")
+        val secondsName = Text("Path Duration:")
+        val currentTimeName = Text("Current Time:")
+        secondsText.prefWidth = 100.0
         secondsText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 val seconds = secondsText.text.toDouble()
                 FieldPane.setSelectedPathDuration(seconds)
             }
         }
+        currentTimeText.prefWidth = 100.0
         currentTimeText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 currentTime = currentTimeText.text.toDouble()
@@ -382,10 +384,11 @@ object ControlPanel : VBox() {
         secondsHBox.children.addAll( currentTimeName, currentTimeText, playButton,  secondsName, secondsText)
 
         val easeAndHeadingHBox = HBox()
-        secondsHBox.spacing = 10.0
+        easeAndHeadingHBox.spacing = 10.0
         val easeValue = Text("Current Ease Value: ")
         val headingValue = Text("Current Heading value: ")
 
+        easePositionText.prefWidth = 100.0
         easePositionText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 if (selectedPath!= null) {
@@ -396,6 +399,7 @@ object ControlPanel : VBox() {
             }
         }
 
+        headingAngleText.prefWidth = 100.0
         headingAngleText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 if (selectedPath!= null && !headingAngleText.text.isEmpty()) {
