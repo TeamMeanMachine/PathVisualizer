@@ -26,8 +26,6 @@ import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javafx.scene.input.KeyCode
 
-
-
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
     private val pathListView = ListView<String>()
@@ -65,7 +63,6 @@ object ControlPanel : VBox() {
             FieldPane.draw()
         }
 
-
     var selectedAutonomous: Autonomous? = null
         private set
 
@@ -75,7 +72,6 @@ object ControlPanel : VBox() {
 
         if (!fileName.isEmpty())
             openFile(File(fileName))
-
 
         pathListView.prefHeight = 180.0
         val pathListViewHBox = HBox()
@@ -90,7 +86,11 @@ object ControlPanel : VBox() {
         val newPathButton = Button("New Path")
         newPathButton.setOnAction {
             var newPathName: String?
-            val dialog = TextInputDialog("Path")
+            val defaultName = "Path"
+            var count = 1
+            while (selectedAutonomous!!.paths.containsKey(defaultName + count))
+                count++
+            val dialog = TextInputDialog(defaultName + count)
             dialog.title = "Path Name"
             dialog.headerText = "Enter the name for your new path"
             dialog.contentText = "Path name:"
@@ -130,12 +130,34 @@ object ControlPanel : VBox() {
 
         val playAllButton = Button("Play All")
         playAllButton.setOnAction {
-            val paths = selectedAutonomous!!.paths
-            for (kvPath in paths) {
-                setSelectedPath(kvPath.key)
-                if (kvPath.value == FieldPane.selectedPath) {
-                    pathListView.selectionModel.select(kvPath.key)
-                    playSelectedPath()
+            var animationJob: Job? = null
+
+            if (selectedAutonomous != null) {
+                animationJob?.cancel()
+
+                val timer = Timer()
+
+                animationJob = GlobalScope.launch {
+                    for (kvPath in selectedAutonomous!!.paths) {
+                        //setSelectedPath(kvPath.key)
+                        selectedPath = kvPath.value
+                        currentTime = 0.0
+                        timer.start()
+
+                        while (timer.get() < selectedPath!!.durationWithSpeed) {
+                            if (!isActive) return@launch
+
+                            Platform.runLater {
+                                currentTime = timer.get()
+                                draw()
+                                refresh()
+                            }
+
+                            // Playback @ approx 30fps (1000ms/30fps = 33ms)
+                            delay(1000L / 30L)
+                        }
+                        Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
+                    }
                 }
             }
         }
