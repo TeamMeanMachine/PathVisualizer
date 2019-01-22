@@ -10,6 +10,7 @@ import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
+import org.team2471.frc.pathvisualizer.ControlPanel
 import kotlin.math.round
 
 object FieldPane : StackPane() {
@@ -109,6 +110,7 @@ object FieldPane : StackPane() {
                 selectedPoint?.nextTangent?.x = x * PathVisualizer.TANGENT_DRAW_FACTOR
             }
         }
+        selectedPoint?.onPositionChanged()
         draw()
     }
 
@@ -124,8 +126,8 @@ object FieldPane : StackPane() {
                 selectedPoint?.nextTangent?.y = y * PathVisualizer.TANGENT_DRAW_FACTOR
             }
         }
+        selectedPoint?.onPositionChanged()
         draw()
-
     }
 
     fun setSelectedPointAngle(angle: Double) {
@@ -212,7 +214,7 @@ object FieldPane : StackPane() {
             point = point.nextPoint
             // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
         }
-        if (shortestDistance <= PathVisualizer.DRAW_CIRCLE_SIZE / 2) {
+        if (shortestDistance <= PathVisualizer.CLICK_CIRCLE_SIZE) {
             selectedPoint = closestPoint
         } else {
             if (closestPoint != null) {
@@ -237,6 +239,7 @@ object FieldPane : StackPane() {
             PathVisualizer.MouseMode.EDIT -> {
                 editPoint = selectedPoint
                 draw()
+                ControlPanel.refresh()
             }
             PathVisualizer.MouseMode.PAN -> {
                 canvas.cursor = ImageCursor.CROSSHAIR
@@ -256,6 +259,7 @@ object FieldPane : StackPane() {
                         PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = (worldPoint - editPoint!!.position) * PathVisualizer.TANGENT_DRAW_FACTOR
                     }
                     draw()
+                    ControlPanel.refresh()
                 }
             }
             PathVisualizer.MouseMode.PAN -> {
@@ -348,6 +352,7 @@ object FieldPane : StackPane() {
                 draw()
                 canvas.requestFocus()
             }
+            ControlPanel.refresh()
         }
     }
 

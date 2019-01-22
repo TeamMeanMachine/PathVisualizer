@@ -67,7 +67,6 @@ fun compressAngle(prevAngle: Double) : Double {
     return angle
 }
 
-
 fun Double.format(fracDigits: Int): String {
     val fd = DecimalFormat()
     fd.maximumFractionDigits = fracDigits

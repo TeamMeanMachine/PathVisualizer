@@ -42,10 +42,7 @@ object EasePane : StackPane() {
         if (selectedPath!=null) {
             val mouseVec = Vector2(e.x, e.y)
             val currentTimeX = ControlPanel.currentTime / selectedPath!!.durationWithSpeed * canvas.width
-            val topTimeKnob = Vector2(currentTimeX, 5.0)
-            val bottomTimeKnob = Vector2(currentTimeX, canvas.height - 5.0)
-            if (Vector2.length(mouseVec - topTimeKnob) < PathVisualizer.CLICK_CIRCLE_SIZE ||
-                    Vector2.length(mouseVec - bottomTimeKnob) < PathVisualizer.CLICK_CIRCLE_SIZE) {
+            if (Math.abs(mouseVec.x - currentTimeX) < PathVisualizer.CLICK_CIRCLE_SIZE) {
                 mouseMode = PathVisualizer.MouseMode.DRAG_TIME
             }
         }
@@ -129,38 +126,20 @@ object EasePane : StackPane() {
                 refresh()
                 draw()
             }
-           PathVisualizer.MouseMode.EDIT -> {
+            PathVisualizer.MouseMode.EDIT -> {
                 if (editPoint != null) {
                     val worldPoint = Vector2(easeScreen2WorldX(e.x), easeScreen2WorldY(e.y))
-                    if (editPoint == selectedPath!!.easeCurve.headKey || editPoint == selectedPath!!.easeCurve.tailKey) {
-                        when (selectedPointType) {
-                            PathVisualizer.PointType.POINT -> {
-                                editPoint?.timeAndValue = worldPoint
-                            }
-                            PathVisualizer.PointType.PREV_TANGENT -> {
-                                editPoint!!.magnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.6
-                                //editPoint!!.magnitude = (worldPoint.x - editPoint!!.time) * -PathVisualizer.TANGENT_DRAW_FACTOR
-                            }
-                            PathVisualizer.PointType.NEXT_TANGENT -> {
-                                editPoint!!.magnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 1.8
-                                //editPoint!!.magnitude = (worldPoint.x - editPoint!!.time) * PathVisualizer.TANGENT_DRAW_FACTOR
-                            }
+                    when (selectedPointType) {
+                        PathVisualizer.PointType.POINT -> {
+                            editPoint?.timeAndValue = worldPoint
                         }
-                    }
-                    else {
-                        when (selectedPointType) {
-                            PathVisualizer.PointType.POINT -> {
-                                editPoint?.timeAndValue = worldPoint
-                            }
-                            PathVisualizer.PointType.PREV_TANGENT -> {
-                                editPoint!!.prevMagnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 9
-                                editPoint!!.angle = (Math.atan(compressAngle(worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
-                            }
-                            PathVisualizer.PointType.NEXT_TANGENT -> {
-                                editPoint!!.nextMagnitude = Vector2.length(worldPoint - editPoint!!.timeAndValue) * 9
-                                editPoint!!.angle = (Math.atan(compressAngle(worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
-
-                            }
+                        PathVisualizer.PointType.PREV_TANGENT -> {
+                            editPoint!!.prevMagnitude *= Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.0 / Vector2.length(editPoint!!.prevTangent)
+                            editPoint!!.angle = (Math.atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+                        }
+                        PathVisualizer.PointType.NEXT_TANGENT -> {
+                            editPoint!!.nextMagnitude *= Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.0 / Vector2.length(editPoint!!.nextTangent)
+                            editPoint!!.angle = (Math.atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
                         }
                     }
                     draw()

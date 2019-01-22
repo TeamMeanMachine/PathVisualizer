@@ -191,13 +191,13 @@ object ControlPanel : VBox() {
         xPosText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 FieldPane.setSelectedPointX(xPosText.text.toDouble())
-                refreshPoints()
+                refresh()
             }
         }
         yPosText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 FieldPane.setSelectedPointY(yPosText.text.toDouble())
-                refreshPoints()
+                refresh()
             }
         }
         val posUnit = Text(" feet")
@@ -208,13 +208,13 @@ object ControlPanel : VBox() {
         angleText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 FieldPane.setSelectedPointAngle(angleText.text.toDouble())
-                refreshPoints()
+                refresh()
             }
         }
         magnitudeText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 FieldPane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
-                refreshPoints()
+                refresh()
             }
         }
         val angleUnit = Text(" degrees")
