@@ -8,7 +8,6 @@ import javafx.scene.control.*
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
-import javafx.stage.FileChooser
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,9 +18,6 @@ import org.team2471.frc.lib.motion_profiling.Autonomous
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.util.Timer
-import java.io.File
-import java.io.PrintWriter
-import java.util.prefs.Preferences
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 
@@ -46,21 +42,46 @@ object ControlPanel : VBox() {
     private val currentTimeText = TextField()
     private val headingAngleText = TextField()
     private val easePositionText = TextField()
-    private val userPref = Preferences.userRoot()
-    private const val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
-    private var fileName = userPref.get(userFilenameKey, "")
     private val networkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
 
     var autonomi = Autonomi()
-        private set
 
     var currentTime = 0.0
         set(value) {
             field = value
             FieldPane.draw()
         }
+
+/*
+    private fun actionSave () {
+        while (actionPointer < actionHistory - 1) {
+            actionHistory.removeAt(actionPointer + 1)
+        }
+        actionHistory[actionPointer] = autonomi.toJsonString()
+        actionPointer++
+    }
+
+    private fun actionUndo () {
+        if (actionPointer > 0) {
+            actionPointer--
+            autonomi = Autonomi.fromJsonString(actionHistory[actionPointer])
+        } else {
+            println("Attempted Undo, stack empty")
+        }
+    }
+
+    private fun actionRedo () {
+        if (actionPointer < actionHistory.length() - 1) {
+            actionPointer++
+            autonomi = Autonomi.fromJsonString(actionHistory[actionPointer])
+        } else {
+            println("Attempted Redo, stack empty")
+        }
+    }
+*/
+
 
 
     var selectedAutonomous: Autonomous? = null
@@ -69,9 +90,6 @@ object ControlPanel : VBox() {
     init {
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
-
-        if (!fileName.isEmpty())
-            openFile(File(fileName))
 
 
         pathListView.prefHeight = 180.0
@@ -276,6 +294,7 @@ object ControlPanel : VBox() {
         val lengthUnit = Text(" inches")
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
+/*
         val filesBox = HBox()
         filesBox.spacing = 10.0
         val openButton = Button("Open")
@@ -308,6 +327,7 @@ object ControlPanel : VBox() {
             }
         }
         filesBox.children.addAll(openButton, saveAsButton, saveButton)
+*/
 
         val robotHBox = HBox()
         val easeCurveFuntions = HBox()
@@ -422,7 +442,7 @@ object ControlPanel : VBox() {
                 widthHBox,
                 lengthHBox,
                 Separator(),
-                filesBox,
+                //filesBox,
                 robotHBox,
                 Separator(),
                 secondsHBox,
@@ -454,36 +474,6 @@ object ControlPanel : VBox() {
             } else {
                 networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
             }
-        }
-    }
-
-    private fun openFile(file: File) {
-        try {
-            val json = file.readText()
-            autonomi = Autonomi.fromJsonString(json)
-            userPref.put(userFilenameKey, file.absolutePath)
-        } catch (e: Exception) {
-            System.err.println("Failed to find file ${file.absolutePath}")
-            autonomi = Autonomi()
-        }
-        refresh()
-    }
-
-    private fun saveAs() {
-        val fileChooser = FileChooser()
-        fileChooser.title = "Save Autonomi File As..."
-        val extFilter = FileChooser.ExtensionFilter("Autonomi files (*.json)", "*.json")
-        fileChooser.extensionFilters.add(extFilter)
-        fileChooser.initialDirectory = File(System.getProperty("user.dir"))
-        fileChooser.initialFileName = "Test.json"  // this is supposed to be saved in the registry, but it didn't work
-        val file = fileChooser.showSaveDialog(PathVisualizer.stage)
-        if (file != null) {
-            userPref.put(userFilenameKey, file.absolutePath)
-            fileName = file.absolutePath
-            val json = autonomi.toJsonString()
-            val writer = PrintWriter(file)
-            writer.append(json)
-            writer.close()
         }
     }
 

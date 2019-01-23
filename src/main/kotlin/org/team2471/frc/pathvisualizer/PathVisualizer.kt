@@ -4,6 +4,8 @@ import javafx.application.Application
 import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.*
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.VBox
 import javafx.stage.Screen
 import javafx.stage.Stage
 import org.team2471.frc.lib.motion_profiling.*
@@ -53,10 +55,15 @@ class PathVisualizer : Application() {
         val horizontalSplitPane = SplitPane(verticalSplitPane, ControlPanel)
         horizontalSplitPane.setDividerPositions(0.68)
 
+        val borderPane = BorderPane(horizontalSplitPane)
+        borderPane.top = TopBar
+
         val screen = Screen.getPrimary()
         val bounds = screen.visualBounds
 
-        stage.scene = Scene(horizontalSplitPane, bounds.width, bounds.height)
+        //stage.scene = Scene(VBox(), bounds.width, bounds.height)
+        //(stage.scene.root as VBox).children.addAll(TopBar)
+        stage.scene = Scene(borderPane, bounds.width, bounds.height)
         FieldPane.draw()
         stage.sizeToScene()
         stage.isMaximized = true
@@ -130,6 +137,7 @@ class PathVisualizer : Application() {
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
-// todo: undo operations
+// todo: undo operations - Ryan
+// todo: top bar - Ryan
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
