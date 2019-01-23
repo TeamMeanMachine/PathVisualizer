@@ -99,7 +99,7 @@ class PathVisualizer : Application() {
 // : edit box for duration of path,
 // : support mirror state of the path (where?  in getPosition() or in worldToScreen()?)
 // : fix robotDirection and speed properties
-// : rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
+// : rename robotWidth in path to trackWidth, add trackWidth and robotWidth to Autonomous for drawing
 // : set initial folder to the output folder for open and save
 // : change path combo to a list box
 // : invert pinch zooming - Julian
@@ -130,5 +130,6 @@ class PathVisualizer : Application() {
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
+// todo: undo operations
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
