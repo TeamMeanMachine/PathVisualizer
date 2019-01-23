@@ -18,15 +18,14 @@ import kotlin.math.absoluteValue
 private var startMouse = Vector2(0.0, 0.0)
 private var mouseMode = PathVisualizer.MouseMode.EDIT
 
-var selectedPointType = PathVisualizer.PointType.POINT
-    private set
 private var editPoint: MotionKey? = null
-var selectedPoint: MotionKey? = null
-    private set
 
 object EasePane : StackPane() {
     private val canvas = ResizableCanvas()
     private var mouseMode = PathVisualizer.MouseMode.EDIT
+    var selectedPoint: MotionKey? = null
+    var selectedPointType = PathVisualizer.PointType.POINT
+        private set
 
     init {
         children.add(canvas)
@@ -47,6 +46,7 @@ object EasePane : StackPane() {
             }
         }
         selectedPoint = null
+        FieldPane.selectedPoint = null
 
         val mouseVec = Vector2(e.x, e.y)
         startMouse = mouseVec
@@ -143,6 +143,7 @@ object EasePane : StackPane() {
                         }
                     }
                     draw()
+                    ControlPanel.refreshPoints()
                 }
             }
         }

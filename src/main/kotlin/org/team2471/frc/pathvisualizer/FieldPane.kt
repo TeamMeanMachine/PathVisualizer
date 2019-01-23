@@ -33,11 +33,12 @@ object FieldPane : StackPane() {
         set(value) {
             field = value
             selectedPoint = null
+            EasePane.selectedPoint = null
         }
 
     private var editPoint: Path2DPoint? = null
     var selectedPoint: Path2DPoint? = null
-        private set
+
     private var oCoord: Vector2 = Vector2(0.0, 0.0)
     var offset = Vector2(0.0, 0.0)
         private set

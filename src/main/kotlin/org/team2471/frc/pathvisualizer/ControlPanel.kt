@@ -14,10 +14,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.team2471.frc.lib.motion_profiling.Autonomi
-import org.team2471.frc.lib.motion_profiling.Autonomous
-import org.team2471.frc.lib.motion_profiling.Path2D
-import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.util.Timer
 import java.io.File
 import java.io.PrintWriter
@@ -25,6 +21,7 @@ import java.util.prefs.Preferences
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javafx.scene.input.KeyCode
+import org.team2471.frc.lib.motion_profiling.*
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -259,6 +256,7 @@ object ControlPanel : VBox() {
         speedHBox.children.addAll(speedName, speedText)
 
         val pointPosHBox = HBox()
+        pointPosHBox.spacing = 5.0
         val posLabel = Text("Position:  ")
         xPosText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
@@ -673,48 +671,79 @@ object ControlPanel : VBox() {
         refreshing = false
     }
 
-    private fun refreshPoints() {
-        val selectedPoint = FieldPane.selectedPoint
+    fun refreshPoints() {
+        val fieldPaneSelectedPoint = FieldPane.selectedPoint
+        val easePaneSelectedPoint = EasePane.selectedPoint
 
         refreshing = true
-        if (selectedPoint == null) {
+        if (fieldPaneSelectedPoint == null && easePaneSelectedPoint == null) {
             xPosText.text = ""
             yPosText.text = ""
             angleText.text = ""
             magnitudeText.text = ""
             slopeModeCombo.selectionModel.select("None")
         } else {
-            when (FieldPane.selectedPointType) {
+            if(fieldPaneSelectedPoint != null) when (FieldPane.selectedPointType) {
                 PathVisualizer.PointType.POINT -> {
-                    xPosText.text = (selectedPoint.position.x).format(2)
-                    yPosText.text = (selectedPoint.position.y).format(2)
+                    xPosText.text = (fieldPaneSelectedPoint.position.x).format(2)
+                    yPosText.text = (fieldPaneSelectedPoint.position.y).format(2)
                     angleText.text = ""
                     magnitudeText.text = ""
                     slopeModeCombo.selectionModel.select("None")
                 }
                 PathVisualizer.PointType.PREV_TANGENT -> {
-                    xPosText.text = (selectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    yPosText.text = (selectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    angleText.text = (selectedPoint.prevAngleAndMagnitude.x).format(1)
-                    magnitudeText.text = (selectedPoint.prevAngleAndMagnitude.y).format(2)
+                    xPosText.text = (fieldPaneSelectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                    yPosText.text = (fieldPaneSelectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                    angleText.text = (fieldPaneSelectedPoint.prevAngleAndMagnitude.x).format(1)
+                    magnitudeText.text = (fieldPaneSelectedPoint.prevAngleAndMagnitude.y).format(2)
                     @Suppress("NON_EXHAUSTIVE_WHEN")
-                    when (selectedPoint.prevSlopeMethod) {
+                    when (fieldPaneSelectedPoint.prevSlopeMethod) {
                         Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
                         Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
                     }
                 }
                 PathVisualizer.PointType.NEXT_TANGENT -> {
-                    xPosText.text = (selectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    yPosText.text = (selectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    angleText.text = (selectedPoint.nextAngleAndMagnitude.x).format(1)
-                    magnitudeText.text = (selectedPoint.nextAngleAndMagnitude.y).format(2)
+                    xPosText.text = (fieldPaneSelectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                    yPosText.text = (fieldPaneSelectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                    angleText.text = (fieldPaneSelectedPoint.nextAngleAndMagnitude.x).format(1)
+                    magnitudeText.text = (fieldPaneSelectedPoint.nextAngleAndMagnitude.y).format(2)
                     @Suppress("NON_EXHAUSTIVE_WHEN")
-                    when (selectedPoint.nextSlopeMethod) {
+                    when (fieldPaneSelectedPoint.nextSlopeMethod) {
                         Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
                         Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
                     }
                 }
-            }
+            } else if (easePaneSelectedPoint != null) when (EasePane.selectedPointType){
+                    PathVisualizer.PointType.POINT -> {
+                        xPosText.text = (easePaneSelectedPoint.time).format(2)
+                        yPosText.text = (easePaneSelectedPoint.value).format(2)
+                        angleText.text = ""
+                        magnitudeText.text = ""
+                        slopeModeCombo.selectionModel.select("None")
+                    }
+                    PathVisualizer.PointType.PREV_TANGENT -> {
+                        xPosText.text = (easePaneSelectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        yPosText.text = (easePaneSelectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        angleText.text = (easePaneSelectedPoint.prevAngleAndMagnitude.x).format(1)
+                        magnitudeText.text = (easePaneSelectedPoint.prevAngleAndMagnitude.y).format(2)
+                        @Suppress("NON_EXHAUSTIVE_WHEN")
+                        when (easePaneSelectedPoint.prevSlopeMethod) {
+                            MotionKey.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
+                            MotionKey.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                        }
+                    }
+                    PathVisualizer.PointType.NEXT_TANGENT -> {
+                        xPosText.text = (easePaneSelectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        yPosText.text = (easePaneSelectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        angleText.text = (easePaneSelectedPoint.nextAngleAndMagnitude.x).format(1)
+                        magnitudeText.text = (easePaneSelectedPoint.nextAngleAndMagnitude.y).format(2)
+                        @Suppress("NON_EXHAUSTIVE_WHEN")
+                        when (easePaneSelectedPoint.nextSlopeMethod) {
+                            MotionKey.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
+                            MotionKey.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                        }
+                    }
+                }
 
             val selectedPath = FieldPane.selectedPath ?: return
             pathLengthText.text = selectedPath.length.format(2)
