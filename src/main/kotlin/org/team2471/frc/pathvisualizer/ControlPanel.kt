@@ -371,11 +371,9 @@ object ControlPanel : VBox() {
                 currentTime = newText.toDouble()
                 refresh()
             }
-
         }
 
         secondsHBox.children.addAll( currentTimeName, currentTimeText, playButton,  secondsName, secondsText)
-
 
 
         val easeAndHeadingHBox = HBox()
@@ -384,12 +382,9 @@ object ControlPanel : VBox() {
         val headingValue = Text("Current Heading value: ")
 
         easePositionText.textProperty().addListener { _, _, newText ->
-            println(" Test ")
 
             if (!refreshing && selectedPath!= null) {
-
                 selectedPath!!.getEaseCurve().storeValue(currentTime, newText.toDouble()/100.0 )
-                println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
                 draw()
             }
         }
@@ -402,7 +397,6 @@ object ControlPanel : VBox() {
         }
 
         easeAndHeadingHBox.children.addAll(easeValue, easePositionText, headingValue, headingAngleText)
-
 
         children.addAll(
                 autoComboHBox,
