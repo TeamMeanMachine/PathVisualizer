@@ -513,8 +513,8 @@ object ControlPanel : VBox() {
                 "Both" -> Path2D.CurveType.BOTH
                 else -> throw IllegalStateException("Invalid slope method $newText")
             }
-            //FieldPane.setSelectedSlopeMethod(method)
-
+            FieldPane.setSelectedCurveType(method)
+            draw()
         }
         curveTypeHBox.children.addAll(curveTypeLabel, curveTypeCombo)
 
