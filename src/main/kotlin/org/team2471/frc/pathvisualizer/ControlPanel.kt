@@ -40,6 +40,7 @@ object ControlPanel : VBox() {
     private val currentTimeText = TextField()
     private val headingAngleText = TextField()
     private val easePositionText = TextField()
+    private val curveTypeCombo = ComboBox<String>()
     private val networkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
@@ -500,6 +501,23 @@ object ControlPanel : VBox() {
 
         easeAndHeadingHBox.children.addAll(easeValue, easePositionText, headingValue, headingAngleText)
 
+        val curveTypeHBox = HBox()
+        val curveTypeLabel = Text("Curve Type:  ")
+        curveTypeCombo.items.addAll("Ease", "Heading", "Both")
+        curveTypeCombo.valueProperty().addListener { _, _, newText ->
+            if (refreshing) return@addListener
+
+            val method = when (newText) {
+                "Ease" -> Path2D.CurveType.EASE
+                "Heading" -> Path2D.CurveType.HEADING
+                "Both" -> Path2D.CurveType.BOTH
+                else -> throw IllegalStateException("Invalid slope method $newText")
+            }
+            //FieldPane.setSelectedSlopeMethod(method)
+
+        }
+        curveTypeHBox.children.addAll(curveTypeLabel, curveTypeCombo)
+
         children.addAll(
                 autoComboHBox,
                 pathListViewHBox,
@@ -522,7 +540,8 @@ object ControlPanel : VBox() {
                 robotHBox,
                 Separator(),
                 secondsHBox,
-                easeAndHeadingHBox
+                easeAndHeadingHBox,
+                curveTypeHBox
         )
 
         refresh()
