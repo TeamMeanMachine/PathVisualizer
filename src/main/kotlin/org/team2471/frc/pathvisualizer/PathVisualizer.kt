@@ -106,7 +106,7 @@ class PathVisualizer : Application() {
 // : edit box for duration of path,
 // : support mirror state of the path (where?  in getPosition() or in worldToScreen()?)
 // : fix robotDirection and speed properties
-// : rename robotWidth in path to trackWidth, add robotLength and robotWidth to Autonomous for drawing
+// : rename robotWidth in path to trackWidth, add trackWidth and robotWidth to Autonomous for drawing
 // : set initial folder to the output folder for open and save
 // : change path combo to a list box
 // : invert pinch zooming - Julian
@@ -124,8 +124,8 @@ class PathVisualizer : Application() {
 
 // todo: editing of ease curve and heading curve - Julian
 // todo: Be able to type heading of robot
-// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to turn Robot heading on field
+// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Add buttons for new auto and new path, remove list items - Jonah
 
