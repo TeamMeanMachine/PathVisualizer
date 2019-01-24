@@ -260,14 +260,24 @@ object ControlPanel : VBox() {
         val posLabel = Text("Position:  ")
         xPosText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
-                FieldPane.setSelectedPointX(xPosText.text.toDouble())
-                refresh()
+                if(FieldPane.selectedPoint != null) {
+                    FieldPane.setSelectedPointX(xPosText.text.toDouble())
+                    refresh()
+                } else if (EasePane.selectedPoint != null) {
+                    EasePane.setSelectedPointX(xPosText.text.toDouble())
+                    refresh()
+                }
             }
         }
         yPosText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
-                FieldPane.setSelectedPointY(yPosText.text.toDouble())
-                refresh()
+                if(FieldPane.selectedPoint != null) {
+                    FieldPane.setSelectedPointY(yPosText.text.toDouble())
+                    refresh()
+                } else if (EasePane.selectedPoint != null) {
+                    EasePane.setSelectedPointY(yPosText.text.toDouble())
+                    refresh()
+                }
             }
         }
         val posUnit = Text(" feet")
@@ -277,14 +287,24 @@ object ControlPanel : VBox() {
         val tangentLabel = Text("Tangent:  ")
         angleText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
-                FieldPane.setSelectedPointAngle(angleText.text.toDouble())
-                refresh()
+                if (FieldPane.selectedPoint != null) {
+                    FieldPane.setSelectedPointAngle(angleText.text.toDouble())
+                    refresh()
+                } else if (EasePane.selectedPoint != null) {
+                    EasePane.setSelectedPointAngle(angleText.text.toDouble())
+                    refresh()
+                }
             }
         }
         magnitudeText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
-                FieldPane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
-                refresh()
+                if (FieldPane.selectedPoint != null) {
+                    FieldPane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
+                    refresh()
+                } else if (EasePane.selectedPoint != null) {
+                    EasePane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
+                    refresh()
+                }
             }
         }
         val angleUnit = Text(" degrees")
