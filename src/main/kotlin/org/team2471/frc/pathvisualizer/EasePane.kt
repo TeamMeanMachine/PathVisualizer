@@ -253,34 +253,19 @@ object EasePane : StackPane() {
 
         val selectedPath = path ?: return
 
-        val maxVelocity = 12.5  // feet per sec
-        val maxAcceleration = 5.0  // feet per sec^2
-        val maxCurveAcceleration = 5.0  // feet per sec^2
-        val speedFactor = 0.75
-        val accelerationFactor = 0.75
-        val curveFactor = 0.75
-
-        val pathLength = selectedPath.length
-        var deltaT = 1.0 / 50.0
-        var t = deltaT
-        var prevPosition = selectedPath.xyCurve.getPositionAtDistance(0.0)
-        var prevVelocity = Vector2(0.0, 0.0)
-        var ease = 0.0
-
-        deltaT = selectedPath.durationWithSpeed / gc.canvas.width
-        t = 0.0
-        ease = selectedPath.headingCurve.getValue(t)
+        val deltaT = selectedPath.durationWithSpeed / gc.canvas.width
+        var t = 0.0
+        var ease = selectedPath.headingCurve.getValue(t)
         var x = t / selectedPath.durationWithSpeed * gc.canvas.width
-        var y = (1.0 - ease) * gc.canvas.height
+        var y = (180.0 - ease) * gc.canvas.height
         var pos = Vector2(x, y)
         var prevPos = pos
-        var prevSpeed = 0.0
-        var prevAccel = 0.0
+
         t = deltaT
         while (t <= selectedPath.durationWithSpeed) {
             ease = selectedPath.headingCurve.getValue(t)
             x = t / selectedPath.durationWithSpeed * gc.canvas.width
-            y = (1.0 - ease)
+            y = (180.0 - ease) / 180.0
             pos = Vector2(x, y)
             val blue = Math.max(Math.min(ease * Color.BLUE.blue, 1.0), 0.0)
 
