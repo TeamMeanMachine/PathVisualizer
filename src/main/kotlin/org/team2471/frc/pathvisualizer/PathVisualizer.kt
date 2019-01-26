@@ -2,6 +2,7 @@ package org.team2471.frc.pathvisualizer
 
 import javafx.application.Application
 import javafx.geometry.Orientation
+import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
@@ -59,10 +60,7 @@ class PathVisualizer : Application() {
         borderPane.top = TopBar
 
         val screen = Screen.getPrimary()
-        val bounds = screen.visualBounds
-
-        //stage.scene = Scene(VBox(), bounds.width, bounds.height)
-        //(stage.scene.root as VBox).children.addAll(TopBar)
+        val bounds = Rectangle2D(screen.visualBounds.minX, screen.visualBounds.minY, screen.visualBounds.width, screen.visualBounds.height - 30)
         stage.scene = Scene(borderPane, bounds.width, bounds.height)
         FieldPane.draw()
         stage.sizeToScene()
