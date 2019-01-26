@@ -6,7 +6,6 @@ import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
-import javafx.scene.layout.VBox
 import javafx.stage.Screen
 import javafx.stage.Stage
 import org.team2471.frc.lib.motion_profiling.*
@@ -25,10 +24,6 @@ class PathVisualizer : Application() {
         fun main(args: Array<String>) {
             launch(PathVisualizer::class.java, *args)
         }
-    }
-
-    enum class PointType {
-        POINT, PREV_TANGENT, NEXT_TANGENT
     }
 
     enum class MouseMode {
@@ -121,12 +116,13 @@ class PathVisualizer : Application() {
 // : playback of robot travel
 // : Be able to type heading of robot
 // : Add buttons for new auto and new path, remove list items - Jonah
+// : playback of entire autonomous
 
-// todo: connect edit box for position, angle, magnitude of ease curve - just share the same one for points - Sasha
-// todo: editing of ease curve and heading curve - Julian
 // todo: Be able to turn Robot heading on field
-// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to create wheel paths for swerves - use swerve modules
+// todo: Be able to add a point anywhere on a path by clicking on it
+// todo: editing of ease curve and heading curve - Julian
+// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 
 // todo: navigation for graph panel - pan and zoom
 // todo: clicking on path should select it
@@ -135,6 +131,7 @@ class PathVisualizer : Application() {
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
+// todo: add a file and edit menu for open, save, save as, undo and redo
 // todo: undo operations - Ryan
 // todo: top bar - Ryan
 

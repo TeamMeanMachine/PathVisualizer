@@ -26,7 +26,7 @@ object FieldPane : StackPane() {
     // view settings
     var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
 
-    var selectedPointType = PathVisualizer.PointType.POINT
+    var selectedPointType = Path2DPoint.PointType.POINT
         private set
 
     var selectedPath: Path2D? = null
@@ -47,7 +47,6 @@ object FieldPane : StackPane() {
     private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
     private var startMouse = Vector2(0.0, 0.0)
     private var mouseMode = PathVisualizer.MouseMode.EDIT
-
 
     init {
         children.add(canvas)
@@ -101,13 +100,13 @@ object FieldPane : StackPane() {
 
     fun setSelectedPointX(x: Double) {
         when (selectedPointType) {
-            PathVisualizer.PointType.POINT -> {
+            Path2DPoint.PointType.POINT -> {
                 selectedPoint!!.position.x = x
             }
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevTangent = Vector2(x * -PathVisualizer.TANGENT_DRAW_FACTOR, selectedPoint!!.prevTangent.y)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextTangent = Vector2(x * PathVisualizer.TANGENT_DRAW_FACTOR, selectedPoint!!.nextTangent.y)
             }
         }
@@ -118,13 +117,13 @@ object FieldPane : StackPane() {
 
     fun setSelectedPointY(y: Double) {
         when (selectedPointType) {
-            PathVisualizer.PointType.POINT -> {
+            Path2DPoint.PointType.POINT -> {
                 selectedPoint?.position?.y = y
             }
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevTangent = Vector2(selectedPoint!!.prevTangent.x, y * -PathVisualizer.TANGENT_DRAW_FACTOR)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextTangent = Vector2(selectedPoint!!.nextTangent.x, y * PathVisualizer.TANGENT_DRAW_FACTOR)
             }
         }
@@ -135,10 +134,10 @@ object FieldPane : StackPane() {
     fun setSelectedPointAngle(angle: Double) {
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (selectedPointType) {
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevAngleAndMagnitude = Vector2(angle, selectedPoint!!.prevMagnitude)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(angle, selectedPoint!!.nextMagnitude)
             }
         }
@@ -148,10 +147,10 @@ object FieldPane : StackPane() {
     fun setSelectedPointMagnitude(magnitude: Double) {
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (selectedPointType) {
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevAngleAndMagnitude = Vector2(selectedPoint!!.prevAngle, magnitude)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(selectedPoint!!.nextAngle, magnitude)
             }
         }
@@ -193,7 +192,7 @@ object FieldPane : StackPane() {
             if (dist <= shortestDistance) {
                 shortestDistance = dist
                 closestPoint = point
-                selectedPointType = PathVisualizer.PointType.POINT
+                selectedPointType = Path2DPoint.PointType.POINT
             }
 
             if (point.prevPoint != null) {
@@ -203,7 +202,7 @@ object FieldPane : StackPane() {
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
-                    selectedPointType = PathVisualizer.PointType.PREV_TANGENT
+                    selectedPointType = Path2DPoint.PointType.PREV_TANGENT
                 }
             }
 
@@ -214,7 +213,7 @@ object FieldPane : StackPane() {
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
-                    selectedPointType = PathVisualizer.PointType.NEXT_TANGENT
+                    selectedPointType = Path2DPoint.PointType.NEXT_TANGENT
                 }
             }
             point = point.nextPoint
@@ -260,9 +259,9 @@ object FieldPane : StackPane() {
                 if (editPoint != null) {
                     val worldPoint = screen2WorldWithMirror(Vector2(e.x, e.y), selectedPath!!.isMirrored)
                     when (selectedPointType) {
-                        PathVisualizer.PointType.POINT -> editPoint?.position = worldPoint
-                        PathVisualizer.PointType.PREV_TANGENT -> editPoint!!.prevTangent = (worldPoint - editPoint!!.position) * -PathVisualizer.TANGENT_DRAW_FACTOR
-                        PathVisualizer.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = (worldPoint - editPoint!!.position) * PathVisualizer.TANGENT_DRAW_FACTOR
+                        Path2DPoint.PointType.POINT -> editPoint?.position = worldPoint
+                        Path2DPoint.PointType.PREV_TANGENT -> editPoint!!.prevTangent = (worldPoint - editPoint!!.position) * -PathVisualizer.TANGENT_DRAW_FACTOR
+                        Path2DPoint.PointType.NEXT_TANGENT -> editPoint!!.nextTangent = (worldPoint - editPoint!!.position) * PathVisualizer.TANGENT_DRAW_FACTOR
                     }
                     draw()
                     ControlPanel.refresh()
@@ -366,13 +365,13 @@ object FieldPane : StackPane() {
                 KeyCode.RIGHT -> offset.x += 1.0 / 12.0
             }
             when (selectedPointType) {
-                PathVisualizer.PointType.POINT -> {
+                Path2DPoint.PointType.POINT -> {
                     selectedPoint!!.position += offset
                 }
-                PathVisualizer.PointType.PREV_TANGENT -> {
+                Path2DPoint.PointType.PREV_TANGENT -> {
                     selectedPoint!!.prevTangent += offset * -PathVisualizer.TANGENT_DRAW_FACTOR
                 }
-                PathVisualizer.PointType.NEXT_TANGENT -> {
+                Path2DPoint.PointType.NEXT_TANGENT -> {
                     selectedPoint!!.nextTangent += offset * PathVisualizer.TANGENT_DRAW_FACTOR
                 }
             }
@@ -399,9 +398,9 @@ object FieldPane : StackPane() {
         tangent = tangent.rotateDegrees(-heading)
 
         var perpendicularToPath = tangent.perpendicular()
-        val robotLength = ControlPanel.selectedAutonomous!!.robotLength / 2.0
+        val robotLength = ControlPanel.autonomi.robotParameters.robotLength / 2.0
         tangent *= robotLength
-        val robotWidth = ControlPanel.selectedAutonomous!!.robotWidth / 2.0
+        val robotWidth = ControlPanel.autonomi.robotParameters.robotWidth / 2.0
         perpendicularToPath *= robotWidth
 
         return arrayOf(

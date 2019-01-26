@@ -13,13 +13,14 @@ private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     gc.strokeLine(tp1.x, tp1.y, tp2.x, tp2.y)
 }
 
-fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2D?, selectedPoint: Path2DPoint?, selectedPointType: PathVisualizer.PointType?) {
+fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2D?, selectedPoint: Path2DPoint?, selectedPointType: Path2DPoint.PointType) {
     if (paths == null) return
 
     for (path in paths) {
         drawPath(gc, path)
     }
-    drawSelectedPath(gc, selectedPath, selectedPoint, selectedPointType)
+    if (selectedPath!=null && ControlPanel.autonomi.drivetrainParameters!=null)
+        drawSelectedPath(gc, selectedPath, selectedPoint, selectedPointType)
 }
 
 private fun drawPath(gc: GraphicsContext, path: Path2D?) {
@@ -43,12 +44,12 @@ private fun drawPath(gc: GraphicsContext, path: Path2D?) {
     }
 }
 
-private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: Path2DPoint?, selectedPointType: PathVisualizer.PointType?) {
+private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: Path2DPoint?, selectedPointType: Path2DPoint.PointType) {
     if (path == null || !path.hasPoints())
         return
 
-    val arcadePath = ArcadePath(path, (ControlPanel.selectedAutonomous?.trackWidth ?: 25.0/12.0) *
-            (ControlPanel.selectedAutonomous?.scrubFactor ?: 1.0))
+    val arcadePath = ArcadePath(path, ControlPanel.autonomi.arcadeParameters.trackWidth *
+            ControlPanel.autonomi.arcadeParameters.scrubFactor)
 
     if (path.durationWithSpeed > 0.0) {
         val deltaT = path.durationWithSpeed / 200.0
@@ -60,22 +61,17 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
         var t = deltaT
         arcadePath.resetDistances()
         while (t <= path.durationWithSpeed) {
-//            val ease = t / path.durationWithSpeed
             leftPos = arcadePath.getLeftPosition(t)
             rightPos = arcadePath.getRightPosition(t)
 
             // left wheel
-            var leftSpeed = (leftPos - prevLeftPos).length / deltaT
-            leftSpeed /= maxSpeed  // MAX_SPEED is full GREEN, 0 is full red.
-            leftSpeed = Math.min(1.0, leftSpeed)
+            var leftSpeed = (leftPos - prevLeftPos).length / deltaT / maxSpeed
+            leftSpeed = Math.max(Math.min(1.0, leftSpeed),0.0)
             val leftDelta = arcadePath.getLeftPositionDelta(t)
             if (leftDelta >= 0) {
                 gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)  // green fast, red slow
-                //gc.stroke = Color(ease*Color.YELLOW.red, ease*Color.YELLOW.green, ease*Color.YELLOW.blue, 1.0)
             } else {
                 gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)  // blue fast, red slow
-                //gc.stroke = Color(0.0, leftSpeed, 1.0 - leftSpeed, 1.0)
-                //gc.stroke = Color(ease*Color.LIMEGREEN.red, ease*Color.LIMEGREEN.green, ease*Color.LIMEGREEN.blue, 1.0)
             }
             drawPathLine(gc, prevLeftPos, leftPos)
 
@@ -100,7 +96,7 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
     // circles and lines for handles
     var point: Path2DPoint? = path.xyCurve.headPoint
     while (point != null) {
-        if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.POINT)
+        if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.POINT)
             gc.stroke = Color.LIMEGREEN
         else
             gc.stroke = Color.WHITE
@@ -109,7 +105,7 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
         gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
                 PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
         if (point.prevPoint != null) {
-            if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.PREV_TANGENT)
+            if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.PREV_TANGENT)
                 gc.stroke = Color.LIMEGREEN
             else
                 gc.stroke = Color.WHITE
@@ -121,7 +117,7 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
             gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
         }
         if (point.nextPoint != null) {
-            if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.NEXT_TANGENT)
+            if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.NEXT_TANGENT)
                 gc.stroke = Color.LIMEGREEN
             else
                 gc.stroke = Color.WHITE
