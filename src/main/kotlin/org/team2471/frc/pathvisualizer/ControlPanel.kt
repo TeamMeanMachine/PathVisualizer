@@ -18,6 +18,7 @@ import org.team2471.frc.lib.util.Timer
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javafx.scene.input.KeyCode
+import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.DrivetrainParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
