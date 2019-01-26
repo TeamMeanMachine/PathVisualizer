@@ -18,7 +18,7 @@ import kotlin.math.absoluteValue
 private var startMouse = Vector2(0.0, 0.0)
 private var mouseMode = PathVisualizer.MouseMode.EDIT
 
-var selectedPointType = PathVisualizer.PointType.POINT
+var selectedPointType = Path2DPoint.PointType.POINT
     private set
 private var editPoint: MotionKey? = null
 var selectedPoint: MotionKey? = null
@@ -62,7 +62,7 @@ object EasePane : StackPane() {
             if (dist <= shortestDistance) {
                 shortestDistance = dist
                 closestPoint = point
-                selectedPointType = PathVisualizer.PointType.POINT
+                selectedPointType = Path2DPoint.PointType.POINT
             }
 
             if (point.prevKey != null) {
@@ -72,7 +72,7 @@ object EasePane : StackPane() {
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
-                    selectedPointType = PathVisualizer.PointType.PREV_TANGENT
+                    selectedPointType = Path2DPoint.PointType.PREV_TANGENT
                 }
             }
 
@@ -83,7 +83,7 @@ object EasePane : StackPane() {
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
-                    selectedPointType = PathVisualizer.PointType.NEXT_TANGENT
+                    selectedPointType = Path2DPoint.PointType.NEXT_TANGENT
                 }
             }
 
@@ -130,14 +130,14 @@ object EasePane : StackPane() {
                 if (editPoint != null) {
                     val worldPoint = Vector2(easeScreen2WorldX(e.x), easeScreen2WorldY(e.y))
                     when (selectedPointType) {
-                        PathVisualizer.PointType.POINT -> {
+                        Path2DPoint.PointType.POINT -> {
                             editPoint?.timeAndValue = worldPoint
                         }
-                        PathVisualizer.PointType.PREV_TANGENT -> {
+                        Path2DPoint.PointType.PREV_TANGENT -> {
                             editPoint!!.prevMagnitude *= Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.0 / Vector2.length(editPoint!!.prevTangent)
                             editPoint!!.angle = (Math.atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
                         }
-                        PathVisualizer.PointType.NEXT_TANGENT -> {
+                        Path2DPoint.PointType.NEXT_TANGENT -> {
                             editPoint!!.nextMagnitude *= Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.0 / Vector2.length(editPoint!!.nextTangent)
                             editPoint!!.angle = (Math.atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
                         }
@@ -209,7 +209,7 @@ object EasePane : StackPane() {
         // circles and lines for handles
         var point: MotionKey? = selectedPath.easeCurve.headKey
         while (point != null) {
-            if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.POINT)
+            if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.POINT)
                 gc.stroke = Color.LIMEGREEN
             else
             gc.stroke = Color.WHITE
@@ -217,7 +217,7 @@ object EasePane : StackPane() {
             val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
             gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
             if (point.prevKey != null) {
-                if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.PREV_TANGENT)
+                if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.PREV_TANGENT)
                     gc.stroke = Color.LIMEGREEN
                 else
                 gc.stroke = Color.WHITE
@@ -229,7 +229,7 @@ object EasePane : StackPane() {
             }
 
             if (point.nextKey != null) {
-                if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.NEXT_TANGENT)
+                if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.NEXT_TANGENT)
                     gc.stroke = Color.LIMEGREEN
                 else
                 gc.stroke = Color.WHITE

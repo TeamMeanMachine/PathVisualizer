@@ -24,10 +24,6 @@ class PathVisualizer : Application() {
         }
     }
 
-    enum class PointType {
-        POINT, PREV_TANGENT, NEXT_TANGENT
-    }
-
     enum class MouseMode {
         EDIT, PAN, ADD, DRAG_TIME
     }
@@ -118,11 +114,11 @@ class PathVisualizer : Application() {
 // : Add buttons for new auto and new path, remove list items - Jonah
 // : playback of entire autonomous
 
-// todo: editing of ease curve and heading curve - Julian
-// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 // todo: Be able to turn Robot heading on field
 // todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Be able to add a point anywhere on a path by clicking on it
+// todo: editing of ease curve and heading curve - Julian
+// todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 
 // todo: navigation for graph panel - pan and zoom
 // todo: connect edit box for position, angle, magnitude of ease curve - just share the same one for points
