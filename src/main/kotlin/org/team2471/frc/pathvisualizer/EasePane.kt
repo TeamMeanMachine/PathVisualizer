@@ -27,7 +27,7 @@ object EasePane : StackPane() {
     val canvas = ResizableCanvas()
     private var mouseMode = PathVisualizer.MouseMode.EDIT
     var selectedPoint: MotionKey? = null
-    var selectedPointType = PathVisualizer.PointType.POINT
+    var selectedPointType = Path2DPoint.PointType.POINT
         private set
 
     init {
@@ -334,13 +334,13 @@ object EasePane : StackPane() {
 
     fun setSelectedPointX(x: Double) {
         when (selectedPointType) {
-            PathVisualizer.PointType.POINT -> {
+            Path2DPoint.PointType.POINT -> {
                 selectedPoint!!.time = x
             }
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevTangent = Vector2(x * -PathVisualizer.TANGENT_DRAW_FACTOR, selectedPoint!!.prevTangent.y)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextTangent = Vector2(x * PathVisualizer.TANGENT_DRAW_FACTOR, selectedPoint!!.nextTangent.y)
             }
         }
@@ -351,13 +351,13 @@ object EasePane : StackPane() {
 
     fun setSelectedPointY(y: Double) {
         when (selectedPointType) {
-            PathVisualizer.PointType.POINT -> {
+            Path2DPoint.PointType.POINT -> {
                 selectedPoint?.value = y
             }
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevTangent = Vector2(selectedPoint!!.prevTangent.x, y * -PathVisualizer.TANGENT_DRAW_FACTOR)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextTangent = Vector2(selectedPoint!!.nextTangent.x, y * PathVisualizer.TANGENT_DRAW_FACTOR)
             }
         }
@@ -367,10 +367,10 @@ object EasePane : StackPane() {
     fun setSelectedPointAngle(angle: Double) {
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (selectedPointType) {
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevAngleAndMagnitude = Vector2(angle, selectedPoint!!.prevMagnitude)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(angle, selectedPoint!!.nextMagnitude)
             }
         }
@@ -379,10 +379,10 @@ object EasePane : StackPane() {
     fun setSelectedPointMagnitude(magnitude: Double) {
         @Suppress("NON_EXHAUSTIVE_WHEN")
         when (selectedPointType) {
-            PathVisualizer.PointType.PREV_TANGENT -> {
+            Path2DPoint.PointType.PREV_TANGENT -> {
                 selectedPoint!!.prevAngleAndMagnitude = Vector2(selectedPoint!!.prevAngle, magnitude)
             }
-            PathVisualizer.PointType.NEXT_TANGENT -> {
+            Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(selectedPoint!!.nextAngle, magnitude)
             }
         }

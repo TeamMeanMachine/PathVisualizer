@@ -10,8 +10,6 @@ import java.io.PrintWriter
 import java.util.prefs.Preferences
 import java.util.Stack
 
-
-
 object TopBar : MenuBar() {
     private const val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
     private val userPref = Preferences.userRoot()
@@ -73,6 +71,8 @@ object TopBar : MenuBar() {
             System.err.println("Failed to find file ${file.absolutePath}")
             ControlPanel.autonomi = Autonomi()
         }
+
+        ControlPanel.initializeParameters()  // since some of our older saved files don't have parameters, this prevents a bunch null references
         ControlPanel.refresh()
     }
 

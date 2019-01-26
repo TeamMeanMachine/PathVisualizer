@@ -18,11 +18,12 @@ import org.team2471.frc.lib.util.Timer
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javafx.scene.input.KeyCode
-import org.team2471.frc.lib.motion_profiling.Autonomi
+import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.DrivetrainParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
 import org.team2471.frc.lib.motion_profiling.following.SwerveModule
+import java.io.File
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
@@ -91,33 +92,31 @@ object ControlPanel : VBox() {
     }
 */
 
-
-
     var selectedAutonomous: Autonomous? = null
         private set
 
-    init {
+    fun initializeParameters() {
         autonomi.arcadeParameters = ArcadeParameters(
-            trackWidth = 25.0/12.0,
-            scrubFactor = 1.12,
-            leftFeedForwardCoefficient = 0.070541988198899,
-            leftFeedForwardOffset = 0.021428882425651,
-            rightFeedForwardCoefficient = 0.071704891069425,
-            rightFeedForwardOffset = 0.020459379452296
+                trackWidth = 25.0/12.0,
+                scrubFactor = 1.12,
+                leftFeedForwardCoefficient = 0.070541988198899,
+                leftFeedForwardOffset = 0.021428882425651,
+                rightFeedForwardCoefficient = 0.071704891069425,
+                rightFeedForwardOffset = 0.020459379452296
         )
         autonomi.robotParameters = RobotParameters(
-            robotWidth = 28.0 / 12.0,
-            robotLength = 32.0 /12.0
+                robotWidth = 28.0 / 12.0,
+                robotLength = 32.0 /12.0
         )
 
         autonomi.drivetrainParameters = autonomi.arcadeParameters
+    }
 
+    init {
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
 
-        if (!fileName.isEmpty()) {
-            openFile(File(fileName))
-        }
+        initializeParameters()
 
         pathListView.prefHeight = 180.0
         val pathListViewHBox = HBox()
@@ -422,7 +421,7 @@ object ControlPanel : VBox() {
         lengthHBox.children.addAll(lengthName, lengthText, lengthUnit)
 
         /* END - ROBOT SPECIFIC PROPERTIES - USE REFLECTION ALONG WITH CURRENT ROBOT TO POPULATE THESE CONTROLS */
-
+/*
         val filesBox = HBox()
         filesBox.spacing = 10.0
         val openButton = Button("Open")
@@ -456,7 +455,6 @@ object ControlPanel : VBox() {
         }
         filesBox.children.addAll(openButton, saveAsButton, saveButton)
 */
-
         val robotHBox = HBox()
         val easeCurveFuntions = HBox()
         val sendToRobotButton = Button("Send To Robot")
@@ -629,6 +627,7 @@ object ControlPanel : VBox() {
         }
     }
 
+/*
     private fun openFile(file: File) {
         try {
             val json = file.readText()
@@ -657,7 +656,9 @@ object ControlPanel : VBox() {
 
         refresh()
     }
+*/
 
+/*
     private fun saveAs() {
         val fileChooser = FileChooser()
         fileChooser.title = "Save Autonomi File As..."
@@ -675,6 +676,7 @@ object ControlPanel : VBox() {
             writer.close()
         }
     }
+*/
 
     private fun deleteSelectedPath() {
         selectedAutonomous!!.paths.remove(FieldPane.selectedPath!!.name, FieldPane.selectedPath)
@@ -820,14 +822,14 @@ object ControlPanel : VBox() {
                     }
                 }
             } else if (easePaneSelectedPoint != null) when (EasePane.selectedPointType){
-                    PathVisualizer.PointType.POINT -> {
+                    Path2DPoint.PointType.POINT -> {
                         xPosText.text = (easePaneSelectedPoint.time).format(2)
                         yPosText.text = (easePaneSelectedPoint.value).format(2)
                         angleText.text = ""
                         magnitudeText.text = ""
                         slopeModeCombo.selectionModel.select("None")
                     }
-                    PathVisualizer.PointType.PREV_TANGENT -> {
+                Path2DPoint.PointType.PREV_TANGENT -> {
                         xPosText.text = (easePaneSelectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         yPosText.text = (easePaneSelectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         angleText.text = (easePaneSelectedPoint.prevAngleAndMagnitude.x).format(1)
@@ -838,7 +840,7 @@ object ControlPanel : VBox() {
                             MotionKey.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
                         }
                     }
-                    PathVisualizer.PointType.NEXT_TANGENT -> {
+                Path2DPoint.PointType.NEXT_TANGENT -> {
                         xPosText.text = (easePaneSelectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         yPosText.text = (easePaneSelectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         angleText.text = (easePaneSelectedPoint.nextAngleAndMagnitude.x).format(1)
