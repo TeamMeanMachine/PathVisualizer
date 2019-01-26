@@ -49,10 +49,15 @@ class PathVisualizer : Application() {
         val horizontalSplitPane = SplitPane(verticalSplitPane, ControlPanel)
         horizontalSplitPane.setDividerPositions(0.68)
 
+        val borderPane = BorderPane(horizontalSplitPane)
+        borderPane.top = TopBar
+
         val screen = Screen.getPrimary()
         val bounds = screen.visualBounds
 
-        stage.scene = Scene(horizontalSplitPane, bounds.width, bounds.height)
+        //stage.scene = Scene(VBox(), bounds.width, bounds.height)
+        //(stage.scene.root as VBox).children.addAll(TopBar)
+        stage.scene = Scene(borderPane, bounds.width, bounds.height)
         FieldPane.draw()
         stage.sizeToScene()
         stage.isMaximized = true
@@ -121,7 +126,6 @@ class PathVisualizer : Application() {
 // todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
 
 // todo: navigation for graph panel - pan and zoom
-// todo: connect edit box for position, angle, magnitude of ease curve - just share the same one for points
 // todo: clicking on path should select it
 // todo: make an add mode for adding a new point to a path or graph
 
@@ -130,5 +134,6 @@ class PathVisualizer : Application() {
 // todo: add pause and turn in place path types (actions)
 // todo: add a file and edit menu for open, save, save as, undo and redo
 // todo: undo operations - Ryan
+// todo: top bar - Ryan
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi

@@ -52,21 +52,6 @@ fun easeScreen2WorldY(yPoint: Double): Double {
     return -1 * (yPoint / EasePane.height - 1)
 }
 
-fun compressAngle(prevAngle: Double) : Double {
-    var angle = prevAngle
-    if (angle < -Math.PI / 2) {
-        while (angle < -Math.PI / 2) {
-            angle += Math.PI / 2
-        }
-    }
-    if (angle > Math.PI / 2) {
-        while (angle > Math.PI / 2) {
-            angle -= Math.PI / 2
-        }
-    }
-    return angle
-}
-
 fun Double.format(fracDigits: Int): String {
     val fd = DecimalFormat()
     fd.maximumFractionDigits = fracDigits

@@ -33,11 +33,12 @@ object FieldPane : StackPane() {
         set(value) {
             field = value
             selectedPoint = null
+            EasePane.selectedPoint = null
         }
 
     private var editPoint: Path2DPoint? = null
     var selectedPoint: Path2DPoint? = null
-        private set
+
     private var oCoord: Vector2 = Vector2(0.0, 0.0)
     var offset = Vector2(0.0, 0.0)
         private set
@@ -162,6 +163,10 @@ object FieldPane : StackPane() {
         draw()
     }
 
+    fun setSelectedCurveType(curveType: Path2D.CurveType) {
+        selectedPath!!.curveType = curveType
+    }
+
 
     fun deleteSelectedPoint() {
         if (selectedPoint != null && selectedPath != null) {
@@ -280,7 +285,7 @@ object FieldPane : StackPane() {
     }
 
     fun draw() {
-        val gc = canvas.graphicsContext2D
+        var gc = canvas.graphicsContext2D
         gc.fill = Color.LIGHTGRAY
         gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
 
@@ -289,8 +294,30 @@ object FieldPane : StackPane() {
         val lowerRightPixels = world2Screen(lowerRightFeet)
         val dimensions = lowerRightPixels - upperLeftPixels
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
-        EasePane.drawEaseCurve(selectedPath)
         drawPaths(gc, ControlPanel.selectedAutonomous?.paths?.values, selectedPath, selectedPoint, selectedPointType)
+
+        gc = EasePane.canvas.graphicsContext2D
+        if (gc.canvas.width == 0.0)
+            return
+        gc.fill = Color.LIGHTGRAY
+        gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
+        gc.lineWidth = 2.0
+
+
+        when (selectedPath!!.curveType) {
+            Path2D.CurveType.EASE -> {
+                EasePane.drawEaseCurve(selectedPath)
+            }
+            Path2D.CurveType.HEADING -> {
+                EasePane.drawHeadingCurve(selectedPath)
+            }
+            Path2D.CurveType.BOTH -> {
+                EasePane.drawEaseCurve(selectedPath)
+                EasePane.drawHeadingCurve(selectedPath)
+            }
+            null -> {}
+        }
+        EasePane.drawTimeScrubber()
     }
 
     private fun onZoom(e: ZoomEvent) {
