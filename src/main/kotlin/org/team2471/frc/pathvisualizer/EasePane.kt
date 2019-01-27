@@ -3,6 +3,7 @@ package org.team2471.frc.pathvisualizer
 import javafx.event.EventHandler
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.input.MouseEvent
+import javafx.scene.input.ScrollEvent
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.MotionKey
@@ -14,16 +15,20 @@ import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javax.naming.ldap.Control
 import kotlin.math.absoluteValue
+import kotlin.math.round
 
 
 private var startMouse = Vector2(0.0, 0.0)
-private var mouseMode = PathVisualizer.MouseMode.EDIT
 
 var selectedPointType = Path2DPoint.PointType.POINT
     private set
 private var editPoint: MotionKey? = null
 
 object EasePane : StackPane() {
+
+    var zoomPivot = Vector2(750.0, 0.0)  // the location in the image where the zoom origin will originate
+    var zoom: Double = 1.0  // initially draw at 1:1 pixel in image = pixel on screen
+
     val canvas = ResizableCanvas()
     private var mouseMode = PathVisualizer.MouseMode.EDIT
     var selectedPoint: MotionKey? = null
@@ -37,6 +42,7 @@ object EasePane : StackPane() {
 
         canvas.onMousePressed = EventHandler<MouseEvent> { onMousePressed(it) }
         canvas.onMouseDragged = EventHandler<MouseEvent> { onMouseDragged(it) }
+        canvas.onScroll = EventHandler<ScrollEvent> {(EasePane::onScroll)}
         canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
     }
 
@@ -152,6 +158,10 @@ object EasePane : StackPane() {
         }
     }
 
+    private fun onScroll(e: ScrollEvent) {
+        this.zoom += e.deltaX
+    }
+
     private fun onMouseReleased() {
         when (mouseMode) {
             PathVisualizer.MouseMode.DRAG_TIME -> {
@@ -199,9 +209,9 @@ object EasePane : StackPane() {
             x = t / selectedPath.durationWithSpeed * gc.canvas.width
             y = (1.0 - ease)
             pos = Vector2(x, y)
-            val red = if (ease * Color.RED.red < 1.0) ease * Color.RED.red else 1.0
-            val redGreen = if (ease * Color.RED.green < 1.0) ease * Color.RED.green else 1.0
-            val redBlue = if (ease * Color.RED.blue < 1.0) ease * Color.RED.blue else 1.0
+            val red = Math.max(Math.min(ease * Color.RED.red, 1.0), 0.0)
+            val redGreen = Math.max(Math.min(ease * Color.RED.green, 1.0), 0.0)
+            val redBlue = Math.max(Math.min(ease * Color.RED.blue, 1.0), 0.0)
 
             gc.stroke = Color(red, redGreen, redBlue, 1.0)
             drawEaseLine(gc, prevPos, pos, gc.canvas.height)
@@ -277,43 +287,6 @@ object EasePane : StackPane() {
             prevPos = pos
             t += deltaT
         }
-
-        // circles and lines for handles
-//        var point: MotionKey? = selectedPath.headingCurve.headKey
-//        while (point != null) {
-//            if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.POINT)
-//                gc.stroke = Color.LIMEGREEN
-//            else
-//                gc.stroke = Color.WHITE
-//
-//            val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
-//            gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
-//            if (point.prevKey != null) {
-//                if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.PREV_TANGENT)
-//                    gc.stroke = Color.LIMEGREEN
-//                else
-//                    gc.stroke = Color.WHITE
-//                val tanPoint = point.timeAndValue - point.prevTangent / PathVisualizer.TANGENT_DRAW_FACTOR
-//                tanPoint.set(easeWorld2ScreenX(tanPoint.x), easeWorld2ScreenY(tanPoint.y))
-//                gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
-//                gc.lineWidth = 2.0
-//                gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
-//            }
-//
-//            if (point.nextKey != null) {
-//                if (point === selectedPoint && selectedPointType == PathVisualizer.PointType.NEXT_TANGENT)
-//                    gc.stroke = Color.LIMEGREEN
-//                else
-//                    gc.stroke = Color.WHITE
-//                val tanPoint = point.timeAndValue + point.nextTangent / PathVisualizer.TANGENT_DRAW_FACTOR
-//                tanPoint.set(easeWorld2ScreenX(tanPoint.x), easeWorld2ScreenY(tanPoint.y))
-//                gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
-//                gc.lineWidth = 2.0
-//                gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
-//            }
-//
-//            point = point.nextKey
-//        }
     }
 
     fun drawTimeScrubber() {

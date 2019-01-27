@@ -45,11 +45,11 @@ fun easeWorld2ScreenY(yPoint: Double): Double {
 }
 
 fun easeScreen2WorldX(xPoint: Double): Double {
-    return xPoint * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width
+    return xPoint * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width /// EasePane.zoom
 }
 
 fun easeScreen2WorldY(yPoint: Double): Double {
-    return -1 * (yPoint / EasePane.height - 1)
+    return -1 * (yPoint / EasePane.height - 1) // EasePane.zoom
 }
 
 fun Double.format(fracDigits: Int): String {

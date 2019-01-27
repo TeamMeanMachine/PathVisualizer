@@ -10,16 +10,14 @@ import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
-import org.team2471.frc.pathvisualizer.ControlPanel
 import kotlin.math.round
-
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
     private val image = Image("assets/2019Field.PNG")
     private val upperLeftOfFieldPixels = Vector2(79.0, 0.0)
     private val lowerRightOfFieldPixels = Vector2(1421.0, 1352.0)
 
-    val zoomPivot = Vector2(750.0, 1352.0)  // the location in the image where the zoom origin will originate
+    var zoomPivot = Vector2(750.0, 1352.0)  // the location in the image where the zoom origin will originate
     val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     val fieldDimensionFeet = Vector2(27.0, 27.0)
 
@@ -184,6 +182,8 @@ object FieldPane : StackPane() {
         var shortestDistance = 10000.0
         var closestPoint: Path2DPoint? = null
 
+        var selectPathFlag = true
+
         //Find closest point
         var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
         while (point != null) {
@@ -221,17 +221,19 @@ object FieldPane : StackPane() {
         }
         if (shortestDistance <= PathVisualizer.CLICK_CIRCLE_SIZE) {
             selectedPoint = closestPoint
+            selectPathFlag = false
         } else {
             if (closestPoint != null) {
-                selectedPoint = if (shortestDistance > PathVisualizer.CLICK_CIRCLE_SIZE * 2) {// trying to deselect?
-                    null
+                if (shortestDistance > PathVisualizer.CLICK_CIRCLE_SIZE * 2) {// trying to deselect?
+                    selectedPoint = null
+                    selectPathFlag = true
                 } else {
                     selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
+                    selectPathFlag = false
                 }
-            } else {  // first point on a path?
-                //                val path2DPoint = selectedPath?.addVector2(screen2World(mouseVec)-Vector2(0.0,0.25)) // add a pair of points, initially on top of one another
-                //                selectedPoint = selectedPaath?.addVector2After(screen2World(mouseVec), path2DPoint)
+            } else {  // first point on a path
                 selectedPath?.addVector2(screen2World(mouseVec))
+                selectPathFlag = false
             }
         }
 
@@ -251,8 +253,44 @@ object FieldPane : StackPane() {
                 oCoord = Vector2(e.x, e.y) - offset
             }
         }
-    }
 
+        /*
+            This code loops through each path, compares
+            the mouse click with different incremental points
+            on each path, and find the closest incremental point
+            to the mouse click. Whichever path that point is on
+            gets selected
+         */
+        if (selectPathFlag) {
+            //val gc = canvas.graphicsContext2D
+            var nearestPoint = Vector2(10000.0, 10000.0)
+
+            //first, iterate through each path of the selected autonomous
+            for (path in ControlPanel.selectedAutonomous!!.paths.values) {
+
+                //iterate through each path with an increment of 1/25
+                for (i in 1..(path.length).toInt()*25) {
+                    val comparePoint = world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble()/25))
+
+                    //comparing mouse click to the nearest comparison point
+                    if (Math.abs(comparePoint.x - e.x) < Math.abs(nearestPoint.x - e.x) &&
+                        Math.abs(comparePoint.y - e.y) < Math.abs( nearestPoint.y - e.y)) {
+                        nearestPoint = comparePoint
+                        if (Math.abs(e.x - nearestPoint.x) < 20 && Math.abs(e.y - nearestPoint.y) < 20) {
+                            ControlPanel.setSelectedPath(path.name)
+                            //gc.strokeOval(world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).x, world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).y, 3.0, 3.0)
+                            break
+                        }
+                        //gc.strokeOval(world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble()/25)).x, world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble()/25)).y, 3.0, 3.0)
+                        //println("" + nearestPoint.x + " " + nearestPoint.y)
+                        //println("" + e.x + " " + e.y)
+                    }
+                    //gc.strokeOval(world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).x, world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).y, 3.0, 3.0)
+
+                }
+            }
+        }
+    }
     private fun onMouseDragged(e: MouseEvent) {
         when (mouseMode) {
             PathVisualizer.MouseMode.EDIT -> {

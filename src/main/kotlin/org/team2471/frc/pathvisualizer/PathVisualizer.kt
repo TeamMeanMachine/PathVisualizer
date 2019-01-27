@@ -55,6 +55,8 @@ class PathVisualizer : Application() {
         borderPane.top = TopBar
 
         val screen = Screen.getPrimary()
+
+        //There is a bug where the default height of the stage leaks under the tool bar in windows 10
         val bounds = Rectangle2D(screen.visualBounds.minX, screen.visualBounds.minY, screen.visualBounds.width, screen.visualBounds.height - 30)
         stage.scene = Scene(borderPane, bounds.width, bounds.height)
         FieldPane.draw()

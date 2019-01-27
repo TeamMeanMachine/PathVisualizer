@@ -713,7 +713,7 @@ object ControlPanel : VBox() {
         refresh()
     }
 
-    private fun setSelectedPath(pathName: String?) {
+    fun setSelectedPath(pathName: String?) {
         var newPathName: String? = pathName
         if (selectedAutonomous != null) {
             FieldPane.selectedPath = selectedAutonomous!![newPathName]
