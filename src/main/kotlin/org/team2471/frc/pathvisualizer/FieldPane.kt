@@ -45,6 +45,8 @@ object FieldPane : StackPane() {
     private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
     private var startMouse = Vector2(0.0, 0.0)
     private var mouseMode = PathVisualizer.MouseMode.EDIT
+    private var different = false
+    private var from = Vector2(0.0, 0.0)
 
     init {
         children.add(canvas)
@@ -245,6 +247,7 @@ object FieldPane : StackPane() {
         when (mouseMode) {
             PathVisualizer.MouseMode.EDIT -> {
                 editPoint = selectedPoint
+                from = selectedPoint!!.position
                 draw()
                 ControlPanel.refresh()
             }
@@ -296,6 +299,7 @@ object FieldPane : StackPane() {
             PathVisualizer.MouseMode.EDIT -> {
                 if (editPoint != null) {
                     val worldPoint = screen2WorldWithMirror(Vector2(e.x, e.y), selectedPath!!.isMirrored)
+                    if (!different) different = true
                     when (selectedPointType) {
                         Path2DPoint.PointType.POINT -> editPoint?.position = worldPoint
                         Path2DPoint.PointType.PREV_TANGENT -> editPoint!!.prevTangent = (worldPoint - editPoint!!.position) * -PathVisualizer.TANGENT_DRAW_FACTOR
@@ -315,7 +319,13 @@ object FieldPane : StackPane() {
 
     private fun onMouseReleased() {
         when (mouseMode) {
-            PathVisualizer.MouseMode.EDIT -> editPoint = null  // no longer editing
+            PathVisualizer.MouseMode.EDIT -> {
+                if (different && editPoint != null) {
+                    TopBar.redoStack.clear()
+                    TopBar.undoStack.add(TopBar.MovedPointAction(editPoint!!, from))
+                }
+                editPoint = null
+            }  // no longer editing
             PathVisualizer.MouseMode.PAN -> mouseMode = PathVisualizer.MouseMode.EDIT
         }
         canvas.cursor = Cursor.DEFAULT

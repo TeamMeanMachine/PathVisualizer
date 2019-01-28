@@ -4,7 +4,9 @@ import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
 import javafx.stage.FileChooser
+import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.Autonomi
+import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
@@ -15,7 +17,8 @@ object TopBar : MenuBar() {
     private val userPref = Preferences.userRoot()
     private var fileName = userPref.get(userFilenameKey, "")
 
-    private val undoStack = SizedStack<Action>(20)
+    val undoStack = SizedStack<Action>(20)
+    val redoStack = SizedStack<Action>(20)
 
     init {
         if (!fileName.isEmpty())
@@ -54,11 +57,20 @@ object TopBar : MenuBar() {
 
         menuFile.items.addAll(openMenuItem, saveAsMenuItem, saveMenuItem)
 
-        //val menuEdit = Menu("Edit")
+        val menuEdit = Menu("Edit")
+        val undoMenuItem = MenuItem("Undo")
+        undoMenuItem.setOnAction {
+            undo()
+        }
+        val redoMenuItem = MenuItem("Redo")
+        redoMenuItem.setOnAction {
+            redo()
+        }
 
+        menuEdit.items.addAll(undoMenuItem, redoMenuItem)
 
         //val menuHelp = Menu("Help")
-        menus.addAll(menuFile/*, menuEdit, menuHelp*/)
+        menus.addAll(menuFile, menuEdit/*, menuHelp*/)
     }
 
 
@@ -93,8 +105,42 @@ object TopBar : MenuBar() {
             writer.close()
         }
     }
+    //TopBar.undoStack.add(MovedPointAction(point, original))
 
-    interface Action
+    fun undo() {
+        if (undoStack.isEmpty()) return
+
+        val action = undoStack.pop()
+        action.undo()
+        redoStack.push(action)
+        FieldPane.draw()
+    }
+
+    fun redo() {
+        if (redoStack.isEmpty()) return
+
+        val action = redoStack.pop()
+        action.redo()
+        undoStack.push(action)
+        FieldPane.draw()
+    }
+
+    interface Action {
+        fun undo()
+        fun redo()
+    }
+
+    class MovedPointAction(private val point: Path2DPoint, private val from: Vector2) : Action {
+        private val to = point.position
+
+        override fun undo() {
+            point.position = from
+        }
+
+        override fun redo() {
+            point.position = to
+        }
+    }
 }
 
 
