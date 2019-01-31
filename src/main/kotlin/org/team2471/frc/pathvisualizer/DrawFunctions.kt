@@ -6,7 +6,8 @@ import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.MotionKey
-import org.team2471.frc.lib.motion_profiling.following.ArcadePath
+import org.team2471.frc.lib.motion.following.ArcadePath
+import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
@@ -50,8 +51,10 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
     if (path == null || !path.hasPoints())
         return
 
-    val arcadePath = ArcadePath(path, ControlPanel.autonomi.arcadeParameters.trackWidth *
-            ControlPanel.autonomi.arcadeParameters.scrubFactor)
+    val parameters = (ControlPanel.autonomi.drivetrainParameters as? ArcadeParameters) ?: return
+
+    val arcadePath = ArcadePath(path, parameters.trackWidth *
+            parameters.scrubFactor)
 
     if (path.durationWithSpeed > 0.0) {
         val deltaT = path.durationWithSpeed / 200.0
