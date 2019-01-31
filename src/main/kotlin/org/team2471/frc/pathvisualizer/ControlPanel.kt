@@ -509,7 +509,7 @@ object ControlPanel : VBox() {
         easePositionText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 if (selectedPath != null) {
-                    selectedPath!!.getEaseCurve().storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
+                    selectedPath!!.easeCurve.storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
                     println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
                     draw()
                 }

@@ -354,14 +354,14 @@ object FieldPane : StackPane() {
 
         when (selectedPath!!.curveType) {
             Path2D.CurveType.EASE -> {
-                EasePane.drawEaseCurve(selectedPath)
+                drawEaseCurve(selectedPath)
             }
             Path2D.CurveType.HEADING -> {
-                EasePane.drawHeadingCurve(selectedPath)
+                drawHeadingCurve(selectedPath)
             }
             Path2D.CurveType.BOTH -> {
-                EasePane.drawEaseCurve(selectedPath)
-                EasePane.drawHeadingCurve(selectedPath)
+                drawEaseCurve(selectedPath)
+                drawHeadingCurve(selectedPath)
             }
             null -> {}
         }
