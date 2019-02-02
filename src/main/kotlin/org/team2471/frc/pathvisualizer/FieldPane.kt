@@ -11,6 +11,8 @@ import kotlinx.coroutines.selects.select
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
+import java.nio.file.Path
+import java.util.*
 import kotlin.math.round
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
@@ -47,7 +49,7 @@ object FieldPane : StackPane() {
     private var startMouse = Vector2(0.0, 0.0)
     private var mouseMode = PathVisualizer.MouseMode.EDIT
     private var different = false
-    private var from = Vector2(0.0, 0.0)
+    private var from: Vector2? = null
 
     init {
         children.add(canvas)
@@ -247,7 +249,11 @@ object FieldPane : StackPane() {
         when (mouseMode) {
             PathVisualizer.MouseMode.EDIT -> {
                 editPoint = selectedPoint
-                if (!selectPathFlag) from = selectedPoint!!.position
+                if (!selectPathFlag) from = when(selectedPointType){
+                    Path2DPoint.PointType.POINT -> selectedPoint?.position
+                    Path2DPoint.PointType.NEXT_TANGENT -> selectedPoint?.nextTangent
+                    Path2DPoint.PointType.PREV_TANGENT -> selectedPoint?.prevTangent
+                }
                 draw()
                 ControlPanel.refresh()
             }
@@ -322,7 +328,7 @@ object FieldPane : StackPane() {
             PathVisualizer.MouseMode.EDIT -> {
                 if (different && editPoint != null) {
                     TopBar.redoStack.clear()
-                    TopBar.undoStack.add(TopBar.MovedPointAction(editPoint!!, from))
+                    TopBar.undoStack.add(TopBar.MovedPointAction(editPoint!!, from!!, selectedPointType))
                 }
                 editPoint = null
             }  // no longer editing

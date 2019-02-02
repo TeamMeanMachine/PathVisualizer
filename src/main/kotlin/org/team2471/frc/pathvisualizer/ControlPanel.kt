@@ -50,7 +50,7 @@ object ControlPanel : VBox() {
     private val headingAngleText = TextField()
     private val easePositionText = TextField()
     private val curveTypeCombo = ComboBox<String>()
-    private val networkTableInstance = NetworkTableInstance.create()
+    val networkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
 
@@ -426,11 +426,7 @@ object ControlPanel : VBox() {
 */
         val robotHBox = HBox()
         val easeCurveFuntions = HBox()
-        val sendToRobotButton = Button("Send To Robot")
-        sendToRobotButton.setOnAction { _: ActionEvent ->
-            autonomi.publishToNetworkTables(networkTableInstance)
-        }
-        val addressName = Text("  IP Address:  ")  // this is a great candidate to be saved in the registry, so that other teams only have to change it once
+        val addressName = Text("  Robot Address:  ")  // this is a great candidate to be saved in the registry, so that other teams only have to change it once
         var ipAddress = "10.24.71.2"
         val addressText = TextField(ipAddress)
         addressText.setOnKeyPressed { event ->
@@ -446,7 +442,7 @@ object ControlPanel : VBox() {
             playSelectedPath()
         }
 
-        robotHBox.children.addAll(sendToRobotButton, addressName, addressText)
+        robotHBox.children.addAll(addressName, addressText)
 
         val secondsHBox = HBox()
         secondsHBox.spacing = 10.0

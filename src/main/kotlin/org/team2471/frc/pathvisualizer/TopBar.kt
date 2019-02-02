@@ -41,6 +41,7 @@ object TopBar : MenuBar() {
             }
         }
         val saveAsMenuItem = MenuItem("Save As...")
+        saveAsMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + Shift + S")
         saveAsMenuItem.setOnAction {
             saveAs()
         }
@@ -57,8 +58,13 @@ object TopBar : MenuBar() {
                 writer.close()
             }
         }
+        val sendToRobotItem = MenuItem("Send to Robot")
+        sendToRobotItem.accelerator = KeyCombination.keyCombination("Ctrl + R")
+        sendToRobotItem.setOnAction {
+            ControlPanel.autonomi.publishToNetworkTables(ControlPanel.networkTableInstance)
+        }
 
-        menuFile.items.addAll(openMenuItem, saveAsMenuItem, saveMenuItem)
+        menuFile.items.addAll(openMenuItem, saveAsMenuItem, saveMenuItem, sendToRobotItem)
 
         val menuEdit = Menu("Edit")
         val undoMenuItem = MenuItem("Undo")
@@ -133,17 +139,28 @@ object TopBar : MenuBar() {
         fun redo()
     }
 
-    class MovedPointAction(private var point: Path2DPoint, private val from: Vector2) : Action {
-        private val to = point.position
+    class MovedPointAction(private val point: Path2DPoint, private val from: Vector2, private val pointType: Path2DPoint.PointType) : Action {
+        private val to = when(pointType) {
+            Path2DPoint.PointType.POINT -> point.position
+            Path2DPoint.PointType.PREV_TANGENT -> point.prevTangent
+            Path2DPoint.PointType.NEXT_TANGENT -> point.nextTangent
+        }
 
         override fun undo() {
-            point.position = from
-            //point.prevAngleAndMagnitude = from.prevAngleAndMagnitude
-            //point.nextAngleAndMagnitude = from.nextAngleAndMagnitude
+            when (pointType) {
+                Path2DPoint.PointType.POINT -> point.position = from
+                Path2DPoint.PointType.PREV_TANGENT -> point.prevTangent = from
+                Path2DPoint.PointType.NEXT_TANGENT -> point.nextTangent = from
+            }
         }
 
         override fun redo() {
-            point.position = to
+            println("redo")
+            when (pointType) {
+                Path2DPoint.PointType.POINT -> point.position = to
+                Path2DPoint.PointType.PREV_TANGENT -> point.prevTangent = to
+                Path2DPoint.PointType.NEXT_TANGENT -> point.nextTangent = to
+            }
             //point.prevTangent = to.prevTangent
             //point.nextTangent = to.nextTangent
         }
