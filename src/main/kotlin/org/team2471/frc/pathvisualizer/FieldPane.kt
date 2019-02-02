@@ -7,6 +7,7 @@ import javafx.scene.image.Image
 import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
+import kotlinx.coroutines.selects.select
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
@@ -228,7 +229,6 @@ object FieldPane : StackPane() {
             if (closestPoint != null) {
                 if (shortestDistance > PathVisualizer.CLICK_CIRCLE_SIZE * 2) {// trying to deselect?
                     selectedPoint = null
-                    selectPathFlag = true
                 } else {
                     selectedPath?.addVector2After(screen2World(mouseVec), closestPoint)
                     selectPathFlag = false
@@ -247,7 +247,7 @@ object FieldPane : StackPane() {
         when (mouseMode) {
             PathVisualizer.MouseMode.EDIT -> {
                 editPoint = selectedPoint
-                from = selectedPoint!!.position
+                if (!selectPathFlag) from = selectedPoint!!.position
                 draw()
                 ControlPanel.refresh()
             }
@@ -354,14 +354,14 @@ object FieldPane : StackPane() {
 
         when (selectedPath!!.curveType) {
             Path2D.CurveType.EASE -> {
-                EasePane.drawEaseCurve(selectedPath)
+                drawEaseCurve(selectedPath)
             }
             Path2D.CurveType.HEADING -> {
-                EasePane.drawHeadingCurve(selectedPath)
+                drawHeadingCurve(selectedPath)
             }
             Path2D.CurveType.BOTH -> {
-                EasePane.drawEaseCurve(selectedPath)
-                EasePane.drawHeadingCurve(selectedPath)
+                drawEaseCurve(selectedPath)
+                drawHeadingCurve(selectedPath)
             }
             null -> {}
         }
@@ -386,6 +386,12 @@ object FieldPane : StackPane() {
             }
             "f" -> {
                 zoomFit()
+            }
+            "z" -> {
+                if (e.isControlDown) {
+                    if (e.isShiftDown) TopBar.redo()
+                    else TopBar.undo()
+                }
             }
             "=" -> {
                 zoom *= if (e.isControlDown)

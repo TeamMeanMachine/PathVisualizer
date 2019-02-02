@@ -5,7 +5,9 @@ import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
-import org.team2471.frc.lib.motion_profiling.following.ArcadePath
+import org.team2471.frc.lib.motion_profiling.MotionKey
+import org.team2471.frc.lib.motion.following.ArcadePath
+import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
@@ -19,8 +21,9 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
     for (path in paths) {
         drawPath(gc, path)
     }
-    if (selectedPath!=null && ControlPanel.autonomi.drivetrainParameters!=null)
+    if (selectedPath != null && ControlPanel.autonomi.drivetrainParameters != null) {
         drawSelectedPath(gc, selectedPath, selectedPoint, selectedPointType)
+    }
 }
 
 private fun drawPath(gc: GraphicsContext, path: Path2D?) {
@@ -48,8 +51,10 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
     if (path == null || !path.hasPoints())
         return
 
-    val arcadePath = ArcadePath(path, ControlPanel.autonomi.arcadeParameters.trackWidth *
-            ControlPanel.autonomi.arcadeParameters.scrubFactor)
+    val parameters = (ControlPanel.autonomi.drivetrainParameters as? ArcadeParameters) ?: return
+
+    val arcadePath = ArcadePath(path, parameters.trackWidth *
+            parameters.scrubFactor)
 
     if (path.durationWithSpeed > 0.0) {
         val deltaT = path.durationWithSpeed / 200.0
@@ -147,4 +152,147 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+}
+
+fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D?) {
+    gc.stroke = Color.GHOSTWHITE
+    for (i in 1..selectedPath!!.xyCurve.length.toInt()) {
+        val corners = FieldPane.getWheelPositions(i/selectedPath.duration)
+        corners[0] = world2ScreenWithMirror(corners[0], selectedPath.isMirrored)
+        corners[1] = world2ScreenWithMirror(corners[1], selectedPath.isMirrored)
+        corners[2] = world2ScreenWithMirror(corners[2], selectedPath.isMirrored)
+        corners[3] = world2ScreenWithMirror(corners[3], selectedPath.isMirrored)
+
+        val prevCorners = FieldPane.getWheelPositions((i - 1)/selectedPath.duration)
+        prevCorners[0] = world2ScreenWithMirror(prevCorners[0], selectedPath.isMirrored)
+        prevCorners[1] = world2ScreenWithMirror(prevCorners[1], selectedPath.isMirrored)
+        prevCorners[2] = world2ScreenWithMirror(prevCorners[2], selectedPath.isMirrored)
+        prevCorners[3] = world2ScreenWithMirror(prevCorners[3], selectedPath.isMirrored)
+
+        gc.strokeLine(prevCorners[0].x, prevCorners[0].y, corners[0].x, corners[0].y)
+        gc.strokeLine(prevCorners[1].x, prevCorners[1].y, corners[1].x, corners[1].y)
+        gc.strokeLine(prevCorners[2].x, prevCorners[2].y, corners[2].x, corners[2].y)
+        gc.strokeLine(prevCorners[3].x, prevCorners[3].y, corners[3].x, corners[3].y)
+
+    }
+}
+
+fun drawHeadingCurve(path: Path2D?) {
+    val gc = EasePane.canvas.graphicsContext2D
+    if (gc.canvas.width == 0.0)
+        return
+
+    val selectedPath = path ?: return
+
+    val deltaT = selectedPath.durationWithSpeed / gc.canvas.width
+    var t = 0.0
+    var ease = selectedPath.headingCurve.getValue(t)
+    var x = t / selectedPath.durationWithSpeed * gc.canvas.width
+    var y = (180.0 - ease) * gc.canvas.height
+    var pos = org.team2471.frc.lib.vector.Vector2(x, y)
+    var prevPos = pos
+
+    t = deltaT
+    while (t <= selectedPath.durationWithSpeed) {
+        ease = selectedPath.headingCurve.getValue(t)
+        x = t / selectedPath.durationWithSpeed * gc.canvas.width
+        y = (180.0 - ease) / 180.0
+        pos = org.team2471.frc.lib.vector.Vector2(x, y)
+        val blue = Math.max(Math.min(ease * Color.BLUE.blue, 1.0), 0.0)
+
+        gc.stroke = Color(0.0, 0.0, blue, 1.0)
+        gc.strokeLine(prevPos.x, prevPos.y * gc.canvas.height, pos.x, pos.y * gc.canvas.height)
+
+
+        prevPos = pos
+        t += deltaT
+    }
+}
+
+fun drawEaseCurve(path: Path2D?) {
+    val gc = EasePane.canvas.graphicsContext2D
+    if (gc.canvas.width == 0.0)
+        return
+    gc.fill = Color.LIGHTGRAY
+    gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
+    gc.lineWidth = 2.0
+
+    val selectedPath = path ?: return
+
+    val maxVelocity = 12.5  // feet per sec
+    val maxAcceleration = 5.0  // feet per sec^2
+    val maxCurveAcceleration = 5.0  // feet per sec^2
+    val speedFactor = 0.75
+    val accelerationFactor = 0.75
+    val curveFactor = 0.75
+
+    val pathLength = selectedPath.length
+    var deltaT = 1.0 / 50.0
+    var t = deltaT
+    var prevPosition = selectedPath.xyCurve.getPositionAtDistance(0.0)
+    var prevVelocity = org.team2471.frc.lib.vector.Vector2(0.0, 0.0)
+    var ease = 0.0
+
+    deltaT = selectedPath.durationWithSpeed / gc.canvas.width
+    t = 0.0
+    ease = selectedPath.easeCurve.getValue(t)
+    var x = t / selectedPath.durationWithSpeed * gc.canvas.width
+    var y = (1.0 - ease) * gc.canvas.height
+    var pos = org.team2471.frc.lib.vector.Vector2(x, y)
+    var prevPos = pos
+    var prevSpeed = 0.0
+    var prevAccel = 0.0
+    t = deltaT
+    while (t <= selectedPath.durationWithSpeed) {
+        ease = selectedPath.easeCurve.getValue(t)
+        x = t / selectedPath.durationWithSpeed * gc.canvas.width
+        y = (1.0 - ease)
+        pos = org.team2471.frc.lib.vector.Vector2(x, y)
+        val red = Math.max(Math.min(ease * Color.RED.red, 1.0), 0.0)
+        val redGreen = Math.max(Math.min(ease * Color.RED.green, 1.0), 0.0)
+        val redBlue = Math.max(Math.min(ease * Color.RED.blue, 1.0), 0.0)
+
+        gc.stroke = Color(red, redGreen, redBlue, 1.0)
+        gc.strokeLine(prevPos.x, prevPos.y * gc.canvas.height, pos.x, pos.y * gc.canvas.height)
+
+        prevPos = pos
+        t += deltaT
+    }
+
+    // circles and lines for handles
+    var point: MotionKey? = selectedPath.easeCurve.headKey
+    while (point != null) {
+        if (point === EasePane.selectedPoint && EasePane.selectedPointType == Path2DPoint.PointType.POINT)
+            gc.stroke = Color.LIMEGREEN
+        else
+            gc.stroke = Color.WHITE
+
+        val tPoint = org.team2471.frc.lib.vector.Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
+        gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
+        if (point.prevKey != null) {
+            if (point === EasePane.selectedPoint && EasePane.selectedPointType == Path2DPoint.PointType.PREV_TANGENT)
+                gc.stroke = Color.LIMEGREEN
+            else
+                gc.stroke = Color.WHITE
+            val tanPoint = point.timeAndValue - point.prevTangent / PathVisualizer.TANGENT_DRAW_FACTOR
+            tanPoint.set(easeWorld2ScreenX(tanPoint.x), easeWorld2ScreenY(tanPoint.y))
+            gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
+            gc.lineWidth = 2.0
+            gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
+        }
+
+        if (point.nextKey != null) {
+            if (point === EasePane.selectedPoint && EasePane.selectedPointType == Path2DPoint.PointType.NEXT_TANGENT)
+                gc.stroke = Color.LIMEGREEN
+            else
+                gc.stroke = Color.WHITE
+            val tanPoint = point.timeAndValue + point.nextTangent / PathVisualizer.TANGENT_DRAW_FACTOR
+            tanPoint.set(easeWorld2ScreenX(tanPoint.x), easeWorld2ScreenY(tanPoint.y))
+            gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
+            gc.lineWidth = 2.0
+            gc.strokeLine(tPoint.x, tPoint.y, tanPoint.x, tanPoint.y)
+        }
+
+        point = point.nextKey
+    }
 }

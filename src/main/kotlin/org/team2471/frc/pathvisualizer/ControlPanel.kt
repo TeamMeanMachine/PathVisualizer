@@ -20,9 +20,7 @@ import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javafx.scene.input.KeyCode
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
-import org.team2471.frc.lib.motion_profiling.following.DrivetrainParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
-import org.team2471.frc.lib.motion_profiling.following.SwerveModule
 import java.io.File
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
@@ -68,7 +66,12 @@ object ControlPanel : VBox() {
         private set
 
     fun initializeParameters() {
-        autonomi.arcadeParameters = ArcadeParameters(
+        autonomi.robotParameters = RobotParameters(
+                robotWidth = 28.0 / 12.0,
+                robotLength = 32.0 /12.0
+        )
+
+        autonomi.drivetrainParameters = ArcadeParameters(
                 trackWidth = 25.0/12.0,
                 scrubFactor = 1.12,
                 leftFeedForwardCoefficient = 0.070541988198899,
@@ -76,12 +79,6 @@ object ControlPanel : VBox() {
                 rightFeedForwardCoefficient = 0.071704891069425,
                 rightFeedForwardOffset = 0.020459379452296
         )
-        autonomi.robotParameters = RobotParameters(
-                robotWidth = 28.0 / 12.0,
-                robotLength = 32.0 /12.0
-        )
-
-        autonomi.drivetrainParameters = autonomi.arcadeParameters
     }
 
     init {
@@ -481,7 +478,7 @@ object ControlPanel : VBox() {
         easePositionText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 if (selectedPath != null) {
-                    selectedPath!!.getEaseCurve().storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
+                    selectedPath!!.easeCurve.storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
                     println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
                     draw()
                 }
@@ -735,10 +732,10 @@ object ControlPanel : VBox() {
             pathLengthText.text = FieldPane.selectedPath!!.length.format(2)
         }
 
-        trackWidthText.text = (autonomi.arcadeParameters.trackWidth * 12.0).format(1)
-        scrubFactorText.text = autonomi.arcadeParameters.scrubFactor.format(3)
-        widthText.text = (autonomi.robotParameters.robotWidth * 12.0).format(1)
-        lengthText.text = (autonomi.robotParameters.robotLength * 12.0).format(1)
+//        trackWidthText.text = (autonomi.arcadeParameters.trackWidth * 12.0).format(1)
+//        scrubFactorText.text = autonomi.arcadeParameters.scrubFactor.format(3)
+//        widthText.text = (autonomi.robotParameters.robotWidth * 12.0).format(1)
+//        lengthText.text = (autonomi.robotParameters.robotLength * 12.0).format(1)
 
         currentTimeText.text = currentTime.format(1)
         if (selectedPath != null) {
