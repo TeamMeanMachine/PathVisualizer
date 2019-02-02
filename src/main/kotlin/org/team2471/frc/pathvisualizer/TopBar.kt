@@ -3,6 +3,7 @@ package org.team2471.frc.pathvisualizer
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
+import javafx.scene.input.KeyCombination
 import javafx.stage.FileChooser
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.Autonomi
@@ -26,6 +27,7 @@ object TopBar : MenuBar() {
 
         val menuFile = Menu("File")
         val openMenuItem = MenuItem("Open...")
+        openMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + O")
         openMenuItem.setOnAction {
             val fileChooser = FileChooser()
             fileChooser.title = "Open Autonomi File..."
@@ -43,6 +45,7 @@ object TopBar : MenuBar() {
             saveAs()
         }
         val saveMenuItem = MenuItem("Save")
+        saveMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + S")
         saveMenuItem.setOnAction {
             if (fileName.isEmpty()) {
                 saveAs()
@@ -59,18 +62,18 @@ object TopBar : MenuBar() {
 
         val menuEdit = Menu("Edit")
         val undoMenuItem = MenuItem("Undo")
+        undoMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + Z")
         undoMenuItem.setOnAction {
             undo()
         }
         val redoMenuItem = MenuItem("Redo")
+        redoMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + Shift + Z")
         redoMenuItem.setOnAction {
             redo()
         }
 
         menuEdit.items.addAll(undoMenuItem, redoMenuItem)
-
-        //val menuHelp = Menu("Help")
-        menus.addAll(menuFile, menuEdit/*, menuHelp*/)
+        menus.addAll(menuFile, menuEdit)
     }
 
 
@@ -130,15 +133,19 @@ object TopBar : MenuBar() {
         fun redo()
     }
 
-    class MovedPointAction(private val point: Path2DPoint, private val from: Vector2) : Action {
+    class MovedPointAction(private var point: Path2DPoint, private val from: Vector2) : Action {
         private val to = point.position
 
         override fun undo() {
             point.position = from
+            //point.prevAngleAndMagnitude = from.prevAngleAndMagnitude
+            //point.nextAngleAndMagnitude = from.nextAngleAndMagnitude
         }
 
         override fun redo() {
             point.position = to
+            //point.prevTangent = to.prevTangent
+            //point.nextTangent = to.nextTangent
         }
     }
 }

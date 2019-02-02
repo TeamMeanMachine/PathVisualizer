@@ -119,6 +119,8 @@ class PathVisualizer : Application() {
 // : Be able to type heading of robot
 // : Add buttons for new auto and new path, remove list items - Jonah
 // : playback of entire autonomous
+// : top bar - Ryan
+// : add a file and edit menu for open, save, save as, undo and redo
 
 // todo: Be able to turn Robot heading on field
 // todo: Be able to create wheel paths for swerves - use swerve modules
@@ -133,8 +135,6 @@ class PathVisualizer : Application() {
 // todo: add partner1 and partner2 auto combos - draw cyan, magenta, yellow
 // todo: multi-select path points by dragging selecting with dashed rectangle
 // todo: add pause and turn in place path types (actions)
-// todo: add a file and edit menu for open, save, save as, undo and redo
 // todo: undo operations - Ryan
-// todo: top bar - Ryan
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi

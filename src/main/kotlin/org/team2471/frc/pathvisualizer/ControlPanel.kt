@@ -64,34 +64,6 @@ object ControlPanel : VBox() {
             FieldPane.draw()
         }
 
-/*
-    private fun actionSave () {
-        while (actionPointer < actionHistory - 1) {
-            actionHistory.removeAt(actionPointer + 1)
-        }
-        actionHistory[actionPointer] = autonomi.toJsonString()
-        actionPointer++
-    }
-
-    private fun actionUndo () {
-        if (actionPointer > 0) {
-            actionPointer--
-            autonomi = Autonomi.fromJsonString(actionHistory[actionPointer])
-        } else {
-            println("Attempted Undo, stack empty")
-        }
-    }
-
-    private fun actionRedo () {
-        if (actionPointer < actionHistory.length() - 1) {
-            actionPointer++
-            autonomi = Autonomi.fromJsonString(actionHistory[actionPointer])
-        } else {
-            println("Attempted Redo, stack empty")
-        }
-    }
-*/
-
     var selectedAutonomous: Autonomous? = null
         private set
 
