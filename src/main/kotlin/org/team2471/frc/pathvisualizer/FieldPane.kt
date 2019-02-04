@@ -16,7 +16,7 @@ import java.util.*
 import kotlin.math.round
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
-    private val image = Image("assets/2019Field.PNG")
+    private val image = Image("assets/2019Field.png")
     private val upperLeftOfFieldPixels = Vector2(79.0, 0.0)
     private val lowerRightOfFieldPixels = Vector2(1421.0, 1352.0)
 
