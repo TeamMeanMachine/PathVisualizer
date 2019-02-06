@@ -271,33 +271,44 @@ object FieldPane : StackPane() {
             gets selected
          */
         if (selectPathFlag) {
-            //val gc = canvas.graphicsContext2D
-            var nearestPoint = Vector2(10000.0, 10000.0)
+            val gc = canvas.graphicsContext2D
+            var nearestPath: Path2D? = null
+            var nearestDistance = 10000.0
 
             //first, iterate through each path of the selected autonomous
             for (path in ControlPanel.selectedAutonomous!!.paths.values) {
-
-                //iterate through each path with an increment of 1/25
-                for (i in 1..(path.length).toInt()*25) {
-                    val comparePoint = world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble()/25))
+                //iterate through each path with an increment of 200 steps
+                if (path.duration == 0.0)
+                    continue
+                val deltaT = path.durationWithSpeed / 200.0
+                var t = 0.0
+                while (t <= path.durationWithSpeed) {
+                    val ease = t / path.durationWithSpeed
+                    var pos = path.getPosition(t)
+                    t += deltaT
+                    val comparePoint = world2Screen(pos)
 
                     //comparing mouse click to the nearest comparison point
-                    if (Math.abs(comparePoint.x - e.x) < Math.abs(nearestPoint.x - e.x) &&
-                        Math.abs(comparePoint.y - e.y) < Math.abs( nearestPoint.y - e.y)) {
-                        nearestPoint = comparePoint
-                        if (Math.abs(e.x - nearestPoint.x) < 20 && Math.abs(e.y - nearestPoint.y) < 20) {
-                            ControlPanel.setSelectedPath(path.name)
-                            //gc.strokeOval(world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).x, world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).y, 3.0, 3.0)
-                            break
-                        }
-                        //gc.strokeOval(world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble()/25)).x, world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble()/25)).y, 3.0, 3.0)
+                    val distance = (comparePoint - mouseVec).length
+                    if (distance<nearestDistance) {
+                        nearestDistance = distance
+                        nearestPath = path
                         //println("" + nearestPoint.x + " " + nearestPoint.y)
                         //println("" + e.x + " " + e.y)
+//                        gc.stroke = Color.CYAN
+//                        gc.strokeOval(comparePoint.x-10.0, comparePoint.y-PathVisualizer.CLICK_CIRCLE_SIZE/2, PathVisualizer.CLICK_CIRCLE_SIZE, PathVisualizer.CLICK_CIRCLE_SIZE)
                     }
-                    //gc.strokeOval(world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).x, world2Screen(path.xyCurve.getPositionAtDistance(i.toDouble())).y, 3.0, 3.0)
-
+                    else {
+//                        gc.stroke = Color.YELLOW
+//                        gc.strokeOval(comparePoint.x - 10.0, comparePoint.y - PathVisualizer.CLICK_CIRCLE_SIZE/2, PathVisualizer.CLICK_CIRCLE_SIZE, PathVisualizer.CLICK_CIRCLE_SIZE)
+                    }
                 }
             }
+            if (nearestDistance < PathVisualizer.CLICK_CIRCLE_SIZE) {
+                ControlPanel.setSelectedPath(nearestPath?.name)
+            }
+//            gc.stroke = Color.MAGENTA
+//            gc.strokeOval(e.x-1.5, e.y-1.5, 3.0, 3.0)
         }
     }
     private fun onMouseDragged(e: MouseEvent) {
