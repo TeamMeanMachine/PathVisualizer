@@ -56,7 +56,7 @@ object TwoFootCircle : Path2D() {
 object EightFootStraight : Path2D() {
     init {
         name = "8 Foot Straight"
-        robotDirection = Path2D.RobotDirection.BACKWARD
+        robotDirection = Path2D.RobotDirection.FORWARD
         addPoint(0.0, 0.0)
         addPoint(0.0, 8.0)
         addEasePoint(0.0, 0.0)
