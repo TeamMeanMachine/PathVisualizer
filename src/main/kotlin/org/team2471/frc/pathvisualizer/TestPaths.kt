@@ -64,3 +64,15 @@ object EightFootStraight : Path2D() {
     }
 }
 
+object AngleAndMagnitudeBug : Path2D() {
+    init {
+        name = "Angle and Magnitude Bug"
+        addPointAndTangent(0.0, 0.0, 0.0, 3.0)
+        //addPointAndTangent(-2.0, 2.0, -2.0, 0.0)
+        addPointAngleAndMagnitude(-2.0, 2.0, 15.0, 1.0)
+        addEasePoint(0.0, 0.0)
+        addEasePoint(5.0, 1.0)
+    }
+}
+
+
