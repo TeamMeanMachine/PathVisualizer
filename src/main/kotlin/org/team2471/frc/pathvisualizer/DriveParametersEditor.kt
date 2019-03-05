@@ -7,8 +7,6 @@ import javafx.scene.layout.HBox
 import org.team2471.frc.lib.motion_profiling.following.DrivetrainParameters
 import java.lang.IllegalStateException
 import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
 
 // this function is magical -tyler
 inline fun <reified T : DrivetrainParameters> DriveParametersEditor(params: T): Node {
@@ -16,11 +14,12 @@ inline fun <reified T : DrivetrainParameters> DriveParametersEditor(params: T): 
 
     @Suppress("UNCHECKED_CAST")
     val props = paramsClass
-            .memberProperties
-            .mapNotNull { it as? KMutableProperty1<T, Any?> }
+          //  .memberProperties
+          //  .mapNotNull { it as? KMutableProperty1<T, Any?> }
 
     val pane = FlowPane()
 
+/*
     for (prop in props) {
         val node: Node = when (prop.returnType) {
             Double::class.starProjectedType -> {
@@ -53,9 +52,10 @@ inline fun <reified T : DrivetrainParameters> DriveParametersEditor(params: T): 
             }
             else -> throw IllegalStateException("Unknown type: ${prop.returnType}")
         }
+*/
 
-        pane.children.add(node)
-    }
+//        pane.children.add(node)
+//    }
 
     return pane
 }

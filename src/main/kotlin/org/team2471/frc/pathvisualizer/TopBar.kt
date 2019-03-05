@@ -7,6 +7,7 @@ import javafx.scene.input.KeyCombination
 import javafx.stage.FileChooser
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.Autonomi
+import org.team2471.frc.lib.motion_profiling.Autonomous
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import java.io.File
 import java.io.PrintWriter
@@ -22,8 +23,19 @@ object TopBar : MenuBar() {
     val redoStack = SizedStack<Action>(20)
 
     init {
-        if (!fileName.isEmpty())
+        if (!fileName.isEmpty()) {
             openFile(File(fileName))
+        }
+
+        // add the test auto and paths
+        val testAuto = Autonomous("Tests")
+        ControlPanel.autonomi.put(testAuto)
+        testAuto.putPath(EightFootStraight)
+        testAuto.putPath(EightFootCircle)
+        testAuto.putPath(FourFootCircle)
+        testAuto.putPath(TwoFootCircle)
+        testAuto.putPath(AngleAndMagnitudeBug)
+        testAuto.putPath(HookPath)
 
         val menuFile = Menu("File")
         val openMenuItem = MenuItem("Open...")

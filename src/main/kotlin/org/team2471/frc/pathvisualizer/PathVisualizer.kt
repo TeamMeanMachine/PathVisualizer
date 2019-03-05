@@ -34,15 +34,6 @@ class PathVisualizer : Application() {
         stage.title = "Path Visualizer"
         PathVisualizer.stage = stage
 
-        // set up the paths and autos
-        val testAuto = Autonomous("Tests")
-        ControlPanel.autonomi.put(testAuto)
-        testAuto.putPath(EightFootStraight)
-        testAuto.putPath(EightFootCircle)
-        testAuto.putPath(FourFootCircle)
-        testAuto.putPath(TwoFootCircle)
-        testAuto.putPath(AngleAndMagnitudeBug)
-
         // setup the layout
         val verticalSplitPane = SplitPane(FieldPane, EasePane)
         verticalSplitPane.orientation = Orientation.VERTICAL
@@ -138,3 +129,5 @@ class PathVisualizer : Application() {
 // todo: undo operations - Ryan
 
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
+
+// todo: figure out why when there is no file, selectedPath is null and visualizer crashes

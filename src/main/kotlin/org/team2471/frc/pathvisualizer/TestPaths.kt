@@ -75,4 +75,14 @@ object AngleAndMagnitudeBug : Path2D() {
     }
 }
 
+object HookPath : Path2D() {
+    init {
+        name = "Hook Path"
+        addPointAndTangent(0.0, 0.0, 0.0, 0.0)
+        addPointAndTangent(3.0, 0.0, 0.0, 3.0)
+        addEasePoint(0.0, 0.0)
+        addEasePoint(5.0, 1.0)
+    }
+}
+
 
