@@ -37,6 +37,7 @@ class PathVisualizer : Application() {
         // set up the paths and autos
         val testAuto = Autonomous("Tests")
         ControlPanel.autonomi.put(testAuto)
+        testAuto.putPath(HookPath)
         testAuto.putPath(EightFootStraight)
         testAuto.putPath(EightFootCircle)
         testAuto.putPath(FourFootCircle)

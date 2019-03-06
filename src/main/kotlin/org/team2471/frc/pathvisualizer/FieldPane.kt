@@ -368,7 +368,6 @@ object FieldPane : StackPane() {
         gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
         gc.lineWidth = 2.0
 
-
         when (selectedPath!!.curveType) {
             Path2D.CurveType.EASE -> {
                 drawEaseCurve(selectedPath)

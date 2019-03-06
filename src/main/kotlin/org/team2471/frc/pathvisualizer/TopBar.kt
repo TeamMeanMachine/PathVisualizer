@@ -62,6 +62,7 @@ object TopBar : MenuBar() {
         sendToRobotItem.accelerator = KeyCombination.keyCombination("Ctrl + R")
         sendToRobotItem.setOnAction {
             ControlPanel.autonomi.publishToNetworkTables(ControlPanel.networkTableInstance)
+            println("Sent to robot...")
         }
 
         menuFile.items.addAll(openMenuItem, saveAsMenuItem, saveMenuItem, sendToRobotItem)
