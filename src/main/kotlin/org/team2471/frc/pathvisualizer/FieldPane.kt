@@ -462,8 +462,7 @@ object FieldPane : StackPane() {
 
     fun getWheelPositions(time: Double): Array<Vector2> {  // offset can be positive or negative (half the width of the robot)
         val centerPosition = selectedPath!!.getPosition(time)
-        var tangent = selectedPath!!.getTangent(time)
-        tangent = tangent!!.normalize()
+        var tangent = Vector2(0.0, 1.0)
         val heading = selectedPath!!.headingCurve.getValue(time)
         tangent = tangent.rotateDegrees(-heading)
 
