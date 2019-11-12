@@ -118,6 +118,7 @@ class PathVisualizer : Application() {
 // : add a file and edit menu for open, save, save as, undo and redo
 
 // : Be able to turn Robot heading on field
+// : Scrolling on Control Panel
 
 // todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Be able to add a point anywhere on a path by clicking on it
