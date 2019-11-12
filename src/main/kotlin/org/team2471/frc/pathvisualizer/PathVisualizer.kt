@@ -117,7 +117,9 @@ class PathVisualizer : Application() {
 // : top bar - Ryan
 // : add a file and edit menu for open, save, save as, undo and redo
 
-// todo: Be able to turn Robot heading on field
+// : Be able to turn Robot heading on field
+
+// todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Be able to add a point anywhere on a path by clicking on it
 // todo: editing of ease curve and heading curve - Julian
 // todo: Ability to add heading curve plus other curves for the robot to the graph and edit them
