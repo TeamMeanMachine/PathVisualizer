@@ -39,7 +39,11 @@ class PathVisualizer : Application() {
         verticalSplitPane.orientation = Orientation.VERTICAL
         verticalSplitPane.setDividerPositions(0.85)
 
-        val horizontalSplitPane = SplitPane(verticalSplitPane, ControlPanel)
+        val scrollPane = ScrollPane(ControlPanel)
+        scrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+        scrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+
+        val horizontalSplitPane = SplitPane(verticalSplitPane, scrollPane)
         horizontalSplitPane.setDividerPositions(0.68)
 
         val borderPane = BorderPane(horizontalSplitPane)
@@ -114,7 +118,6 @@ class PathVisualizer : Application() {
 // : add a file and edit menu for open, save, save as, undo and redo
 
 // todo: Be able to turn Robot heading on field
-// todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Be able to add a point anywhere on a path by clicking on it
 // todo: editing of ease curve and heading curve - Julian
 // todo: Ability to add heading curve plus other curves for the robot to the graph and edit them

@@ -236,7 +236,7 @@ object ControlPanel : VBox() {
         val pathLengthUnits = Text("   Feet")
         miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
-        mirroredCheckBox.isSelected = if (selectedAutonomous != null) selectedAutonomous!!.isMirrored else false
+        mirroredCheckBox.isSelected =  selectedAutonomous?.isMirrored ?: false
         mirroredCheckBox.setOnAction {
             if (!refreshing) {
                 FieldPane.setSelectedPathMirrored(mirroredCheckBox.isSelected)
@@ -245,9 +245,10 @@ object ControlPanel : VBox() {
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
-        robotDirectionBox.items.add("Forward")
-        robotDirectionBox.items.add("Backward")
-        robotDirectionBox.value = if (FieldPane.selectedPath == null || FieldPane.selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
+        robotDirectionBox.items.add(Path2D.RobotDirection.FORWARD.name)
+        robotDirectionBox.items.add(Path2D.RobotDirection.BACKWARD.name)
+        robotDirectionBox.value = selectedPath?.robotDirection?.name ?: Path2D.RobotDirection.BACKWARD.name
+        //if (FieldPane.selectedPath == null || FieldPane.selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener { _, _, newText ->
             if (!refreshing) {
                 FieldPane.setSelectedPathRobotDirection(if (newText == "Forward") Path2D.RobotDirection.FORWARD else Path2D.RobotDirection.BACKWARD)
@@ -716,7 +717,7 @@ object ControlPanel : VBox() {
 
         if (FieldPane.selectedPath != null) {
             mirroredCheckBox.isSelected = selectedAutonomous!!.isMirrored
-            robotDirectionBox.value = if (FieldPane.selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
+            robotDirectionBox.value = selectedPath!!.robotDirection?.name ?: Path2D.RobotDirection.BACKWARD.name
             secondsText.text = FieldPane.selectedPath!!.duration.format(1)
             speedText.text = FieldPane.selectedPath!!.speed.format(1)
             pathLengthText.text = FieldPane.selectedPath!!.length.format(2)
