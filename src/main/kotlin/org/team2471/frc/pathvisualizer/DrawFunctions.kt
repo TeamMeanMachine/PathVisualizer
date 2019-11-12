@@ -149,6 +149,8 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     corners[3] = world2ScreenWithMirror(corners[3], selectedPath.isMirrored)
 
     gc.strokeLine(corners[0].x, corners[0].y, corners[1].x, corners[1].y)
+    gc.strokeText("F", (corners[1].x + corners[0].x)/2, (corners[1].y + corners[0].y)/2)
+    gc.stroke = Color.BLUE
     gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
