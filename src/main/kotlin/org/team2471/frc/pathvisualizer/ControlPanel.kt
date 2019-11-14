@@ -251,13 +251,13 @@ object ControlPanel : VBox() {
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
-        robotDirectionBox.items.add(Path2D.RobotDirection.FORWARD.name.capitalize())
-        robotDirectionBox.items.add(Path2D.RobotDirection.BACKWARD.name.capitalize())
-        robotDirectionBox.value = selectedPath?.robotDirection?.name?.capitalize() ?: Path2D.RobotDirection.BACKWARD.name.capitalize()
+        robotDirectionBox.items.add(Path2D.RobotDirection.FORWARD.name.toLowerCase().capitalize())
+        robotDirectionBox.items.add(Path2D.RobotDirection.BACKWARD.name.toLowerCase().capitalize())
+        robotDirectionBox.value = selectedPath?.robotDirection?.name?.toLowerCase()?.capitalize() ?: Path2D.RobotDirection.BACKWARD.name.toLowerCase().capitalize()
         //if (FieldPane.selectedPath == null || FieldPane.selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener { _, _, newText ->
             if (!refreshing) {
-                FieldPane.setSelectedPathRobotDirection(if (newText == "Forward") Path2D.RobotDirection.FORWARD else Path2D.RobotDirection.BACKWARD)
+                FieldPane.setSelectedPathRobotDirection(if (newText.toUpperCase() == Path2D.RobotDirection.BACKWARD.name) Path2D.RobotDirection.BACKWARD else Path2D.RobotDirection.FORWARD)
             }
         }
         robotDirectionHBox.children.addAll(robotDirectionName, robotDirectionBox)
@@ -722,7 +722,7 @@ object ControlPanel : VBox() {
 
         if (FieldPane.selectedPath != null) {
             mirroredCheckBox.isSelected = selectedAutonomous?.isMirrored ?: false
-            robotDirectionBox.value = selectedPath?.robotDirection?.name ?: Path2D.RobotDirection.BACKWARD.name.capitalize()
+            robotDirectionBox.value = selectedPath?.robotDirection?.name?.toLowerCase()?.capitalize() ?: Path2D.RobotDirection.BACKWARD.name.toLowerCase().capitalize()
             secondsText.text = FieldPane.selectedPath?.duration?.format(1)
             speedText.text = FieldPane.selectedPath?.speed?.format(1)
             pathLengthText.text = FieldPane.selectedPath?.length?.format(2)
