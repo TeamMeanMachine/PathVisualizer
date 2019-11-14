@@ -96,23 +96,25 @@ object ControlPanel : VBox() {
             var newPathName: String?
             val defaultName = "Path"
             var count = 1
-            while (selectedAutonomous!!.paths.containsKey(defaultName + count))
-                count++
-            val dialog = TextInputDialog(defaultName + count)
-            dialog.title = "Path Name"
-            dialog.headerText = "Enter the name for your new path"
-            dialog.contentText = "Path name:"
-            val result = dialog.showAndWait()
-            if (result.isPresent) {
-                newPathName = result.get()
-                val newPath = Path2D(newPathName)
-                newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0, 1.0) // always begin with an ease curve
-                selectedAutonomous!!.putPath(newPath)
-                pathListView.items.add(pathListView.items.count() - 1, newPathName)
-            } else {
-                newPathName = FieldPane.selectedPath?.name
+            if (selectedAutonomous != null) {
+                while (selectedAutonomous!!.paths.containsKey(defaultName + count))
+                    count++
+                val dialog = TextInputDialog(defaultName + count)
+                dialog.title = "Path Name"
+                dialog.headerText = "Enter the name for your new path"
+                dialog.contentText = "Path name:"
+                val result = dialog.showAndWait()
+                if (result.isPresent) {
+                    newPathName = result.get()
+                    val newPath = Path2D(newPathName)
+                    newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0, 1.0) // always begin with an ease curve
+                    selectedAutonomous?.putPath(newPath)
+                    pathListView.items.add(pathListView.items.count() - 1, newPathName)
+                } else {
+                    newPathName = FieldPane.selectedPath?.name
+                }
+                setSelectedPath(newPathName)
             }
-            setSelectedPath(newPathName)
         }
 
         val deletePathButton = Button("Delete Path")
@@ -146,25 +148,29 @@ object ControlPanel : VBox() {
                 val timer = Timer()
 
                 animationJob = GlobalScope.launch {
-                    for (kvPath in selectedAutonomous!!.paths) {
-                        selectedPath = kvPath.value
-                        currentTime = 0.0
-                        timer.start()
+                    if (selectedAutonomous != null) {
+                        for (kvPath in selectedAutonomous!!.paths) {
+                            selectedPath = kvPath.value
+                            currentTime = 0.0
+                            timer.start()
 
-                        while (timer.get() < selectedPath!!.durationWithSpeed) {
-                            if (!isActive) return@launch
+                            while (timer.get() < selectedPath?.durationWithSpeed ?: 0.0) {
+                                if (!isActive) return@launch
 
-                            Platform.runLater {
-                                currentTime = timer.get()
-                                draw()
-                                refresh()
+                                Platform.runLater {
+                                    currentTime = timer.get()
+                                    draw()
+                                    refresh()
+                                }
+
+                                // Playback @ approx 30fps (1000ms/30fps = 33ms)
+                                delay(1000L / 30L)
                             }
-
-                            // Playback @ approx 30fps (1000ms/30fps = 33ms)
-                            delay(1000L / 30L)
+                        }
+                        if (selectedPath != null) {
+                            Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
                         }
                     }
-                    Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
                 }
             }
         }
@@ -236,7 +242,7 @@ object ControlPanel : VBox() {
         val pathLengthUnits = Text("   Feet")
         miscHBox.children.addAll(deletePoint, pathLengthLabel, pathLengthText, pathLengthUnits)
 
-        mirroredCheckBox.isSelected =  selectedAutonomous?.isMirrored ?: false
+        mirroredCheckBox.isSelected = selectedAutonomous?.isMirrored ?: false
         mirroredCheckBox.setOnAction {
             if (!refreshing) {
                 FieldPane.setSelectedPathMirrored(mirroredCheckBox.isSelected)
@@ -245,9 +251,9 @@ object ControlPanel : VBox() {
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
-        robotDirectionBox.items.add(Path2D.RobotDirection.FORWARD.name)
-        robotDirectionBox.items.add(Path2D.RobotDirection.BACKWARD.name)
-        robotDirectionBox.value = selectedPath?.robotDirection?.name ?: Path2D.RobotDirection.BACKWARD.name
+        robotDirectionBox.items.add(Path2D.RobotDirection.FORWARD.name.capitalize())
+        robotDirectionBox.items.add(Path2D.RobotDirection.BACKWARD.name.capitalize())
+        robotDirectionBox.value = selectedPath?.robotDirection?.name?.capitalize() ?: Path2D.RobotDirection.BACKWARD.name.capitalize()
         //if (FieldPane.selectedPath == null || FieldPane.selectedPath!!.robotDirection == Path2D.RobotDirection.FORWARD) "Forward" else "Backward"
         robotDirectionBox.valueProperty().addListener { _, _, newText ->
             if (!refreshing) {
@@ -468,19 +474,17 @@ object ControlPanel : VBox() {
         easePositionText.prefWidth = 100.0
         easePositionText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
-                if (selectedPath != null) {
-                    selectedPath!!.easeCurve.storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
-                    println("Edited Ease: ${selectedPath!!.getEaseCurve().getValue(currentTime)}")
-                    draw()
-                }
+                selectedPath?.easeCurve?.storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
+                println("Edited Ease: ${selectedPath?.easeCurve?.getValue(currentTime)}")
+                draw()
             }
         }
 
         headingAngleText.prefWidth = 100.0
         headingAngleText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
-                if (selectedPath != null && !headingAngleText.text.isEmpty()) {
-                    selectedPath!!.getHeadingCurve().storeValue(currentTime, headingAngleText.text.toDouble())
+                if (headingAngleText.text.isNotEmpty()) {
+                    selectedPath?.headingCurve?.storeValue(currentTime, headingAngleText.text.toDouble())
                     draw()
                 }
             }
@@ -545,7 +549,7 @@ object ControlPanel : VBox() {
             timer.start()
 
             animationJob = GlobalScope.launch {
-                while (timer.get() < selectedPath!!.durationWithSpeed) {
+                while (timer.get() < selectedPath?.durationWithSpeed ?: 0.0) {
                     if (!isActive) return@launch
 
                     Platform.runLater {
@@ -557,8 +561,9 @@ object ControlPanel : VBox() {
                     // Playback @ approx 30fps (1000ms/30fps = 33ms)
                     delay(1000L / 30L)
                 }
-
-                Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
+                if (selectedPath != null) {
+                    Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
+                }
             }
         }
     }
@@ -639,13 +644,13 @@ object ControlPanel : VBox() {
 */
 
     private fun deleteSelectedPath() {
-        selectedAutonomous!!.paths.remove(FieldPane.selectedPath!!.name, FieldPane.selectedPath)
+        selectedAutonomous?.paths?.remove(FieldPane.selectedPath?.name, FieldPane.selectedPath)
         FieldPane.selectedPath = null
         refresh()
     }
 
     private fun deleteSelectedAuto() {
-        autonomi.mapAutonomous.remove(selectedAutonomous!!.name)
+        autonomi.mapAutonomous.remove(selectedAutonomous?.name)
         selectedAutonomous = null
         FieldPane.selectedPath = null
         refresh()
@@ -676,10 +681,10 @@ object ControlPanel : VBox() {
     fun setSelectedPath(pathName: String?) {
         var newPathName: String? = pathName
         if (selectedAutonomous != null) {
-            FieldPane.selectedPath = selectedAutonomous!![newPathName]
+            FieldPane.selectedPath = selectedAutonomous?.get(pathName)
         }
         currentTime = 0.0
-        pathListView.selectionModel.select(newPathName)
+        pathListView.selectionModel.select(pathName)
         refresh()
         FieldPane.draw()
     }
@@ -716,11 +721,11 @@ object ControlPanel : VBox() {
         }
 
         if (FieldPane.selectedPath != null) {
-            mirroredCheckBox.isSelected = selectedAutonomous!!.isMirrored
-            robotDirectionBox.value = selectedPath!!.robotDirection?.name ?: Path2D.RobotDirection.BACKWARD.name
-            secondsText.text = FieldPane.selectedPath!!.duration.format(1)
-            speedText.text = FieldPane.selectedPath!!.speed.format(1)
-            pathLengthText.text = FieldPane.selectedPath!!.length.format(2)
+            mirroredCheckBox.isSelected = selectedAutonomous?.isMirrored ?: false
+            robotDirectionBox.value = selectedPath?.robotDirection?.name ?: Path2D.RobotDirection.BACKWARD.name.capitalize()
+            secondsText.text = FieldPane.selectedPath?.duration?.format(1)
+            speedText.text = FieldPane.selectedPath?.speed?.format(1)
+            pathLengthText.text = FieldPane.selectedPath?.length?.format(2)
         }
 
 //        trackWidthText.text = (autonomi.arcadeParameters.trackWidth * 12.0).format(1)
@@ -730,8 +735,8 @@ object ControlPanel : VBox() {
 
         currentTimeText.text = currentTime.format(1)
         if (selectedPath != null) {
-            easePositionText.text = (selectedPath!!.getEaseCurve().getValue(currentTime) * 100.0).format(1)
-            headingAngleText.text = selectedPath!!.getHeadingCurve().getValue(currentTime).format(1)
+            easePositionText.text = (selectedPath!!.easeCurve.getValue(currentTime) * 100.0).format(1)
+            headingAngleText.text = selectedPath!!.headingCurve.getValue(currentTime).format(1)
         }
 
         refreshPoints()

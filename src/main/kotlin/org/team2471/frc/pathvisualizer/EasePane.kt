@@ -15,6 +15,7 @@ import org.team2471.frc.pathvisualizer.ControlPanel.refresh
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import javax.naming.ldap.Control
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.round
 
@@ -51,7 +52,7 @@ object EasePane : StackPane() {
         if (selectedPath!=null) {
             val mouseVec = Vector2(e.x, e.y)
             val currentTimeX = ControlPanel.currentTime / selectedPath!!.durationWithSpeed * canvas.width
-            if (Math.abs(mouseVec.x - currentTimeX) < PathVisualizer.CLICK_CIRCLE_SIZE) {
+            if (abs(mouseVec.x - currentTimeX) < PathVisualizer.CLICK_CIRCLE_SIZE) {
                 mouseMode = PathVisualizer.MouseMode.DRAG_TIME
             }
         }
