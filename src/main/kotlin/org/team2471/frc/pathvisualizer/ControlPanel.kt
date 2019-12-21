@@ -108,7 +108,10 @@ object ControlPanel : VBox() {
                 val newPath = Path2D(newPathName)
                 newPath.addEasePoint(0.0, 0.0); newPath.addEasePoint(5.0, 1.0) // always begin with an ease curve
                 selectedAutonomous!!.putPath(newPath)
-                pathListView.items.add(pathListView.items.count() - 1, newPathName)
+                if(pathListView.items.count() > 0)
+                    pathListView.items.add(pathListView.items.count() - 1, newPathName)
+                else
+                    pathListView.items.add(pathListView.items.count(), newPathName)
             } else {
                 newPathName = FieldPane.selectedPath?.name
             }

@@ -37,7 +37,9 @@ fun screen2WorldWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
 }
 
 fun easeWorld2ScreenX(xPoint: Double): Double {
-    return xPoint / FieldPane.selectedPath!!.durationWithSpeed * EasePane.width
+    if(FieldPane.selectedPath != null)
+        return xPoint / FieldPane.selectedPath!!.durationWithSpeed * EasePane.width
+    return 0.0
 }
 
 fun easeWorld2ScreenY(yPoint: Double): Double {

@@ -119,6 +119,7 @@ class PathVisualizer : Application() {
 
 // : Be able to turn Robot heading on field
 // : Scrolling on Control Panel
+// : Have an indicator for the front of the robot
 
 // todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Be able to add a point anywhere on a path by clicking on it
