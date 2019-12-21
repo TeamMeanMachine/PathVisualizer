@@ -167,12 +167,12 @@ object FieldPane : StackPane() {
     }
 
     fun setSelectedCurveType(curveType: Path2D.CurveType) {
-        selectedPath!!.curveType = curveType
+        selectedPath?.curveType = curveType
     }
 
 
     fun deleteSelectedPoint() {
-        if (selectedPoint != null && selectedPath != null) {
+        if (selectedPoint != null) {
             FieldPane.selectedPath?.removePoint(selectedPoint)
             selectedPoint = null
         }
@@ -192,7 +192,7 @@ object FieldPane : StackPane() {
         //Find closest point
         var point: Path2DPoint? = selectedPath?.xyCurve?.headPoint
         while (point != null) {
-            val tPoint = world2ScreenWithMirror(point.position, selectedPath!!.isMirrored)
+            val tPoint = world2ScreenWithMirror(point.position, selectedPath?.isMirrored ?: false)
             var dist = (tPoint - mouseVec).length
             if (dist <= shortestDistance) {
                 shortestDistance = dist
@@ -202,7 +202,7 @@ object FieldPane : StackPane() {
 
             if (point.prevPoint != null) {
                 val tanPoint1 = world2ScreenWithMirror(point.position -
-                        point.prevTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), selectedPath!!.isMirrored)
+                        point.prevTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), selectedPath?.isMirrored ?: false)
                 dist = (tanPoint1 - mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
@@ -213,7 +213,7 @@ object FieldPane : StackPane() {
 
             if (point.nextPoint != null) {
                 val tanPoint2 = world2ScreenWithMirror(point.position +
-                        point.nextTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), selectedPath!!.isMirrored)
+                        point.nextTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), selectedPath?.isMirrored ?: false)
                 dist = (tanPoint2 - mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
@@ -315,7 +315,7 @@ object FieldPane : StackPane() {
         when (mouseMode) {
             PathVisualizer.MouseMode.EDIT -> {
                 if (editPoint != null) {
-                    val worldPoint = screen2WorldWithMirror(Vector2(e.x, e.y), selectedPath!!.isMirrored)
+                    val worldPoint = screen2WorldWithMirror(Vector2(e.x, e.y), selectedPath?.isMirrored ?: false)
                     if (!different) different = true
                     when (selectedPointType) {
                         Path2DPoint.PointType.POINT -> editPoint?.position = worldPoint
@@ -461,9 +461,10 @@ object FieldPane : StackPane() {
     }
 
     fun getWheelPositions(time: Double): Array<Vector2> {  // offset can be positive or negative (half the width of the robot)
-        val centerPosition = selectedPath!!.getPosition(time)
+        val centerPosition = selectedPath?.getPosition(time) ?: Vector2(0.0,0.0)
         var tangent = Vector2(0.0, 1.0)
-        val heading = selectedPath!!.headingCurve.getValue(time)
+        val heading = selectedPath?.headingCurve?.getValue(time) ?: 0.0
+
         tangent = tangent.rotateDegrees(-heading)
 
         var perpendicularToPath = tangent.perpendicular()

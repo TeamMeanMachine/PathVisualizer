@@ -47,7 +47,7 @@ fun easeWorld2ScreenY(yPoint: Double): Double {
 }
 
 fun easeScreen2WorldX(xPoint: Double): Double {
-    return xPoint * FieldPane.selectedPath!!.durationWithSpeed / EasePane.width /// EasePane.zoom
+    return xPoint * (FieldPane.selectedPath?.durationWithSpeed ?: 0.0) / EasePane.width /// EasePane.zoom
 }
 
 fun easeScreen2WorldY(yPoint: Double): Double {
