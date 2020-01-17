@@ -156,6 +156,16 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
 }
 
+fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Double){
+    gc.fill = Color(0.65, 0.976, 0.56, 0.75);
+    var w = width;
+    var h = height;
+
+    w *= FieldPane.zoom;
+    h *= FieldPane.zoom;
+    gc.fillRect(pos.x - (w/2), pos.y - (h/2), w, h)
+}
+
 fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D?) {
     gc.stroke = Color.GHOSTWHITE
     for (i in 1..selectedPath!!.xyCurve.length.toInt()) {

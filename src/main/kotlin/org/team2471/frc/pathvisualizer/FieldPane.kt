@@ -360,7 +360,9 @@ object FieldPane : StackPane() {
         val lowerRightPixels = world2Screen(lowerRightFeet)
         val dimensions = lowerRightPixels - upperLeftPixels
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
+        val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
         drawPaths(gc, ControlPanel.selectedAutonomous?.paths?.values, selectedPath, selectedPoint, selectedPointType)
+        drawArbitraryRobot(gc, world2Screen(Vector2(positionTable.getEntry("X").getDouble(0.0), positionTable.getEntry("Y").getDouble(0.0))), ControlPanel.autonomi.robotParameters.robotLength, ControlPanel.autonomi.robotParameters.robotWidth)
 
         gc = EasePane.canvas.graphicsContext2D
         if (gc.canvas.width == 0.0)
