@@ -21,7 +21,7 @@ object FieldPane : StackPane() {
     private val upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private val lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
-    var zoomPivot = Vector2(1143.5, 2835.5)  // the location in the image where the zoom origin will originate
+    var zoomPivot = Vector2(1101.0, 4842.0)  // the location in the image where the zoom origin will originate
     val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     val fieldDimensionFeet = Vector2(27.0, 54.0)
 
