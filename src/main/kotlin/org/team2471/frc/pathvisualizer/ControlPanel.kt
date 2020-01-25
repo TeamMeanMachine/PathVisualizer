@@ -707,7 +707,8 @@ object ControlPanel : VBox() {
         pathListView.items.clear()
         if (selectedAutonomous != null) {
             val paths = selectedAutonomous!!.paths
-            for (kvPath in paths) {
+            val sortedPaths = paths.toSortedMap()
+            for (kvPath in sortedPaths) {
                 pathListView.items.add(kvPath.key)
                 if (kvPath.value == FieldPane.selectedPath) {
                     pathListView.selectionModel.select(kvPath.key)
