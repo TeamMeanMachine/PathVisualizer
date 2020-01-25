@@ -148,7 +148,9 @@ object ControlPanel : VBox() {
 
                 animationJob = GlobalScope.launch {
                     if (selectedAutonomous != null) {
-                        for (kvPath in selectedAutonomous!!.paths) {
+                        val paths = selectedAutonomous!!.paths
+                        val sortedPaths = paths.toSortedMap()
+                        for (kvPath in sortedPaths) {
                             selectedPath = kvPath.value
                             currentTime = 0.0
                             timer.start()
