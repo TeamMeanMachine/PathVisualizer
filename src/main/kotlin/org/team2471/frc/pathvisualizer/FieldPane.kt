@@ -8,22 +8,34 @@ import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import kotlinx.coroutines.selects.select
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
+import java.io.BufferedWriter
+import java.io.File
 import java.nio.file.Path
 import java.util.*
 import kotlin.math.round
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
+    private val arbitraryCanvas = ResizableCanvas()
+    private val arbitraryGC = arbitraryCanvas.graphicsContext2D
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
     private val image = Image("assets/2020Field.png")
     private val upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private val lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
-    var zoomPivot = Vector2(1101.0, 4842.0)  // the location in the image where the zoom origin will originate
+    var zoomPivot = Vector2(1565.0, 821.0)  // the location in the image where the zoom origin will originate
     val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     val fieldDimensionFeet = Vector2(27.0, 54.0)
+    var displayActiveRobot = false
+    var displayParallax = true
+    var displayTarget = false
+    var recording = false
+    var wasRecording = false
+    var recordingFile : BufferedWriter? = null // = File("C:\\pathRecording.txt").bufferedWriter()
+    val recordingTimer = Timer()
 
     // view settings
     var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
@@ -51,17 +63,38 @@ object FieldPane : StackPane() {
     private var mouseMode = PathVisualizer.MouseMode.EDIT
     private var different = false
     private var from: Vector2? = null
-
+    private val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
+    val limelightTable = ControlPanel.networkTableInstance.getTable("limelight-front")
     init {
         children.add(canvas)
         canvas.widthProperty().bind(widthProperty())
         canvas.heightProperty().bind(heightProperty())
-        canvas.onMousePressed = EventHandler<MouseEvent>(::onMousePressed)
-        canvas.onMouseDragged = EventHandler<MouseEvent>(::onMouseDragged)
-        canvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
-        canvas.onZoom = EventHandler<ZoomEvent>(::onZoom)
-        canvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
-        canvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
+        arbitraryCanvas.onMousePressed = EventHandler<MouseEvent>(::onMousePressed)
+        arbitraryCanvas.onMouseDragged = EventHandler<MouseEvent>(::onMouseDragged)
+        arbitraryCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        arbitraryCanvas.onZoom = EventHandler<ZoomEvent>(::onZoom)
+        arbitraryCanvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
+        arbitraryCanvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
+        initActiveRobotDraw()
+    }
+
+
+    private fun initActiveRobotDraw(){
+        children.add(arbitraryCanvas)
+        arbitraryCanvas.widthProperty().bind(widthProperty())
+        arbitraryCanvas.heightProperty().bind(heightProperty())
+        val framesPerSecond = 20L
+        val timer = Timer()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                if (displayActiveRobot) {
+                    //println("displaying arbitrary robot")
+
+                    arbitraryGC.clearRect(0.0, 0.0, arbitraryCanvas.width, arbitraryCanvas.height);
+                    drawArbitraryRobot(arbitraryGC, Vector2(positionTable.getEntry("X").getDouble(0.0), positionTable.getEntry("Y").getDouble(0.0)), ControlPanel.autonomi.robotParameters.robotLength, ControlPanel.autonomi.robotParameters.robotWidth, positionTable.getEntry("Heading").getDouble(0.0))
+                }
+            }
+        }, 1, 1000L/framesPerSecond)
     }
 
     fun zoomFit() {
@@ -359,32 +392,35 @@ object FieldPane : StackPane() {
         val upperLeftPixels = world2Screen(upperLeftFeet)
         val lowerRightPixels = world2Screen(lowerRightFeet)
         val dimensions = lowerRightPixels - upperLeftPixels
+        //val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
-        val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
-        drawPaths(gc, ControlPanel.selectedAutonomous?.paths?.values, selectedPath, selectedPoint, selectedPointType)
-        drawArbitraryRobot(gc, world2Screen(Vector2(positionTable.getEntry("X").getDouble(0.0), positionTable.getEntry("Y").getDouble(0.0))), ControlPanel.autonomi.robotParameters.robotLength, ControlPanel.autonomi.robotParameters.robotWidth)
 
-        gc = EasePane.canvas.graphicsContext2D
-        if (gc.canvas.width == 0.0)
-            return
-        gc.fill = Color.LIGHTGRAY
-        gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
-        gc.lineWidth = 2.0
+        if (!displayActiveRobot) {
+            drawPaths(gc, ControlPanel.selectedAutonomous?.paths?.values, selectedPath, selectedPoint, selectedPointType)
 
-        when (selectedPath?.curveType) {
-            Path2D.CurveType.EASE -> {
-                drawEaseCurve(selectedPath)
+            gc = EasePane.canvas.graphicsContext2D
+            if (gc.canvas.width == 0.0)
+                return
+            gc.fill = Color.LIGHTGRAY
+            gc.fillRect(0.0, 0.0, gc.canvas.width, gc.canvas.height)
+            gc.lineWidth = 2.0
+
+            when (selectedPath?.curveType) {
+                Path2D.CurveType.EASE -> {
+                    drawEaseCurve(selectedPath)
+                }
+                Path2D.CurveType.HEADING -> {
+                    drawHeadingCurve(selectedPath)
+                }
+                Path2D.CurveType.BOTH -> {
+                    drawEaseCurve(selectedPath)
+                    drawHeadingCurve(selectedPath)
+                }
+                null -> {
+                }
             }
-            Path2D.CurveType.HEADING -> {
-                drawHeadingCurve(selectedPath)
-            }
-            Path2D.CurveType.BOTH -> {
-                drawEaseCurve(selectedPath)
-                drawHeadingCurve(selectedPath)
-            }
-            null -> {}
+            EasePane.drawTimeScrubber()
         }
-        EasePane.drawTimeScrubber()
     }
 
     private fun onZoom(e: ZoomEvent) {
@@ -464,10 +500,13 @@ object FieldPane : StackPane() {
     }
 
     fun getWheelPositions(time: Double): Array<Vector2> {  // offset can be positive or negative (half the width of the robot)
-        val centerPosition = selectedPath?.getPosition(time) ?: Vector2(0.0,0.0)
-        var tangent = Vector2(0.0, 1.0)
+        val centerPosition = selectedPath?.getPosition(time) ?: Vector2(0.0, 0.0)
         val heading = selectedPath?.headingCurve?.getValue(time) ?: 0.0
+        return getWheelPositions(centerPosition, heading)
+    }
 
+    fun getWheelPositions(centerPosition: Vector2, heading: Double) : Array<Vector2> {
+        var tangent = Vector2(0.0, 1.0)
         tangent = tangent.rotateDegrees(-heading)
 
         var perpendicularToPath = tangent.perpendicular()

@@ -8,6 +8,12 @@ import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion.following.ArcadePath
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+import java.lang.reflect.Field
+import java.time.Instant
+import kotlin.math.roundToInt
 
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
@@ -156,15 +162,125 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
 }
 
-fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Double){
-    gc.fill = Color(0.65, 0.976, 0.56, 0.75);
-    var w = width;
-    var h = height;
+fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Double, heading: Double) {
+    //println("pos: $pos head: $heading")
 
-    w *= FieldPane.zoom;
-    h *= FieldPane.zoom;
-    gc.fillRect(pos.x - (w/2), pos.y - (h/2), w, h)
+    val corners = FieldPane.getWheelPositions(pos, heading)
+    corners[0] = world2ScreenWithMirror(corners[0], false)
+    corners[1] = world2ScreenWithMirror(corners[1], false)
+    corners[2] = world2ScreenWithMirror(corners[2], false)
+    corners[3] = world2ScreenWithMirror(corners[3], false)
+
+    gc.stroke = Color(1.0, 0.5, 0.31, 0.60)
+    gc.strokeLine(corners[0].x, corners[0].y, corners[1].x, corners[1].y)
+    gc.strokeText("F", (corners[1].x + corners[0].x) / 2, (corners[1].y + corners[0].y) / 2)
+
+    gc.stroke = Color(0.65, 0.976, 0.56, 0.75);
+    gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
+    gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
+    gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+
+    if (FieldPane.displayParallax || FieldPane.recording) {
+        val tx = FieldPane.limelightTable.getEntry("tx").getDouble(0.0).round(2)
+        val parallax = FieldPane.limelightTable.getEntry("Parallax").getDouble(0.0).round(2)
+        val distance = FieldPane.limelightTable.getEntry("Distance").getDouble(0.0).round(2)
+        val positionX = FieldPane.limelightTable.getEntry("PositionX").getDouble(0.0).round(2)
+        val positionY = FieldPane.limelightTable.getEntry("PositionY").getDouble(0.0).round(2)
+        val headingRecordable = heading.round(2)
+       // println("pos: $positionX head: $positionY  heading: $heading parallax: $parallax tx: $tx distance $distance")
+
+
+        if (FieldPane.recording){
+            var addComma = ","
+            val currTime = Instant.now().toEpochMilli()
+            if (!FieldPane.wasRecording) {
+                // create file buffer to record to
+                val savePath = System.getProperty("user.dir") + "/../pathVisualizer_" + Instant.now().epochSecond + ".json" // TODO: allow user to select their save folder
+                println(savePath)
+                val fileWriter =  FileWriter(savePath)
+                FieldPane.recordingFile = BufferedWriter(fileWriter)
+                FieldPane.recordingFile?.write("{")
+                addComma = ""
+                FieldPane.wasRecording = true
+            }
+            FieldPane.recordingFile?.write("$addComma\t\n{\"ts\": $currTime, \"x\" : $positionX, \"y\" : $positionY, \"h\": $headingRecordable, \"p\": $parallax, \"tx\": $tx, \"d\": $distance}")
+        } else {
+            if (FieldPane.wasRecording) {
+                FieldPane.recordingFile?.write("\n}")
+                FieldPane.recordingFile?.close()
+                FieldPane.wasRecording = false
+                // close file and save
+            }
+        }
+        // Parallax Robot
+        val cornersParallax = FieldPane.getWheelPositions(Vector2(positionX, positionY), heading)
+        cornersParallax[0] = world2ScreenWithMirror(cornersParallax[0], false)
+        cornersParallax[1] = world2ScreenWithMirror(cornersParallax[1], false)
+        cornersParallax[2] = world2ScreenWithMirror(cornersParallax[2], false)
+        cornersParallax[3] = world2ScreenWithMirror(cornersParallax[3], false)
+
+        gc.stroke = Color(0.564, 0.434, 0.003, 0.6)
+//        gc.strokeLine(cornersParallax[0].x, cornersParallax[0].y, cornersParallax[1].x, cornersParallax[1].y)
+        gc.strokeText("F", (cornersParallax[1].x + cornersParallax[0].x) / 2, (cornersParallax[1].y + cornersParallax[0].y) / 2)
+//
+//        gc.stroke = Color(0.440, 0.447, 0.113, 0.6)
+//        gc.strokeLine(cornersParallax[1].x, cornersParallax[1].y, cornersParallax[2].x, cornersParallax[2].y)
+//        gc.strokeLine(cornersParallax[2].x, cornersParallax[2].y, cornersParallax[3].x, cornersParallax[3].y)
+//        gc.strokeLine(cornersParallax[3].x, cornersParallax[3].y, cornersParallax[0].x, cornersParallax[0].y)
+
+        gc.fill = Color(0.4, 0.4, 0.1, 0.6)
+        val xParaBot = DoubleArray(4)
+        xParaBot[0] = cornersParallax[0].x
+        xParaBot[1] = cornersParallax[1].x
+        xParaBot[2] = cornersParallax[2].x
+        xParaBot[3] = cornersParallax[3].x
+        val yParaBot = DoubleArray(4)
+        yParaBot[0] = cornersParallax[0].y
+        yParaBot[1] = cornersParallax[1].y
+        yParaBot[2] = cornersParallax[2].y
+        yParaBot[3] = cornersParallax[3].y
+
+        gc.fillPolygon(xParaBot, yParaBot, 4)
+//
+//        var xVal = DoubleArray(3)
+//        var yVal = DoubleArray(3)
+//        val shooterTarget = world2ScreenWithMirror(Vector2(0.0, 0.0), false)
+//        val threePointTarget = world2ScreenWithMirror(Vector2(0.0, 2.0), false)
+//
+//        xVal[0] = shooterTarget.x
+//        xVal[1] = threePointTarget.x
+//        xVal[2] = (corners[1].x + corners[0].x) / 2.0
+//        //val xVals = DoubleArray(0.0, -1.0, (corners[1].x + corners[0].x)/2)
+//        yVal[0] = shooterTarget.y
+//        yVal[1] = threePointTarget.y
+//        yVal[2] = (corners[1].y + corners[0].y) / 2.0
+//        //val yVals = arrayOf<Double>(0.0, -1.0, (corners[1].y + corners[0].y)/2)
+//        gc.fill = Color(1.0, 0.5, 0.31, 0.60)
+//        gc.stroke = Color(1.0, 0.5, 0.31, 0.60)
+//        gc.strokePolygon(xVal, yVal, 3)
+//        gc.fillPolygon(xVal, yVal, 3)
+    }
+    if (FieldPane.displayTarget) {
+        var xVal = DoubleArray(3)
+        var yVal = DoubleArray(3)
+        val shooterTarget = world2ScreenWithMirror(Vector2(0.0, 0.0), false)
+        val threePointTarget = world2ScreenWithMirror(Vector2(0.0, 2.0), false)
+
+        xVal[0] = shooterTarget.x
+        xVal[1] = threePointTarget.x
+        xVal[2] = (corners[1].x + corners[0].x) / 2.0
+        //val xVals = DoubleArray(0.0, -1.0, (corners[1].x + corners[0].x)/2)
+        yVal[0] = shooterTarget.y
+        yVal[1] = threePointTarget.y
+        yVal[2] = (corners[1].y + corners[0].y) / 2.0
+        //val yVals = arrayOf<Double>(0.0, -1.0, (corners[1].y + corners[0].y)/2)
+        gc.fill = Color(1.0, 0.5, 0.31, 0.60)
+        gc.stroke = Color(1.0, 0.5, 0.31, 0.60)
+        gc.strokePolygon(xVal, yVal, 3)
+        gc.fillPolygon(xVal, yVal, 3)
+    }
 }
+
 
 fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D?) {
     gc.stroke = Color.GHOSTWHITE

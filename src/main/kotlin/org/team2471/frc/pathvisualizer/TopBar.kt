@@ -21,7 +21,10 @@ object TopBar : MenuBar() {
 
     val undoStack = SizedStack<Action>(20)
     val redoStack = SizedStack<Action>(20)
-
+    val toggleVisualizeActiveRobotMenuItem = MenuItem("☐ Display Active Robot")
+    val toggleVisualizeParralaxMenuItem = MenuItem("☑ Display Parallax")
+    val toggleVisualizeTargetMenuItem = MenuItem("☐ Display Odometry Target")
+    val toggleVisualizeRecordMenuItem = MenuItem("Start Recording")
     init {
         if (!fileName.isEmpty()) {
             openFile(File(fileName))
@@ -91,10 +94,54 @@ object TopBar : MenuBar() {
         }
 
         menuEdit.items.addAll(undoMenuItem, redoMenuItem)
-        menus.addAll(menuFile, menuEdit)
+
+
+        val menuVisualize = Menu("Visualize")
+        toggleVisualizeActiveRobotMenuItem.setOnAction {
+            toggleVisualizeActiveRobot()
+        }
+        toggleVisualizeParralaxMenuItem.setOnAction {
+            toggleVisualizeParallax()
+        }
+        toggleVisualizeTargetMenuItem.setOnAction {
+            toggleVisualizeTarget()
+        }
+        toggleVisualizeRecordMenuItem.setOnAction {
+            toggleVisualizeRecord()
+        }
+        menuVisualize.items.addAll(toggleVisualizeActiveRobotMenuItem, toggleVisualizeParralaxMenuItem, toggleVisualizeTargetMenuItem, toggleVisualizeRecordMenuItem)
+
+        menus.addAll(menuFile, menuEdit, menuVisualize)
     }
 
+    private fun toggleVisualizeActiveRobot() {
+        FieldPane.displayActiveRobot = !FieldPane.displayActiveRobot
+        toggleVisualizeActiveRobotMenuItem.text = if (FieldPane.displayActiveRobot) "☑ Display Active Robot" else "☐ Display Active Robot"
 
+        // redraw screen in case we removed the arbitrary bot
+        FieldPane.draw()
+    }
+    private fun toggleVisualizeParallax() {
+        FieldPane.displayParallax = !FieldPane.displayParallax
+        toggleVisualizeParralaxMenuItem.text = if (FieldPane.displayParallax) "☑ Display Parallax" else "☐ Display Parallax"
+
+        // redraw screen in case we removed the arbitrary bot
+        FieldPane.draw()
+    }
+    private fun toggleVisualizeTarget() {
+        FieldPane.displayTarget = !FieldPane.displayTarget
+        toggleVisualizeTargetMenuItem.text = if (FieldPane.displayTarget) "☑ Display Target" else "☐ Display Target"
+
+        // redraw screen in case we removed the arbitrary bot
+        FieldPane.draw()
+    }
+    private fun toggleVisualizeRecord(){
+        FieldPane.recording = !FieldPane.recording
+        toggleVisualizeRecordMenuItem.text = if (FieldPane.recording) "Stop Recording" else "Start Recording"
+
+        // redraw screen in case we removed the arbitrary bot
+        FieldPane.draw()
+    }
     private fun openFile(file: File) {
         try {
             val json = file.readText()

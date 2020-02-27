@@ -2,6 +2,8 @@ package org.team2471.frc.pathvisualizer
 
 import org.team2471.frc.lib.math.Vector2
 import java.text.DecimalFormat
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 fun feetToPixels(feet: Double): Double = feet * FieldPane.fieldDimensionPixels.x / FieldPane.fieldDimensionFeet.x
 fun PixelsToFeet(pixels: Double): Double = pixels * FieldPane.fieldDimensionFeet.x / FieldPane.fieldDimensionPixels.x
@@ -59,4 +61,12 @@ fun Double.format(fracDigits: Int): String {
     fd.maximumFractionDigits = fracDigits
     fd.minimumFractionDigits = fracDigits
     return fd.format(this)
+}
+fun Double.round(fracDigits : Int) : Double {
+    return if (this.equals(0.0)) {
+        0.0
+    } else {
+        val powerOf: Double = 10.0.pow(fracDigits)
+        kotlin.math.round(this * powerOf) / (powerOf)
+    }
 }
