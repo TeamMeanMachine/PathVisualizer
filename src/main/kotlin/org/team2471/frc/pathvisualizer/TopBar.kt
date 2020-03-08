@@ -114,7 +114,7 @@ object TopBar : MenuBar() {
         menus.addAll(menuFile, menuEdit, menuVisualize)
     }
 
-    private fun toggleVisualizeActiveRobot() {
+    fun toggleVisualizeActiveRobot() {
         FieldPane.displayActiveRobot = !FieldPane.displayActiveRobot
         toggleVisualizeActiveRobotMenuItem.text = if (FieldPane.displayActiveRobot) "☑ Display Active Robot" else "☐ Display Active Robot"
 

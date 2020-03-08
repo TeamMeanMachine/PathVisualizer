@@ -43,7 +43,19 @@ class PathVisualizer : Application() {
         scrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
         scrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
 
-        val horizontalSplitPane = SplitPane(verticalSplitPane, scrollPane)
+        val tabPane = TabPane()
+        val tabScroll = Tab("Path Editing")
+        tabScroll.content = scrollPane
+        tabScroll.isClosable = false
+
+        tabPane.tabs.add(tabScroll)
+        val tabLive = Tab("Live View")
+        tabLive.isClosable = false
+        tabLive.setOnSelectionChanged {
+            TopBar.toggleVisualizeActiveRobot()
+        }
+        tabPane.tabs.add(tabLive)
+        val horizontalSplitPane = SplitPane(verticalSplitPane, tabPane)
         horizontalSplitPane.setDividerPositions(0.68)
 
         val borderPane = BorderPane(horizontalSplitPane)
