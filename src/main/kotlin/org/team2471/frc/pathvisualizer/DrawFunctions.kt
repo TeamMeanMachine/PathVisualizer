@@ -9,11 +9,8 @@ import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion.following.ArcadePath
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import java.io.BufferedWriter
-import java.io.File
 import java.io.FileWriter
-import java.lang.reflect.Field
 import java.time.Instant
-import kotlin.math.roundToInt
 
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
@@ -180,14 +177,18 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
 
-    if (FieldPane.displayParallax || FieldPane.recording) {
+    if (FieldPane.displayLimeLightRobot || FieldPane.recording) {
         val tx = FieldPane.limelightTable.getEntry("tx").getDouble(0.0).round(2)
         val parallax = FieldPane.limelightTable.getEntry("Parallax").getDouble(0.0).round(2)
         val distance = FieldPane.limelightTable.getEntry("Distance").getDouble(0.0).round(2)
         val positionX = FieldPane.limelightTable.getEntry("PositionX").getDouble(0.0).round(2)
         val positionY = FieldPane.limelightTable.getEntry("PositionY").getDouble(0.0).round(2)
+        val rpm = FieldPane.shooterTable.getEntry("RPM").getDouble(0.0).round(2)
+        val rpmSetPoint = FieldPane.shooterTable.getEntry("RPM Setpoint").getDouble(0.0).round(2)
+        val rpmError = FieldPane.shooterTable.getEntry("RPM Error").getDouble(0.0).round(2)
+        val rpmOffset = FieldPane.shooterTable.getEntry("RPM Offset").getDouble(0.0).round(2)
         val headingRecordable = heading.round(2)
-       // println("pos: $positionX head: $positionY  heading: $heading parallax: $parallax tx: $tx distance $distance")
+        //println(" \"x\" : $positionX, \"y\" : $positionY, \"h\": $headingRecordable, \"p\": $parallax, \"tx\": $tx, \"d\": $distance, \"r\": $rpm, \"rs\": $rpmSetPoint, \"ro\": $rpmOffset, \"re\": $rpmError")
 
 
         if (FieldPane.recording){
@@ -195,18 +196,19 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
             val currTime = Instant.now().toEpochMilli()
             if (!FieldPane.wasRecording) {
                 // create file buffer to record to
-                val savePath = System.getProperty("user.dir") + "/../pathVisualizer_" + Instant.now().epochSecond + ".json" // TODO: allow user to select their save folder
+                val currAuto = LivePanel.getCurrentAuto()
+                val savePath = System.getProperty("user.dir") + "/../pathVisualizer_" + currAuto.replace(" ", "") + "_" + Instant.now().epochSecond + ".json" // TODO: allow user to select their save folder
                 println(savePath)
                 val fileWriter =  FileWriter(savePath)
                 FieldPane.recordingFile = BufferedWriter(fileWriter)
-                FieldPane.recordingFile?.write("{")
+                FieldPane.recordingFile?.write("{ \"name\": \"${currAuto}\", \"recordings\": [\n")
                 addComma = ""
                 FieldPane.wasRecording = true
             }
-            FieldPane.recordingFile?.write("$addComma\t\n{\"ts\": $currTime, \"x\" : $positionX, \"y\" : $positionY, \"h\": $headingRecordable, \"p\": $parallax, \"tx\": $tx, \"d\": $distance}")
+            FieldPane.recordingFile?.write("$addComma\t\n{\"ts\": $currTime, \"x\" : $positionX, \"y\" : $positionY, \"h\": $headingRecordable, \"p\": $parallax, \"tx\": $tx, \"d\": $distance, \"r\": $rpm, \"rs\": $rpmSetPoint, \"ro\": $rpmOffset, \"re\": $rpmError}")
         } else {
             if (FieldPane.wasRecording) {
-                FieldPane.recordingFile?.write("\n}")
+                FieldPane.recordingFile?.write("]\n}")
                 FieldPane.recordingFile?.close()
                 FieldPane.wasRecording = false
                 // close file and save
@@ -260,7 +262,7 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
 //        gc.strokePolygon(xVal, yVal, 3)
 //        gc.fillPolygon(xVal, yVal, 3)
     }
-    if (FieldPane.displayTarget) {
+    if (FieldPane.displayParallax) {
         var xVal = DoubleArray(3)
         var yVal = DoubleArray(3)
         val shooterTarget = world2ScreenWithMirror(Vector2(0.0, 0.0), false)

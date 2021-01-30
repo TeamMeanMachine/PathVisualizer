@@ -30,12 +30,14 @@ object FieldPane : StackPane() {
     val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     val fieldDimensionFeet = Vector2(27.0, 54.0)
     var displayActiveRobot = false
-    var displayParallax = true
-    var displayTarget = false
+    var displayLimeLightRobot = true
+    var displayParallax = false
+    var playing = false
     var recording = false
     var wasRecording = false
-    var recordingFile : BufferedWriter? = null // = File("C:\\pathRecording.txt").bufferedWriter()
+    var recordingFile : BufferedWriter? = null
     val recordingTimer = Timer()
+    val currentRecordedTime = 0
 
     // view settings
     var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
@@ -65,6 +67,7 @@ object FieldPane : StackPane() {
     private var from: Vector2? = null
     private val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
     val limelightTable = ControlPanel.networkTableInstance.getTable("limelight-front")
+    val shooterTable = ControlPanel.networkTableInstance.getTable("Shooter")
     init {
         children.add(canvas)
         canvas.widthProperty().bind(widthProperty())

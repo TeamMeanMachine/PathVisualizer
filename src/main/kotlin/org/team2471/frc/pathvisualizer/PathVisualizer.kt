@@ -39,22 +39,29 @@ class PathVisualizer : Application() {
         verticalSplitPane.orientation = Orientation.VERTICAL
         verticalSplitPane.setDividerPositions(0.85)
 
-        val scrollPane = ScrollPane(ControlPanel)
-        scrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
-        scrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+        val pathScrollPane = ScrollPane(ControlPanel)
+        pathScrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+        pathScrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+
+        val liveScrollPane = ScrollPane(LivePanel)
+        liveScrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+        liveScrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
 
         val tabPane = TabPane()
         val tabScroll = Tab("Path Editing")
-        tabScroll.content = scrollPane
+        tabScroll.content = pathScrollPane
         tabScroll.isClosable = false
-
         tabPane.tabs.add(tabScroll)
+
         val tabLive = Tab("Live View")
         tabLive.isClosable = false
+        tabLive.content = liveScrollPane
         tabLive.setOnSelectionChanged {
             TopBar.toggleVisualizeActiveRobot()
+            (liveScrollPane.content as LivePanel).refresh()
         }
         tabPane.tabs.add(tabLive)
+
         val horizontalSplitPane = SplitPane(verticalSplitPane, tabPane)
         horizontalSplitPane.setDividerPositions(0.68)
 
@@ -71,6 +78,7 @@ class PathVisualizer : Application() {
         stage.isMaximized = true
         stage.show()
         ControlPanel.refresh()
+        LivePanel.refresh()
         FieldPane.zoomFit()
     }
 }

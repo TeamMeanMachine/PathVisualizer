@@ -122,15 +122,15 @@ object TopBar : MenuBar() {
         FieldPane.draw()
     }
     private fun toggleVisualizeParallax() {
-        FieldPane.displayParallax = !FieldPane.displayParallax
-        toggleVisualizeParralaxMenuItem.text = if (FieldPane.displayParallax) "☑ Display Parallax" else "☐ Display Parallax"
+        FieldPane.displayLimeLightRobot = !FieldPane.displayLimeLightRobot
+        toggleVisualizeParralaxMenuItem.text = if (FieldPane.displayLimeLightRobot) "☑ Display Parallax" else "☐ Display Parallax"
 
         // redraw screen in case we removed the arbitrary bot
         FieldPane.draw()
     }
     private fun toggleVisualizeTarget() {
-        FieldPane.displayTarget = !FieldPane.displayTarget
-        toggleVisualizeTargetMenuItem.text = if (FieldPane.displayTarget) "☑ Display Target" else "☐ Display Target"
+        FieldPane.displayParallax = !FieldPane.displayParallax
+        toggleVisualizeTargetMenuItem.text = if (FieldPane.displayParallax) "☑ Display Target" else "☐ Display Target"
 
         // redraw screen in case we removed the arbitrary bot
         FieldPane.draw()
