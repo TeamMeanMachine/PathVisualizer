@@ -115,6 +115,12 @@ object EasePane : StackPane() {
             }
         }
 
+        if (selectedPoint != null && e.isShiftDown) {
+            // deleting selected point
+            selectedPath!!.removeEasePoint(selectedPoint)
+            draw()
+        }
+
         if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
             //fieldCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = PathVisualizer.MouseMode.PAN
