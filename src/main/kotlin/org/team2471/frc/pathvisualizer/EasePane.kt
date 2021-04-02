@@ -23,6 +23,7 @@ import kotlin.math.round
 private var startMouse = Vector2(0.0, 0.0)
 
 var selectedPointType = Path2DPoint.PointType.POINT
+var selectedPointHeading = false
     private set
 private var editPoint: MotionKey? = null
 
@@ -65,8 +66,25 @@ object EasePane : StackPane() {
         var shortestDistance = 10000.0
         var closestPoint: MotionKey? = null
 
-        //Find closest point
-        var point: MotionKey? = selectedPath?.easeCurve?.headKey
+        selectedPointHeading = false
+
+        // Find closest point (heading curve)
+        var point: MotionKey? = selectedPath?.headingCurve?.headKey
+        while (point != null) {
+            println("found a point ${point.value}")
+            val tPoint = Vector2(easeWorld2ScreenX(point.time), headingWorld2ScreenY(point.value))
+            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+            if (dist <= shortestDistance) {
+                shortestDistance = dist
+                closestPoint = point
+                selectedPointType = Path2DPoint.PointType.POINT
+                selectedPointHeading = true
+            }
+            point = point.nextKey
+        }
+
+        //Find closest point (ease curve)
+        point = selectedPath?.easeCurve?.headKey
         while (point != null) {
             val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
             var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
@@ -115,9 +133,19 @@ object EasePane : StackPane() {
             }
         }
 
+        if (selectedPoint != null) {
+            ControlPanel.currentTime = selectedPoint?.time!!
+            refresh()
+            draw()
+        }
         if (selectedPoint != null && e.isShiftDown) {
             // deleting selected point
-            selectedPath!!.removeEasePoint(selectedPoint)
+            if (selectedPointHeading) {
+                println("removing ${selectedPoint?.time} ${selectedPoint?.value}")
+                selectedPath?.removeHeadingPoint(selectedPoint)
+            } else {
+                selectedPath?.removeEasePoint(selectedPoint)
+            }
             draw()
         }
 
