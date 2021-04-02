@@ -22,7 +22,7 @@ object FieldPane : StackPane() {
     private val arbitraryCanvas = ResizableCanvas()
     private val arbitraryGC = arbitraryCanvas.graphicsContext2D
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
-    private val image = Image("assets/2020Field.png")
+    private val image = Image("assets/2021Field.png")
     private val upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private val lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
