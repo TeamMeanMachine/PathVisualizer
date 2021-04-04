@@ -47,6 +47,9 @@ fun easeWorld2ScreenX(xPoint: Double): Double {
 fun easeWorld2ScreenY(yPoint: Double): Double {
     return (1.0 - yPoint) * EasePane.height
 }
+fun headingWorld2ScreenY(yPoint: Double) : Double {
+    return getHeadingYVal(yPoint) * EasePane.canvas.height
+}
 
 fun easeScreen2WorldX(xPoint: Double): Double {
     return xPoint * (FieldPane.selectedPath?.durationWithSpeed ?: 0.0) / EasePane.width /// EasePane.zoom

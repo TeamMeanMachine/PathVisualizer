@@ -8,6 +8,7 @@ import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion.following.ArcadePath
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
+import org.team2471.frc.lib.units.degrees
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.time.Instant
@@ -307,6 +308,12 @@ fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D?) {
     }
 }
 
+fun getHeadingYVal(headingVal : Double) : Double {
+    // set 0 point to middle
+    //println("${headingVal} ${(headingVal).degrees.wrap().asDegrees}")
+    return ((180 - headingVal.degrees.wrap().asDegrees) / 360.0)
+}
+
 fun drawHeadingCurve(path: Path2D?) {
     val gc = EasePane.canvas.graphicsContext2D
     if (gc.canvas.width == 0.0)
@@ -316,29 +323,42 @@ fun drawHeadingCurve(path: Path2D?) {
 
     val deltaT = selectedPath.durationWithSpeed / gc.canvas.width
     var t = 0.0
-    var ease = selectedPath.headingCurve.getValue(t)
+    var heading = selectedPath.headingCurve.getValue(t)
     var x = t / selectedPath.durationWithSpeed * gc.canvas.width
-    var y = (180.0 - ease) * gc.canvas.height
+    var y = getHeadingYVal(heading)
     var pos = org.team2471.frc.lib.vector.Vector2(x, y)
     var prevPos = pos
 
     t = deltaT
     while (t <= selectedPath.durationWithSpeed) {
-        ease = selectedPath.headingCurve.getValue(t)
+        heading = selectedPath.headingCurve.getValue(t)
         x = t / selectedPath.durationWithSpeed * gc.canvas.width
-        y = (180.0 - ease) / 180.0
+        y = getHeadingYVal(heading)
         pos = org.team2471.frc.lib.vector.Vector2(x, y)
-        val blue = Math.max(Math.min(ease * Color.BLUE.blue, 1.0), 0.0)
+        val blue = Math.max(Math.min(heading * Color.BLUE.blue, 1.0), 0.0)
 
         gc.stroke = Color(0.0, 0.0, blue, 1.0)
+        //println("x = ${pos.x}, y = ${pos.y}")
         gc.strokeLine(prevPos.x, prevPos.y * gc.canvas.height, pos.x, pos.y * gc.canvas.height)
 
 
         prevPos = pos
         t += deltaT
     }
-}
 
+    // circles and lines for handles
+    var point: MotionKey? = selectedPath.headingCurve.headKey
+    while (point != null) {
+        if (point === EasePane.selectedPoint && EasePane.selectedPointType == Path2DPoint.PointType.POINT)
+            gc.stroke = Color.CORAL
+        else
+            gc.stroke = Color.WHITE
+        println("${point.value} is ${getHeadingYVal(point.value)}")
+        val tPoint = org.team2471.frc.lib.vector.Vector2(easeWorld2ScreenX(point.time), getHeadingYVal(point.value)*gc.canvas.height)
+        gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
+        point = point.nextKey
+    }
+}
 fun drawEaseCurve(path: Path2D?) {
     val gc = EasePane.canvas.graphicsContext2D
     if (gc.canvas.width == 0.0)

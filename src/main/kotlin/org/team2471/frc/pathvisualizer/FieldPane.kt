@@ -124,7 +124,11 @@ object FieldPane : StackPane() {
     }
 
     fun setSelectedPathDuration(seconds: Double) {
+        val prevDuration = selectedPath?.duration
+        selectedPath?.scaleEasePoints(seconds)
+        println("new duration is ${selectedPath?.duration}")
         selectedPath?.duration = seconds
+        println("new duration explicitly set is ${selectedPath?.duration}")
         draw()
     }
 

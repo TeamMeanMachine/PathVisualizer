@@ -23,6 +23,7 @@ import kotlin.math.round
 private var startMouse = Vector2(0.0, 0.0)
 
 var selectedPointType = Path2DPoint.PointType.POINT
+var selectedPointHeading = false
     private set
 private var editPoint: MotionKey? = null
 
@@ -65,41 +66,64 @@ object EasePane : StackPane() {
         var shortestDistance = 10000.0
         var closestPoint: MotionKey? = null
 
-        //Find closest point
-        var point: MotionKey? = selectedPath?.easeCurve?.headKey
-        while (point != null) {
-            val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
-            var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
-            if (dist <= shortestDistance) {
-                shortestDistance = dist
-                closestPoint = point
-                selectedPointType = Path2DPoint.PointType.POINT
-            }
+        selectedPointHeading = false
 
-            if (point.prevKey != null) {
-                val prevTanPoint = point.timeAndValue - point.prevTangent / PathVisualizer.TANGENT_DRAW_FACTOR
-                val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
-                dist = Vector2.length(Vector2.subtract(tanPoint, mouseVec))
+        // Find closest point (heading curve)
+        var point: MotionKey? = selectedPath?.headingCurve?.headKey
+
+        if (selectedPath?.curveType == Path2D.CurveType.BOTH || selectedPath?.curveType == Path2D.CurveType.HEADING) {
+            while (point != null) {
+                println("found a point ${point.value}")
+                val tPoint = Vector2(easeWorld2ScreenX(point.time), headingWorld2ScreenY(point.value))
+                var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
-                    selectedPointType = Path2DPoint.PointType.PREV_TANGENT
+                    selectedPointType = Path2DPoint.PointType.POINT
+                    selectedPointHeading = true
                 }
+                point = point.nextKey
             }
+        }
 
-            if (point.nextKey != null) {
-                val prevTanPoint = point.timeAndValue + point.nextTangent / PathVisualizer.TANGENT_DRAW_FACTOR
-                val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
-                dist = Vector2.length(Vector2.subtract(tanPoint, mouseVec))
+        if (selectedPath?.curveType == Path2D.CurveType.BOTH || selectedPath?.curveType == Path2D.CurveType.EASE) {
+
+            //Find closest point (ease curve)
+            point = selectedPath?.easeCurve?.headKey
+            while (point != null) {
+                val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
+                var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
-                    selectedPointType = Path2DPoint.PointType.NEXT_TANGENT
+                    selectedPointType = Path2DPoint.PointType.POINT
                 }
-            }
 
-            point = point.nextKey
-            // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
+                if (point.prevKey != null) {
+                    val prevTanPoint = point.timeAndValue - point.prevTangent / PathVisualizer.TANGENT_DRAW_FACTOR
+                    val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
+                    dist = Vector2.length(Vector2.subtract(tanPoint, mouseVec))
+                    if (dist <= shortestDistance) {
+                        shortestDistance = dist
+                        closestPoint = point
+                        selectedPointType = Path2DPoint.PointType.PREV_TANGENT
+                    }
+                }
+
+                if (point.nextKey != null) {
+                    val prevTanPoint = point.timeAndValue + point.nextTangent / PathVisualizer.TANGENT_DRAW_FACTOR
+                    val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
+                    dist = Vector2.length(Vector2.subtract(tanPoint, mouseVec))
+                    if (dist <= shortestDistance) {
+                        shortestDistance = dist
+                        closestPoint = point
+                        selectedPointType = Path2DPoint.PointType.NEXT_TANGENT
+                    }
+                }
+
+                point = point.nextKey
+                // find distance between point clicked and each point in the graph. Whichever one is the max gets to be assigned to the var.
+            }
         }
         if (shortestDistance <= PathVisualizer.CLICK_CIRCLE_SIZE / 2) {
             selectedPoint = closestPoint
@@ -113,6 +137,22 @@ object EasePane : StackPane() {
                 if (shortestDistance > PathVisualizer.CLICK_CIRCLE_SIZE * 2) // trying to deselect?
                     selectedPoint = null
             }
+        }
+
+        if (selectedPoint != null) {
+            ControlPanel.currentTime = selectedPoint?.time!!
+            refresh()
+            draw()
+        }
+        if (selectedPoint != null && e.isShiftDown) {
+            // deleting selected point
+            if (selectedPointHeading) {
+                println("removing ${selectedPoint?.time} ${selectedPoint?.value}")
+                selectedPath?.removeHeadingPoint(selectedPoint)
+            } else {
+                selectedPath?.removeEasePoint(selectedPoint)
+            }
+            draw()
         }
 
         if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
