@@ -158,3 +158,5 @@ class PathVisualizer : Application() {
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
 
 // todo: figure out why when there is no file, selectedPath is null and visualizer crashes
+
+// todo: make tangent adjustment points a different color than the point

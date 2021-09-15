@@ -1,5 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
+import com.squareup.moshi.Json
 import edu.wpi.first.networktables.EntryListenerFlags
 import javafx.geometry.Insets
 import javafx.scene.control.Button
@@ -8,10 +9,13 @@ import javafx.scene.control.ChoiceBox
 import javafx.scene.control.Slider
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
+import sun.util.locale.provider.DateFormatProviderImpl
 import java.io.File
 import java.security.KeyStore
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.*
+import kotlin.collections.HashMap
 
 
 object LivePanel : VBox() {
@@ -30,6 +34,7 @@ object LivePanel : VBox() {
     val autosTable = smartDashboardTable.getSubTable("Autos")
     val autoTestsTable = smartDashboardTable.getSubTable("Tests")
 
+    val recording_lookup = HashMap<String, String>()
     init {
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
@@ -61,7 +66,7 @@ object LivePanel : VBox() {
                 val selectedRecording = selectRecordingForPlayback.value
                 val selectedRecordingTS = selectedRecording.split(" : ").first()
                 println("starting playback for ${selectedRecordingTS}")
-                
+
             }
             FieldPane.playing = willPlay
         }
@@ -77,7 +82,9 @@ object LivePanel : VBox() {
             FieldPane.draw()
         }
 
-
+playbackSlider.valueProperty().addListener { _, _, newValue ->
+    newSliderSelected(newValue.toDouble())
+}
 
         refreshRecordingsList()
         children.addAll(
@@ -156,17 +163,48 @@ object LivePanel : VBox() {
                     var pathName = arrParts[0]
                     var timeStamp = arrParts[arrParts.size-1]
                     var testName = if (arrParts.size == 3) {" : " + arrParts[1]} else ""
-                    convertLongToTime(timeStamp
-                                .toLong()*1000) + " ($pathName$testName)"
+                    convertLongToTime(timeStamp.toLong()*1000) + " ($pathName$testName)"
                 }
 
+       for(recordingfill in folder.list().filter{it.startsWith("pathVisualizer_") && it.endsWith(".json")}){
+           val arrParts = recordingfill.replace("pathVisualizer_", "")
+                   .replace(".json", "").split("_")
+           var pathName = arrParts[0]
+           var timeStamp = arrParts[arrParts.size-1]
+           var testName = if (arrParts.size == 3) {" : " + arrParts[1]} else ""
+           val longTime = convertLongToTime(timeStamp.toLong()*1000) + " ($pathName$testName)"
+           recording_lookup.set(longTime, recordingfill)
+       }
         selectRecordingForPlayback.items.addAll(files.sorted().reversed())
         if (selectRecordingForPlayback.items.count() > 0) {
+            selectRecordingForPlayback.setOnAction {
+                loadRecording()
+            }
             selectRecordingForPlayback.selectionModel.selectFirst()
+
         }
     }
-    fun convertLongToTime(time: Long): String {
+    fun loadRecording() {
+        val currRecording = selectRecordingForPlayback.value
+        if (currRecording != null) {
+            val filename = recording_lookup.get(currRecording)
+            val jsonKjkjed = File("$savePath\\$filename" ).readLines()
+            println (jsonKjkjed)
 
+
+
+            println("recording: ${selectRecordingForPlayback.value} $filename")
+            val startTime = Instant.ofEpochMilli(1629255631201)
+            val endTime = Instant.ofEpochMilli(1629255633712)
+            endTime.minusMillis(startTime.toEpochMilli())
+            val timeDifference = endTime.minusMillis(startTime.toEpochMilli())
+            println(timeDifference.toEpochMilli())
+            playbackSlider.max = timeDifference.toEpochMilli().toDouble()
+
+        }
+
+    }
+    fun convertLongToTime(time: Long): String {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = time
         val format = SimpleDateFormat("MM.dd HH:mm:ss")
@@ -178,5 +216,7 @@ object LivePanel : VBox() {
         val testValue = if (selAuto == "Tests") {"_" + selectAutoTest.value } else ""
         return selAuto + testValue
     }
-
+fun newSliderSelected(sliderValue: Double) {
+  println("slider value: $sliderValue")
+}
 }

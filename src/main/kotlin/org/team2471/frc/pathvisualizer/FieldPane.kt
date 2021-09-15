@@ -7,7 +7,7 @@ import javafx.scene.image.Image
 import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
-import kotlinx.coroutines.selects.select
+
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -16,7 +16,6 @@ import java.io.BufferedWriter
 import java.io.File
 import java.nio.file.Path
 import java.util.*
-import kotlin.math.round
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
     private val arbitraryCanvas = ResizableCanvas()
@@ -40,7 +39,7 @@ object FieldPane : StackPane() {
     val currentRecordedTime = 0
 
     // view settings
-    var zoom: Double = round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
+    var zoom: Double = kotlin.math.round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
 
     var selectedPointType = Path2DPoint.PointType.POINT
         private set
