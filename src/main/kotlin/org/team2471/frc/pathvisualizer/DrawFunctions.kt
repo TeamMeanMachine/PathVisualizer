@@ -13,6 +13,12 @@ import java.io.BufferedWriter
 import java.io.FileWriter
 import java.time.Instant
 
+fun drawConnectionStatus(gc: GraphicsContext, isConnected : Boolean){
+    gc.fill = if (isConnected) {Color.GREEN} else {Color.RED}
+    gc.fillOval(5.0, 5.0, 10.0, 10.0)
+    //println("filled the oval")
+}
+
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
     val tp2 = world2Screen(p2)
@@ -159,7 +165,22 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
 }
+fun drawReplayRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Double, heading: Double) {
+    val corners = FieldPane.getWheelPositions(pos, heading)
+    corners[0] = world2ScreenWithMirror(corners[0], false)
+    corners[1] = world2ScreenWithMirror(corners[1], false)
+    corners[2] = world2ScreenWithMirror(corners[2], false)
+    corners[3] = world2ScreenWithMirror(corners[3], false)
 
+    gc.stroke = Color.CORNFLOWERBLUE
+    gc.strokeLine(corners[0].x, corners[0].y, corners[1].x, corners[1].y)
+    gc.strokeText("F", (corners[1].x + corners[0].x) / 2, (corners[1].y + corners[0].y) / 2)
+
+    gc.stroke = Color.RED
+    gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
+    gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
+    gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+}
 fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Double, heading: Double) {
     //println("pos: $pos head: $heading")
 

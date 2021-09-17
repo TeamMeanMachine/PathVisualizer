@@ -1,6 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
-class RobotRecording {
+class RobotRecording2 {
     var name:String = ""
     var recordings:Array<Karlson> = emptyArray()
 

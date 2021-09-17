@@ -79,7 +79,12 @@ object TopBar : MenuBar() {
             ControlPanel.autonomi.publishToNetworkTables(ControlPanel.networkTableInstance)
         }
 
-        menuFile.items.addAll(openMenuItem, saveAsMenuItem, saveMenuItem, sendToRobotItem)
+        val getFromRobotItem = MenuItem("Get from Robot")
+        getFromRobotItem.setOnAction {
+            readFromRobot()
+        }
+
+        menuFile.items.addAll(openMenuItem, saveAsMenuItem, saveMenuItem, sendToRobotItem, getFromRobotItem)
 
         val menuEdit = Menu("Edit")
         val undoMenuItem = MenuItem("Undo")
@@ -149,6 +154,20 @@ object TopBar : MenuBar() {
             userPref.put(userFilenameKey, file.absolutePath)
         } catch (e: Exception) {
             System.err.println("Failed to find file ${file.absolutePath}")
+            ControlPanel.autonomi = Autonomi()
+        }
+
+        ControlPanel.initializeParameters()  // since some of our older saved files don't have parameters, this prevents a bunch null references
+        ControlPanel.refresh()
+    }
+
+    private fun readFromRobot(){
+        try {
+            val json = ControlPanel.autonomi.readFromNetworkTables(ControlPanel.networkTableInstance)
+            println(json)
+            ControlPanel.autonomi = Autonomi.fromJsonString(json)
+            println("made it no error")
+        } catch (e: Exception) {
             ControlPanel.autonomi = Autonomi()
         }
 

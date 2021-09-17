@@ -1,8 +1,10 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.networktables.ConnectionInfo
 import javafx.event.EventHandler
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
+import javafx.scene.control.TableView
 import javafx.scene.image.Image
 import javafx.scene.input.*
 import javafx.scene.layout.StackPane
@@ -12,6 +14,7 @@ import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
+import org.team2471.frc.lib.units.Time
 import java.io.BufferedWriter
 import java.io.File
 import java.nio.file.Path
@@ -19,9 +22,11 @@ import java.util.*
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
     private val arbitraryCanvas = ResizableCanvas()
+    private val replayCanvas = ResizableCanvas()
     private val arbitraryGC = arbitraryCanvas.graphicsContext2D
+    private val replayGC = replayCanvas.graphicsContext2D
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
-    private val image = Image("assets/2021Field.png")
+    private val image = Image("assets/2020Field.png")
     private val upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private val lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
@@ -34,9 +39,11 @@ object FieldPane : StackPane() {
     var playing = false
     var recording = false
     var wasRecording = false
+    var recordedPlayback = false
     var recordingFile : BufferedWriter? = null
     val recordingTimer = Timer()
-    val currentRecordedTime = 0
+    var currentRecordedTime = 0
+    var firstRecordedTime : Time = Time(0.0)
 
     // view settings
     var zoom: Double = kotlin.math.round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
@@ -78,8 +85,49 @@ object FieldPane : StackPane() {
         arbitraryCanvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
         arbitraryCanvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
         initActiveRobotDraw()
+        initPlaybackRobotDraw()
+        initConnectionStatusDraw()
     }
 
+    private fun initConnectionStatusDraw(){
+        drawConnectionStatus(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected)
+        val updateFrequencyInSeconds = 1
+        val timer = Timer()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                // check network table connection
+                drawConnectionStatus(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected)
+            }
+        }, 1, 1000L * updateFrequencyInSeconds)
+    }
+
+    private fun initPlaybackRobotDraw() {
+        children.add(replayCanvas)
+        replayCanvas.widthProperty().bind(widthProperty())
+        replayCanvas.heightProperty().bind(heightProperty())
+        replayGC.clearRect(0.0, 0.0, replayCanvas.width, replayCanvas.height)
+        val framesPerSecond = 20L
+        val timer = Timer()
+        if (LivePanel.currRecording != null && LivePanel.currRecording!!.recordings.size > 0) {
+            firstRecordedTime = LivePanel.currRecording!!.recordings[0].ts
+        } else {
+            firstRecordedTime = Time(0.0)
+        }
+        currentRecordedTime = 0
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                if (recordedPlayback) {
+                    //println("displaying arbitrary robot")
+
+                    replayGC.clearRect(0.0, 0.0, replayCanvas.width, replayCanvas.height)
+                    if (LivePanel.currRecording != null) {
+                        val recording = LivePanel.currRecording!!.recordings[currentRecordedTime]
+                        drawReplayRobot(arbitraryGC, Vector2(recording.x, recording.y), ControlPanel.autonomi.robotParameters.robotLength, ControlPanel.autonomi.robotParameters.robotWidth, recording.y)
+                    }
+                }
+            }
+        }, 1, 1000L/framesPerSecond)
+    }
 
     private fun initActiveRobotDraw(){
         children.add(arbitraryCanvas)
@@ -89,7 +137,7 @@ object FieldPane : StackPane() {
         val timer = Timer()
         timer.schedule(object : TimerTask() {
             override fun run() {
-                if (displayActiveRobot) {
+                if (playing) {
                     //println("displaying arbitrary robot")
 
                     arbitraryGC.clearRect(0.0, 0.0, arbitraryCanvas.width, arbitraryCanvas.height);
