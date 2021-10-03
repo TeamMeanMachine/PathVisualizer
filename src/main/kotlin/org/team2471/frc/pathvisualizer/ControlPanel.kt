@@ -44,7 +44,7 @@ object ControlPanel : VBox() {
     private val headingAngleText = TextField()
     private val easePositionText = TextField()
     private val curveTypeCombo = ComboBox<String>()
-    val networkTableInstance = NetworkTableInstance.create()
+    val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
 

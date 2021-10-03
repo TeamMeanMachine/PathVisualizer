@@ -4,6 +4,7 @@ import edu.wpi.first.networktables.ConnectionInfo
 import javafx.event.EventHandler
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
+import javafx.scene.control.Control
 import javafx.scene.control.TableView
 import javafx.scene.image.Image
 import javafx.scene.input.*
@@ -17,6 +18,7 @@ import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.units.Time
 import java.io.BufferedWriter
 import java.io.File
+import java.net.InetAddress
 import java.nio.file.Path
 import java.util.*
 object FieldPane : StackPane() {
@@ -26,7 +28,7 @@ object FieldPane : StackPane() {
     private val arbitraryGC = arbitraryCanvas.graphicsContext2D
     private val replayGC = replayCanvas.graphicsContext2D
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
-    private val image = Image("assets/2020Field.png")
+    private val image = Image("assets/2021Field.png")
     private val upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private val lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
@@ -78,12 +80,12 @@ object FieldPane : StackPane() {
         children.add(canvas)
         canvas.widthProperty().bind(widthProperty())
         canvas.heightProperty().bind(heightProperty())
-        arbitraryCanvas.onMousePressed = EventHandler<MouseEvent>(::onMousePressed)
-        arbitraryCanvas.onMouseDragged = EventHandler<MouseEvent>(::onMouseDragged)
-        arbitraryCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
-        arbitraryCanvas.onZoom = EventHandler<ZoomEvent>(::onZoom)
-        arbitraryCanvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
-        arbitraryCanvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
+        replayCanvas.onMousePressed = EventHandler<MouseEvent>(::onMousePressed)
+        replayCanvas.onMouseDragged = EventHandler<MouseEvent>(::onMouseDragged)
+        replayCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
+        replayCanvas.onZoom = EventHandler<ZoomEvent>(::onZoom)
+        replayCanvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
+        replayCanvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
         initActiveRobotDraw()
         initPlaybackRobotDraw()
         initConnectionStatusDraw()
@@ -96,6 +98,16 @@ object FieldPane : StackPane() {
         timer.schedule(object : TimerTask() {
             override fun run() {
                 // check network table connection
+                println(InetAddress.getLocalHost().hostAddress)
+                if (InetAddress.getLocalHost().hostAddress.startsWith("10.24.71.")){
+                    if (!ControlPanel.networkTableInstance.isConnected) {
+                        // attempt to connect
+                        println("found FRC 2471 network. Connecting to network table")
+                        ControlPanel.networkTableInstance.startClient()
+                    }
+                } else {
+                    ControlPanel.networkTableInstance.stopClient()
+                }
                 drawConnectionStatus(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected)
             }
         }, 1, 1000L * updateFrequencyInSeconds)
