@@ -44,6 +44,7 @@ object ControlPanel : VBox() {
     private val headingAngleText = TextField()
     private val easePositionText = TextField()
     private val curveTypeCombo = ComboBox<String>()
+    var ipAddress = "10.24.71.2"
     val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
@@ -429,15 +430,14 @@ object ControlPanel : VBox() {
         val robotHBox = HBox()
         val easeCurveFuntions = HBox()
         val addressName = Text("  Robot Address:  ")  // this is a great candidate to be saved in the registry, so that other teams only have to change it once
-        var ipAddress = "10.24.71.2"
         val addressText = TextField(ipAddress)
         addressText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 ipAddress = addressText.text
-                connect(ipAddress)
+                connect()
             }
         }
-        connect(ipAddress)
+        connect()
 
         val playButton = Button("Play")
         playButton.setOnAction {
@@ -569,7 +569,8 @@ object ControlPanel : VBox() {
         }
     }
 
-    private fun connect(address: String) {
+    fun connect() {
+        val address = ipAddress
         println("Connecting to address $address")
 
         connectionJob?.cancel()

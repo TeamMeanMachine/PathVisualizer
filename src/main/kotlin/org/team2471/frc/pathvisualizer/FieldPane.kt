@@ -98,12 +98,11 @@ object FieldPane : StackPane() {
         timer.schedule(object : TimerTask() {
             override fun run() {
                 // check network table connection
-                println(InetAddress.getLocalHost().hostAddress)
-                if (InetAddress.getLocalHost().hostAddress.startsWith("10.24.71.")){
+                if (InetAddress.getLocalHost().hostAddress.startsWith(ControlPanel.ipAddress.substringBeforeLast(".", "____"))){
                     if (!ControlPanel.networkTableInstance.isConnected) {
                         // attempt to connect
                         println("found FRC 2471 network. Connecting to network table")
-                        ControlPanel.networkTableInstance.startClient()
+                        ControlPanel.connect()
                     }
                 } else {
                     ControlPanel.networkTableInstance.stopClient()
