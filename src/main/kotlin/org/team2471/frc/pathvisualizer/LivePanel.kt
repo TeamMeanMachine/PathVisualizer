@@ -1,7 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
 import com.google.gson.Gson
-import com.squareup.moshi.Json
 import edu.wpi.first.networktables.EntryListenerFlags
 import javafx.application.Platform
 import javafx.geometry.Insets
@@ -13,8 +12,6 @@ import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import kotlinx.coroutines.*
 import org.team2471.frc.lib.util.Timer
-import org.team____.frc.PathVisualizer.BuildConfig
-import sun.util.locale.provider.DateFormatProviderImpl
 import java.io.File
 import java.io.FileReader
 import java.text.SimpleDateFormat
@@ -91,7 +88,7 @@ object LivePanel : VBox() {
                                 LivePanel.playbackSlider.value = 0.0
                                 timer.start()
 
-                                while (timer.get() < FieldPane.selectedPath?.durationWithSpeed ?: 0.0) {
+                                while (timer.get() < (FieldPane.selectedPath?.durationWithSpeed ?: 0.0)) {
                                     if (!isActive) return@launch
 
                                     Platform.runLater {

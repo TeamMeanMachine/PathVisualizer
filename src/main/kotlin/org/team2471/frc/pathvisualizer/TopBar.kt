@@ -150,7 +150,7 @@ object TopBar : MenuBar() {
     private fun openFile(file: File) {
         try {
             val json = file.readText()
-            ControlPanel.autonomi = Autonomi.fromJsonString(json)
+            ControlPanel.autonomi = Autonomi.fromJsonString(json)!!
             userPref.put(userFilenameKey, file.absolutePath)
         } catch (e: Exception) {
             System.err.println("Failed to find file ${file.absolutePath}")
@@ -165,7 +165,7 @@ object TopBar : MenuBar() {
         try {
             val json = ControlPanel.autonomi.readFromNetworkTables(ControlPanel.networkTableInstance)
             println(json)
-            ControlPanel.autonomi = Autonomi.fromJsonString(json)
+            ControlPanel.autonomi = Autonomi.fromJsonString(json)!!
             println("made it no error")
         } catch (e: Exception) {
             ControlPanel.autonomi = Autonomi()

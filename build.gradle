@@ -1,8 +1,9 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.3.10"
+    id "org.jetbrains.kotlin.jvm" version "1.5.31"
     id "java"
     id "application"
     id "com.github.gmazzo.buildconfig" version "3.0.0"
+    id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
 group 'org.team2471.frc'
@@ -10,9 +11,9 @@ version '1.0-SNAPSHOT'
 
 def mainClass = 'org.team2471.frc.pathvisualizer.PathVisualizer'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
 
-ext.kotlin_version = "1.3.10"
+ext.kotlin_version = "1.5.31"
 
 buildConfig {
     buildConfigField "long", "BUILD_TIME", "${System.currentTimeMillis()}L"
@@ -21,25 +22,40 @@ buildConfig {
 repositories {
     mavenCentral()
     maven {setUrl("https://plugins.gradle.org/m2/")}
-    maven { url "https://frcmaven.wpi.edu/artifactory/release/"}
-    maven {url "http://first.wpi.edu/FRC/roborio/maven/release"}
-    maven { url "http://devsite.ctr-electronics.com/maven/release" }
-    maven { url "https://raw.githubusercontent.com/Open-RIO/Maven-Mirror/master/m2" }
-    maven {url "http://www.revrobotics.com/content/sw/max/sdk/maven"}
+    maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
+    maven { setUrl("https://raw.githubusercontent.com/Open-RIO/Maven-Mirror/master/m2")}
 }
 
+javafx {
+    version = "17"
+    modules = [ 'javafx.controls']
+}
+def wpiLibVersion = "2021.3.1"
+mainClassName = 'PathVisualizer'
+
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile "edu.wpi.first.ntcore:ntcore-java:2019.2.1"
-    compile "edu.wpi.first.ntcore:ntcore-jni:2019.2.1:all"
-    compile "edu.wpi.first.wpiutil:wpiutil-java:2019.2.1"
+//    api wpi.deps.wpilib()
+//    nativeZip wpi.deps.wpilibJni(wpi.platforms.roborio)
+//    nativeDesktopZip wpi.deps.wpilibJni(wpi.platforms.desktop)
+//
+//    api wpi.deps.vendor.java()
+//    nativeZip wpi.deps.vendor.jni(wpi.platforms.roborio)
+//    nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
+//    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31"
+//    implementation "edu.wpi.first.ntcore:ntcore-jni:2021.3.1"
+    implementation "edu.wpi.first.ntcore:ntcore-java:$wpiLibVersion"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:windowsx86-64"
+    implementation "edu.wpi.first.wpiutil:wpiutil-java:$wpiLibVersion"
     compile project("meanlib")
-    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt'
     implementation 'com.github.gmazzo.buildconfig:com.github.gmazzo.buildconfig.gradle.plugin:3.0.0'
     //implementation group: 'com.github.gmazzo.buildconfig', name: 'com.github.gmazzo.buildconfig.gradle.plugin', version: '3.0.0', ext: 'pom'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation("com.squareup.moshi:moshi:1.12.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
+    implementation("com.squareup.moshi:moshi-adapters:1.12.0")
 }
 
 jar {
@@ -47,7 +63,7 @@ jar {
         attributes 'Main-Class': mainClass
     }
 
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+   from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 run {
@@ -60,11 +76,6 @@ startScripts {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }

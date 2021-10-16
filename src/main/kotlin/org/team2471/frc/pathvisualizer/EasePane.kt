@@ -1,23 +1,20 @@
 package org.team2471.frc.pathvisualizer
 
 import javafx.event.EventHandler
-import javafx.scene.canvas.GraphicsContext
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent
-import javafx.scene.layout.BackgroundPosition
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
+import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import org.team2471.frc.lib.vector.Vector2
 import org.team2471.frc.pathvisualizer.ControlPanel.refresh
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
-import javax.naming.ldap.Control
 import kotlin.math.abs
 import kotlin.math.absoluteValue
-import kotlin.math.round
+import kotlin.math.atan
 
 
 private var startMouse = Vector2(0.0, 0.0)
@@ -75,7 +72,7 @@ object EasePane : StackPane() {
             while (point != null) {
                 println("found a point ${point.value}")
                 val tPoint = Vector2(easeWorld2ScreenX(point.time), headingWorld2ScreenY(point.value))
-                var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+                var dist = tPoint.minus(mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
@@ -92,7 +89,7 @@ object EasePane : StackPane() {
             point = selectedPath?.easeCurve?.headKey
             while (point != null) {
                 val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
-                var dist = Vector2.length(Vector2.subtract(tPoint, mouseVec))
+                var dist = tPoint.minus(mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
@@ -102,7 +99,7 @@ object EasePane : StackPane() {
                 if (point.prevKey != null) {
                     val prevTanPoint = point.timeAndValue - point.prevTangent / PathVisualizer.TANGENT_DRAW_FACTOR
                     val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
-                    dist = Vector2.length(Vector2.subtract(tanPoint, mouseVec))
+                    dist = tanPoint.minus(mouseVec).length
                     if (dist <= shortestDistance) {
                         shortestDistance = dist
                         closestPoint = point
@@ -113,7 +110,7 @@ object EasePane : StackPane() {
                 if (point.nextKey != null) {
                     val prevTanPoint = point.timeAndValue + point.nextTangent / PathVisualizer.TANGENT_DRAW_FACTOR
                     val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
-                    dist = Vector2.length(Vector2.subtract(tanPoint, mouseVec))
+                    dist = tanPoint.minus(mouseVec).length
                     if (dist <= shortestDistance) {
                         shortestDistance = dist
                         closestPoint = point
@@ -186,12 +183,13 @@ object EasePane : StackPane() {
                             editPoint?.timeAndValue = worldPoint
                         }
                         Path2DPoint.PointType.PREV_TANGENT -> {
-                            editPoint!!.prevMagnitude *= Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.0 / Vector2.length(editPoint!!.prevTangent)
-                            editPoint!!.angle = (Math.atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+                            editPoint!!.prevMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.prevTangent.length
+                            editPoint!!.prevMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.prevTangent.length
+                            editPoint!!.angle = (atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
                         }
                         Path2DPoint.PointType.NEXT_TANGENT -> {
-                            editPoint!!.nextMagnitude *= Vector2.length(worldPoint - editPoint!!.timeAndValue) * 3.0 / Vector2.length(editPoint!!.nextTangent)
-                            editPoint!!.angle = (Math.atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+                            editPoint!!.nextMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.nextTangent.length
+                            editPoint!!.angle = (atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
                         }
                     }
                     draw()

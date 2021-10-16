@@ -673,7 +673,7 @@ object ControlPanel : VBox() {
 
     private fun setAuto(auto: String?) {
         var newAutoName = auto
-        selectedAutonomous = autonomi.get(newAutoName)
+        selectedAutonomous = newAutoName?.let { autonomi[it] }
         autoComboBox.value = newAutoName
         FieldPane.selectedPath = null
         refresh()

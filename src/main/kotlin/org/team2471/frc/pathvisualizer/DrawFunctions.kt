@@ -347,7 +347,7 @@ fun drawHeadingCurve(path: Path2D?) {
     var heading = selectedPath.headingCurve.getValue(t)
     var x = t / selectedPath.durationWithSpeed * gc.canvas.width
     var y = getHeadingYVal(heading)
-    var pos = org.team2471.frc.lib.vector.Vector2(x, y)
+    var pos = Vector2(x, y)
     var prevPos = pos
 
     t = deltaT
@@ -355,7 +355,7 @@ fun drawHeadingCurve(path: Path2D?) {
         heading = selectedPath.headingCurve.getValue(t)
         x = t / selectedPath.durationWithSpeed * gc.canvas.width
         y = getHeadingYVal(heading)
-        pos = org.team2471.frc.lib.vector.Vector2(x, y)
+        pos = Vector2(x, y)
         val blue = Math.max(Math.min(heading * Color.BLUE.blue, 1.0), 0.0)
 
         gc.stroke = Color(0.0, 0.0, blue, 1.0)
@@ -375,7 +375,7 @@ fun drawHeadingCurve(path: Path2D?) {
         else
             gc.stroke = Color.WHITE
         println("${point.value} is ${getHeadingYVal(point.value)}")
-        val tPoint = org.team2471.frc.lib.vector.Vector2(easeWorld2ScreenX(point.time), getHeadingYVal(point.value)*gc.canvas.height)
+        val tPoint = Vector2(easeWorld2ScreenX(point.time), getHeadingYVal(point.value)*gc.canvas.height)
         gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
         point = point.nextKey
     }
@@ -401,7 +401,7 @@ fun drawEaseCurve(path: Path2D?) {
     var deltaT = 1.0 / 50.0
     var t = deltaT
     var prevPosition = selectedPath.xyCurve.getPositionAtDistance(0.0)
-    var prevVelocity = org.team2471.frc.lib.vector.Vector2(0.0, 0.0)
+    var prevVelocity = Vector2(0.0, 0.0)
     var ease = 0.0
 
     deltaT = selectedPath.durationWithSpeed / gc.canvas.width
@@ -409,7 +409,7 @@ fun drawEaseCurve(path: Path2D?) {
     ease = selectedPath.easeCurve.getValue(t)
     var x = t / selectedPath.durationWithSpeed * gc.canvas.width
     var y = (1.0 - ease) * gc.canvas.height
-    var pos = org.team2471.frc.lib.vector.Vector2(x, y)
+    var pos = Vector2(x, y)
     var prevPos = pos
     var prevSpeed = 0.0
     var prevAccel = 0.0
@@ -418,7 +418,7 @@ fun drawEaseCurve(path: Path2D?) {
         ease = selectedPath.easeCurve.getValue(t)
         x = t / selectedPath.durationWithSpeed * gc.canvas.width
         y = (1.0 - ease)
-        pos = org.team2471.frc.lib.vector.Vector2(x, y)
+        pos = Vector2(x, y)
         val red = Math.max(Math.min(ease * Color.RED.red, 1.0), 0.0)
         val redGreen = Math.max(Math.min(ease * Color.RED.green, 1.0), 0.0)
         val redBlue = Math.max(Math.min(ease * Color.RED.blue, 1.0), 0.0)
@@ -438,7 +438,7 @@ fun drawEaseCurve(path: Path2D?) {
         else
             gc.stroke = Color.WHITE
 
-        val tPoint = org.team2471.frc.lib.vector.Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
+        val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
         gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
         if (point.prevKey != null) {
             if (point === EasePane.selectedPoint && EasePane.selectedPointType == Path2DPoint.PointType.PREV_TANGENT)
