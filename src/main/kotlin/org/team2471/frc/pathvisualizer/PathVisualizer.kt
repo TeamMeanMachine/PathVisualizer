@@ -8,7 +8,6 @@ import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
 import javafx.stage.Screen
 import javafx.stage.Stage
-import org.team2471.frc.lib.motion_profiling.*
 
 class PathVisualizer : Application() {
 
