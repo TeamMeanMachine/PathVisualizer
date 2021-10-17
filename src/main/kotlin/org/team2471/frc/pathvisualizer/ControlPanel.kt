@@ -2,9 +2,7 @@ package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Platform
-import javafx.event.ActionEvent
 import javafx.geometry.Insets
-import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
@@ -22,11 +20,13 @@ import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
 import java.util.prefs.Preferences
+import kotlin.reflect.jvm.internal.impl.util.Check
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
     private val pathListView = ListView<String>()
     private val mirroredCheckBox = CheckBox("Mirrored")
+    private val pathWeaverFormatCheckBox = CheckBox("PathWeaver")
     private val robotDirectionBox = ComboBox<String>()
     private val secondsText = TextField()
     private val speedText = TextField()
@@ -46,6 +46,10 @@ object ControlPanel : VBox() {
     private val easePositionText = TextField()
     private val curveTypeCombo = ComboBox<String>()
     var ipAddress = ""
+    var pathWeaverFormat = false
+
+    var maxVelocity = 20.0
+    var maxAcceleration = 20.0
     val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
@@ -79,8 +83,9 @@ object ControlPanel : VBox() {
 
     init {
         // get ipAddress from preferences
-        val pref = Preferences.userNodeForPackage(PathVisualizer.javaClass)
+        val pref = Preferences.userNodeForPackage(::PathVisualizer.javaClass)
         ipAddress = pref.get("ipAddress", "10.24.71.2")
+        pathWeaverFormat = pref.getBoolean("pathWeaverFormat", false)
 
 
         spacing = 10.0
@@ -119,20 +124,20 @@ object ControlPanel : VBox() {
                 else
                     pathListView.items.add(pathListView.items.count(), newPathName)
             } else {
-                newPathName = FieldPane.selectedPath?.name
+                newPathName = selectedPath?.name
             }
         }
 
         val deletePathButton = Button("Delete Path")
         deletePathButton.setOnAction {
-            if (FieldPane.selectedPath != null && selectedAutonomous != null) {
+            if (selectedPath != null && selectedAutonomous != null) {
                 deleteSelectedPath()
             }
         }
 
         val renamePathButton = Button("Rename Path")
         renamePathButton.setOnAction {
-            val selectedPath = FieldPane.selectedPath ?: return@setOnAction
+            val selectedPath = selectedPath ?: return@setOnAction
 
             val dialog = TextInputDialog(selectedPath.name)
             dialog.title = "Path Name"
@@ -256,6 +261,13 @@ object ControlPanel : VBox() {
                 FieldPane.setSelectedPathMirrored(mirroredCheckBox.isSelected)
             }
         }
+        pathWeaverFormatCheckBox.isSelected = pathWeaverFormat
+        pathWeaverFormatCheckBox.setOnAction {
+            pathWeaverFormat = pathWeaverFormatCheckBox.isSelected
+            pref.putBoolean("pathWeaverFormat", pathWeaverFormat)
+        }
+        val checkboxHBox = HBox()
+        checkboxHBox.children.addAll(mirroredCheckBox, pathWeaverFormatCheckBox)
 
         val robotDirectionHBox = HBox()
         val robotDirectionName = Text("Robot Direction:  ")
@@ -522,7 +534,7 @@ object ControlPanel : VBox() {
                 pathListViewHBox,
                 miscHBox,
                 Separator(),
-                mirroredCheckBox,
+                checkboxHBox,
                 speedHBox,
                 robotDirectionHBox,
                 Separator(),
@@ -653,15 +665,15 @@ object ControlPanel : VBox() {
 */
 
     private fun deleteSelectedPath() {
-        selectedAutonomous?.paths?.remove(FieldPane.selectedPath?.name, FieldPane.selectedPath)
-        FieldPane.selectedPath = null
+        selectedAutonomous?.paths?.remove(selectedPath?.name, selectedPath)
+        selectedPath = null
         refresh()
     }
 
     private fun deleteSelectedAuto() {
         autonomi.mapAutonomous.remove(selectedAutonomous?.name)
         selectedAutonomous = null
-        FieldPane.selectedPath = null
+        selectedPath = null
         refresh()
     }
 
@@ -680,22 +692,20 @@ object ControlPanel : VBox() {
     }
 
     private fun setAuto(auto: String?) {
-        var newAutoName = auto
-        selectedAutonomous = newAutoName?.let { autonomi[it] }
-        autoComboBox.value = newAutoName
-        FieldPane.selectedPath = null
+        selectedAutonomous = auto?.let { autonomi[it] }
+        autoComboBox.value = auto
+        selectedPath = null
         refresh()
     }
 
     fun setSelectedPath(pathName: String?) {
-        var newPathName: String? = pathName
         if (selectedAutonomous != null) {
-            FieldPane.selectedPath = selectedAutonomous?.get(pathName)
+            selectedPath = selectedAutonomous?.get(pathName)
         }
         currentTime = 0.0
         pathListView.selectionModel.select(pathName)
         refresh()
-        FieldPane.draw()
+        draw()
     }
 
     fun refresh() {
@@ -720,22 +730,22 @@ object ControlPanel : VBox() {
             val sortedPaths = paths.toSortedMap()
             for (kvPath in sortedPaths) {
                 pathListView.items.add(kvPath.key)
-                if (kvPath.value == FieldPane.selectedPath) {
+                if (kvPath.value == selectedPath) {
                     pathListView.selectionModel.select(kvPath.key)
                 }
             }
-            if (FieldPane.selectedPath == null) {
-                FieldPane.selectedPath = paths.values.firstOrNull()
-                pathListView.selectionModel.select(FieldPane.selectedPath?.name)
+            if (selectedPath == null) {
+                selectedPath = paths.values.firstOrNull()
+                pathListView.selectionModel.select(selectedPath?.name)
             }
         }
 
-        if (FieldPane.selectedPath != null) {
+        if (selectedPath != null) {
             mirroredCheckBox.isSelected = selectedAutonomous?.isMirrored ?: false
             robotDirectionBox.value = selectedPath?.robotDirection?.name?.toLowerCase()?.capitalize() ?: Path2D.RobotDirection.BACKWARD.name.toLowerCase().capitalize()
-            secondsText.text = FieldPane.selectedPath?.duration?.format(1)
-            speedText.text = FieldPane.selectedPath?.speed?.format(1)
-            pathLengthText.text = FieldPane.selectedPath?.length?.format(2)
+            secondsText.text = selectedPath?.duration?.format(1)
+            speedText.text = selectedPath?.speed?.format(1)
+            pathLengthText.text = selectedPath?.length?.format(2)
         }
 
 //        trackWidthText.text = (autonomi.arcadeParameters.trackWidth * 12.0).format(1)
@@ -766,37 +776,40 @@ object ControlPanel : VBox() {
             magnitudeText.text = ""
             slopeModeCombo.selectionModel.select("None")
         } else {
-            if(fieldPaneSelectedPoint != null) when (FieldPane.selectedPointType) {
-                Path2DPoint.PointType.POINT -> {
-                    xPosText.text = (fieldPaneSelectedPoint.position.x).format(2)
-                    yPosText.text = (fieldPaneSelectedPoint.position.y).format(2)
-                    angleText.text = ""
-                    magnitudeText.text = ""
-                    slopeModeCombo.selectionModel.select("None")
-                }
-                Path2DPoint.PointType.PREV_TANGENT -> {
-                    xPosText.text = (fieldPaneSelectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    yPosText.text = (fieldPaneSelectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    angleText.text = (fieldPaneSelectedPoint.prevAngleAndMagnitude.x).format(1)
-                    magnitudeText.text = (fieldPaneSelectedPoint.prevAngleAndMagnitude.y).format(2)
-                    @Suppress("NON_EXHAUSTIVE_WHEN")
-                    when (fieldPaneSelectedPoint.prevSlopeMethod) {
-                        Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
-                        Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+            if(fieldPaneSelectedPoint != null) {
+                when (FieldPane.selectedPointType) {
+                    Path2DPoint.PointType.POINT -> {
+                        xPosText.text = (fieldPaneSelectedPoint.position.x).format(2)
+                        yPosText.text = (fieldPaneSelectedPoint.position.y).format(2)
+                        angleText.text = ""
+                        magnitudeText.text = ""
+                        slopeModeCombo.selectionModel.select("None")
+                    }
+                    Path2DPoint.PointType.PREV_TANGENT -> {
+                        xPosText.text = (fieldPaneSelectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        yPosText.text = (fieldPaneSelectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        angleText.text = (fieldPaneSelectedPoint.prevAngleAndMagnitude.x).format(1)
+                        magnitudeText.text = (fieldPaneSelectedPoint.prevAngleAndMagnitude.y).format(2)
+                        @Suppress("NON_EXHAUSTIVE_WHEN")
+                        when (fieldPaneSelectedPoint.prevSlopeMethod) {
+                            Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
+                            Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                        }
+                    }
+                    Path2DPoint.PointType.NEXT_TANGENT -> {
+                        xPosText.text = (fieldPaneSelectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        yPosText.text = (fieldPaneSelectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
+                        angleText.text = (fieldPaneSelectedPoint.nextAngleAndMagnitude.x).format(1)
+                        magnitudeText.text = (fieldPaneSelectedPoint.nextAngleAndMagnitude.y).format(2)
+                        @Suppress("NON_EXHAUSTIVE_WHEN")
+                        when (fieldPaneSelectedPoint.nextSlopeMethod) {
+                            Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
+                            Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                        }
                     }
                 }
-                Path2DPoint.PointType.NEXT_TANGENT -> {
-                    xPosText.text = (fieldPaneSelectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    yPosText.text = (fieldPaneSelectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
-                    angleText.text = (fieldPaneSelectedPoint.nextAngleAndMagnitude.x).format(1)
-                    magnitudeText.text = (fieldPaneSelectedPoint.nextAngleAndMagnitude.y).format(2)
-                    @Suppress("NON_EXHAUSTIVE_WHEN")
-                    when (fieldPaneSelectedPoint.nextSlopeMethod) {
-                        Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
-                        Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
-                    }
-                }
-            } else if (easePaneSelectedPoint != null) when (EasePane.selectedPointType){
+            } else if (easePaneSelectedPoint != null) {
+                when (EasePane.selectedPointType){
                     Path2DPoint.PointType.POINT -> {
                         xPosText.text = (easePaneSelectedPoint.time).format(2)
                         yPosText.text = (easePaneSelectedPoint.value).format(2)
@@ -804,7 +817,7 @@ object ControlPanel : VBox() {
                         magnitudeText.text = ""
                         slopeModeCombo.selectionModel.select("None")
                     }
-                Path2DPoint.PointType.PREV_TANGENT -> {
+                    Path2DPoint.PointType.PREV_TANGENT -> {
                         xPosText.text = (easePaneSelectedPoint.prevTangent.x / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         yPosText.text = (easePaneSelectedPoint.prevTangent.y / -PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         angleText.text = (easePaneSelectedPoint.prevAngleAndMagnitude.x).format(1)
@@ -815,7 +828,7 @@ object ControlPanel : VBox() {
                             MotionKey.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
                         }
                     }
-                Path2DPoint.PointType.NEXT_TANGENT -> {
+                    Path2DPoint.PointType.NEXT_TANGENT -> {
                         xPosText.text = (easePaneSelectedPoint.nextTangent.x / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         yPosText.text = (easePaneSelectedPoint.nextTangent.y / PathVisualizer.TANGENT_DRAW_FACTOR).format(2)
                         angleText.text = (easePaneSelectedPoint.nextAngleAndMagnitude.x).format(1)
@@ -827,8 +840,9 @@ object ControlPanel : VBox() {
                         }
                     }
                 }
+            }
 
-            val selectedPath = FieldPane.selectedPath ?: return
+            val selectedPath = selectedPath ?: return
             pathLengthText.text = selectedPath.length.format(2)
         }
         refreshing = false

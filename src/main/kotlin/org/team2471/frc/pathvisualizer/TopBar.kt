@@ -1,5 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil
+import edu.wpi.first.wpilibj.util.Units
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
@@ -8,11 +10,13 @@ import javafx.stage.FileChooser
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
+import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
 import java.util.Stack
+import kotlin.io.path.Path
 
 object TopBar : MenuBar() {
     private const val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
@@ -66,11 +70,7 @@ object TopBar : MenuBar() {
             if (fileName.isEmpty()) {
                 saveAs()
             } else {
-                val file = File(fileName)
-                val json = ControlPanel.autonomi.toJsonString()
-                val writer = PrintWriter(file)
-                writer.append(json)
-                writer.close()
+                performSave()
             }
         }
         val sendToRobotItem = MenuItem("Send to Robot")
@@ -186,11 +186,36 @@ object TopBar : MenuBar() {
         if (file != null) {
             userPref.put(userFilenameKey, file.absolutePath)
             fileName = file.absolutePath
-            val json = ControlPanel.autonomi.toJsonString()
-            val writer = PrintWriter(file)
-            writer.append(json)
-            writer.close()
+            performSave()
         }
+    }
+
+    private fun performSave(){
+        try {
+            if (ControlPanel.pathWeaverFormat) {
+                val file = File(fileName)
+                val folder = file.parentFile.toPath()
+                val autos = ControlPanel.autonomi.mapAutonomous
+                for (currAutos in autos) {
+                    for (currPath in currAutos.value.paths) {
+                        val pathToSave = folder.resolve("AutoPW.${currAutos.key}.${currPath.key}.json")
+                        println(pathToSave)
+                        val traj  = currPath.value.generateTrajectory(Units.feetToMeters(ControlPanel.maxVelocity),Units.feetToMeters(ControlPanel.maxAcceleration))
+                        TrajectoryUtil.toPathweaverJson(traj, pathToSave)
+                    }
+                }
+            } else {
+                fileWrite(fileName, ControlPanel.autonomi.toJsonString())
+            }
+        } catch (ex : Exception) {
+            println("Error during save: ${ex.message}")
+        }
+    }
+    private fun fileWrite(writeToFile: String, json: String) {
+        val file = File(writeToFile)
+        val writer = PrintWriter(file)
+        writer.append(json)
+        writer.close()
     }
     //TopBar.undoStack.add(MovedPointAction(point, original))
 
