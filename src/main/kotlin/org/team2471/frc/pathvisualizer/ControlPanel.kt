@@ -267,6 +267,7 @@ object ControlPanel : VBox() {
             pref.putBoolean("pathWeaverFormat", pathWeaverFormat)
         }
         val checkboxHBox = HBox()
+        checkboxHBox.spacing = 10.0
         checkboxHBox.children.addAll(mirroredCheckBox, pathWeaverFormatCheckBox)
 
         val robotDirectionHBox = HBox()
