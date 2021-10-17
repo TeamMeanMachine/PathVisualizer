@@ -21,6 +21,7 @@ import javafx.scene.input.KeyCode
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
+import java.util.prefs.Preferences
 
 object ControlPanel : VBox() {
     private val autoComboBox = ComboBox<String>()
@@ -44,7 +45,8 @@ object ControlPanel : VBox() {
     private val headingAngleText = TextField()
     private val easePositionText = TextField()
     private val curveTypeCombo = ComboBox<String>()
-    val networkTableInstance = NetworkTableInstance.create()
+    var ipAddress = ""
+    val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
 
     private var connectionJob: Job? = null
 
@@ -76,6 +78,11 @@ object ControlPanel : VBox() {
     }
 
     init {
+        // get ipAddress from preferences
+        val pref = Preferences.userNodeForPackage(PathVisualizer.javaClass)
+        ipAddress = pref.get("ipAddress", "10.24.71.2")
+
+
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
 
@@ -429,15 +436,15 @@ object ControlPanel : VBox() {
         val robotHBox = HBox()
         val easeCurveFuntions = HBox()
         val addressName = Text("  Robot Address:  ")  // this is a great candidate to be saved in the registry, so that other teams only have to change it once
-        var ipAddress = "10.24.71.2"
         val addressText = TextField(ipAddress)
         addressText.setOnKeyPressed { event ->
             if (event.code === KeyCode.ENTER) {
                 ipAddress = addressText.text
-                connect(ipAddress)
+                pref.put("ipAddress", ipAddress)
+                connect()
             }
         }
-        connect(ipAddress)
+        connect()
 
         val playButton = Button("Play")
         playButton.setOnAction {
@@ -569,7 +576,8 @@ object ControlPanel : VBox() {
         }
     }
 
-    private fun connect(address: String) {
+    fun connect() {
+        val address = ipAddress
         println("Connecting to address $address")
 
         connectionJob?.cancel()
