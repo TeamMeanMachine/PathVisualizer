@@ -265,6 +265,7 @@ object ControlPanel : VBox() {
         pathWeaverFormatCheckBox.setOnAction {
             pathWeaverFormat = pathWeaverFormatCheckBox.isSelected
             pref.putBoolean("pathWeaverFormat", pathWeaverFormat)
+            draw()
         }
         val checkboxHBox = HBox()
         checkboxHBox.spacing = 10.0

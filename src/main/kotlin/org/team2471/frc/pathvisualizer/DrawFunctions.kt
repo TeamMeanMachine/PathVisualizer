@@ -1,5 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.wpilibj.trajectory.Trajectory
+import edu.wpi.first.wpilibj.util.Units
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
@@ -31,7 +33,7 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
     for (path in paths) {
         drawPath(gc, path)
     }
-    if (selectedPath != null && ControlPanel.autonomi.drivetrainParameters != null) {
+    if (selectedPath != null) {
         drawSelectedPath(gc, selectedPath, selectedPoint, selectedPointType)
     }
 }
@@ -39,16 +41,28 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
 private fun drawPath(gc: GraphicsContext, path: Path2D?) {
     if (path == null || path.duration == 0.0)
         return
-    val deltaT = path.durationWithSpeed / 200.0
+    var totalTime = path.durationWithSpeed
+    var deltaT = totalTime / 200.0
     var prevPos = path.getPosition(0.0)
-    var pos: Vector2
-
+    var pos: Vector2 = path.getPosition(0.0)
+    var pwPath : Trajectory? = null
+    if (ControlPanel.pathWeaverFormat) {
+        pwPath = path.generateTrajectory(ControlPanel.maxVelocity, ControlPanel.maxAcceleration)!!
+        deltaT = pwPath.totalTimeSeconds / 200.0
+        prevPos = Vector2(Units.metersToFeet(pwPath.initialPose.x), Units.metersToFeet(pwPath.initialPose.y))
+    }
     gc.stroke = Color.WHITE
     var t = deltaT
-    while (t <= path.durationWithSpeed) {
-        val ease = t / path.durationWithSpeed
-        pos = path.getPosition(t)
-
+    while (t <= totalTime) {
+        val ease = t / totalTime
+        if (ControlPanel.pathWeaverFormat) {
+            val currPose = pwPath?.sample(ease)?.poseMeters
+            if (currPose != null) {
+                pos = Vector2(Units.metersToFeet(currPose.x), Units.metersToFeet(currPose.y))
+            }
+        } else {
+            pos = path.getPosition(t)
+        }
         // center line
         gc.stroke = Color(ease * Color.WHITE.red, ease * Color.WHITE.green, ease * Color.WHITE.blue, 1.0)
         drawPathLine(gc, prevPos, pos)
