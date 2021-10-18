@@ -25,6 +25,7 @@ object LivePanel : VBox() {
     private val viewActiveRobotCheckBox = CheckBox("Odometry Robot")
     private val viewLimelightRobot = CheckBox("Limelight Robot")
     private val viewParralaxCheckBox = CheckBox("Parralax")
+    private val viewRecordingPathCheckBox = CheckBox("Recording")
     private val recordButton = Button("Start Recording")
     private val txtRecordTime = Text("00:00")
     private val playbackSlider = Slider(0.0, 100.0, 0.0)
@@ -58,6 +59,10 @@ object LivePanel : VBox() {
         }
         viewParralaxCheckBox.setOnAction {
             FieldPane.displayParallax = viewLimelightRobot.isSelected
+        }
+        viewRecordingPathCheckBox.setOnAction{
+            FieldPane.displayRecording = viewRecordingPathCheckBox.isSelected
+            FieldPane.draw()
         }
 
         playbackSlider.setOnDragDone {
@@ -136,6 +141,7 @@ playbackSlider.valueProperty().addListener { _, _, newValue ->
                 viewActiveRobotCheckBox,
                 viewLimelightRobot,
                 viewParralaxCheckBox,
+                viewRecordingPathCheckBox,
                 recordButton,
                 txtRecordTime,
                 playButton,
@@ -266,11 +272,9 @@ playbackSlider.valueProperty().addListener { _, _, newValue ->
     fun loadRecording() {
         val currRecording = selectRecordingForPlayback.value
         if (currRecording != null) {
-            val filename = recording_lookup.get(currRecording)
+            val filename = recording_lookup[currRecording]
             val jsonKjkjed = File("$savePath$filename" ).readLines()
             println (jsonKjkjed)
-
-
 
             println("recording: ${selectRecordingForPlayback.value} $filename")
             val startTime = Instant.ofEpochMilli(1629255631201)
@@ -279,7 +283,6 @@ playbackSlider.valueProperty().addListener { _, _, newValue ->
             val timeDifference = endTime.minusMillis(startTime.toEpochMilli())
             println(timeDifference.toEpochMilli())
             playbackSlider.max = timeDifference.toEpochMilli().toDouble()
-
         }
 
     }

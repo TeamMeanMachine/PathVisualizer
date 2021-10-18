@@ -38,6 +38,16 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
     }
 }
 
+ fun drawRecording(gc: GraphicsContext, recording: RobotRecording) {
+    var prevRobotPosition = recording.recordings[0]
+    gc.stroke = Color.PEACHPUFF
+    for (currRobotPosition in recording.recordings) {
+        println("printing recording: ${currRobotPosition.x} ${currRobotPosition.y}")
+        drawPathLine(gc, Vector2(prevRobotPosition.x, prevRobotPosition.y), Vector2(currRobotPosition.x,currRobotPosition.y))
+        prevRobotPosition = currRobotPosition
+    }
+}
+
 private fun drawPath(gc: GraphicsContext, path: Path2D?) {
     if (path == null || path.duration == 0.0)
         return

@@ -38,6 +38,7 @@ object FieldPane : StackPane() {
     var displayActiveRobot = false
     var displayLimeLightRobot = true
     var displayParallax = false
+    var displayRecording = false
     var playing = false
     var recording = false
     var wasRecording = false
@@ -459,10 +460,11 @@ object FieldPane : StackPane() {
         val dimensions = lowerRightPixels - upperLeftPixels
         //val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
-
+        if (displayRecording && LivePanel.currRecording != null) {
+            drawRecording(gc, LivePanel.currRecording!!)
+        }
         if (!displayActiveRobot) {
             drawPaths(gc, ControlPanel.selectedAutonomous?.paths?.values, selectedPath, selectedPoint, selectedPointType)
-
             gc = EasePane.canvas.graphicsContext2D
             if (gc.canvas.width == 0.0)
                 return
