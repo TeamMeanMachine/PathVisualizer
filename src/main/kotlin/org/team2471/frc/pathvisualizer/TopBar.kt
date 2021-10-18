@@ -192,8 +192,10 @@ object TopBar : MenuBar() {
 
     private fun performSave(){
         try {
+            val file = File(fileName)
+            fileWrite(fileName, ControlPanel.autonomi.toJsonString())
             if (ControlPanel.pathWeaverFormat) {
-                val file = File(fileName)
+
                 val folder = file.parentFile.toPath()
                 val autos = ControlPanel.autonomi.mapAutonomous
                 for (currAutos in autos) {
@@ -204,8 +206,6 @@ object TopBar : MenuBar() {
                         TrajectoryUtil.toPathweaverJson(traj, pathToSave)
                     }
                 }
-            } else {
-                fileWrite(fileName, ControlPanel.autonomi.toJsonString())
             }
         } catch (ex : Exception) {
             println("Error during save: ${ex.message}")

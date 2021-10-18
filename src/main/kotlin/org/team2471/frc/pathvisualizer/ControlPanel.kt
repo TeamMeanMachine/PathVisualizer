@@ -85,7 +85,7 @@ object ControlPanel : VBox() {
         // get ipAddress from preferences
         val pref = Preferences.userNodeForPackage(::PathVisualizer.javaClass)
         ipAddress = pref.get("ipAddress", "10.24.71.2")
-        pathWeaverFormat = pref.getBoolean("pathWeaverFormat", false)
+        pathWeaverFormat = false //pref.getBoolean("pathWeaverFormat", false)
 
 
         spacing = 10.0
