@@ -1,0 +1,27 @@
+.add-button {
+    -fx-background-color: ForestGreen;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+
+.edit-button {
+    -fx-background-color: DarkBlue;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+
+.delete-button {
+    -fx-background-color: DarkRed;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+
+.play-button {
+    -fx-background-color: Orange;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 6 3 4;
+    -fx-text-fill: white;
+}

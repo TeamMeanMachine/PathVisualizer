@@ -100,23 +100,23 @@ object TopBar : MenuBar() {
 
         menuEdit.items.addAll(undoMenuItem, redoMenuItem)
 
+//
+//        val menuVisualize = Menu("Visualize")
+//        toggleVisualizeActiveRobotMenuItem.setOnAction {
+//            toggleVisualizeActiveRobot()
+//        }
+//        toggleVisualizeParralaxMenuItem.setOnAction {
+//            toggleVisualizeParallax()
+//        }
+//        toggleVisualizeTargetMenuItem.setOnAction {
+//            toggleVisualizeTarget()
+//        }
+//        toggleVisualizeRecordMenuItem.setOnAction {
+//            toggleVisualizeRecord()
+//        }
+//        menuVisualize.items.addAll(toggleVisualizeActiveRobotMenuItem, toggleVisualizeParralaxMenuItem, toggleVisualizeTargetMenuItem, toggleVisualizeRecordMenuItem)
 
-        val menuVisualize = Menu("Visualize")
-        toggleVisualizeActiveRobotMenuItem.setOnAction {
-            toggleVisualizeActiveRobot()
-        }
-        toggleVisualizeParralaxMenuItem.setOnAction {
-            toggleVisualizeParallax()
-        }
-        toggleVisualizeTargetMenuItem.setOnAction {
-            toggleVisualizeTarget()
-        }
-        toggleVisualizeRecordMenuItem.setOnAction {
-            toggleVisualizeRecord()
-        }
-        menuVisualize.items.addAll(toggleVisualizeActiveRobotMenuItem, toggleVisualizeParralaxMenuItem, toggleVisualizeTargetMenuItem, toggleVisualizeRecordMenuItem)
-
-        menus.addAll(menuFile, menuEdit, menuVisualize)
+        menus.addAll(menuFile, menuEdit)//, menuVisualize)
     }
 
     fun toggleVisualizeActiveRobot() {
@@ -158,7 +158,7 @@ object TopBar : MenuBar() {
         }
 
         ControlPanel.initializeParameters()  // since some of our older saved files don't have parameters, this prevents a bunch null references
-        ControlPanel.refresh()
+        ControlPanel.refresh(true)
     }
 
     private fun readFromRobot(){
@@ -172,7 +172,7 @@ object TopBar : MenuBar() {
         }
 
         ControlPanel.initializeParameters()  // since some of our older saved files don't have parameters, this prevents a bunch null references
-        ControlPanel.refresh()
+        ControlPanel.refresh(true)
     }
 
     private fun saveAs() {

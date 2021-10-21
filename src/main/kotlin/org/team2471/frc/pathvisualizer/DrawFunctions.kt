@@ -16,9 +16,24 @@ import java.io.FileWriter
 import java.time.Instant
 
 fun drawConnectionStatus(gc: GraphicsContext, isConnected : Boolean){
-    gc.fill = if (isConnected) {Color.GREEN} else {Color.RED}
-    gc.fillOval(5.0, 5.0, 10.0, 10.0)
+
     //println("filled the oval")
+}
+fun drawFieldPaneData(gc: GraphicsContext, isConnected : Boolean, fieldVector: Vector2) {
+    gc.fill = Color.BLACK
+    gc.fillRect(0.0, 0.0, 70.0, 50.0)
+    gc.fill = Color.WHITE
+    gc.stroke = Color.WHITE
+    if (fieldVector.x > -1000.0 && fieldVector.y > -1000.0) {
+        gc.fill = Color.WHITE
+        gc.stroke = Color.WHITE
+
+        gc.fillText("X: ${fieldVector.x.round(2)}", 5.0, 30.0)
+        gc.fillText("Y: ${fieldVector.y.round(2)}", 5.0, 45.0)
+    }
+    gc.fillText(ControlPanel.ipAddress, 15.0, 15.0)
+    gc.fill = if (isConnected) {Color.GREEN} else {Color.RED}
+    gc.fillOval(4.0, 5.0, 10.0, 10.0)
 }
 
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
@@ -145,9 +160,9 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
                 PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
         if (point.prevPoint != null) {
             if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.PREV_TANGENT)
-                gc.stroke = Color.LIMEGREEN
+                gc.stroke = Color.GOLD
             else
-                gc.stroke = Color.WHITE
+                gc.stroke = Color.PERU
             val tanPoint = world2ScreenWithMirror(point.position - point.prevTangent * (1.0 / PathVisualizer.TANGENT_DRAW_FACTOR), path.isMirrored)
             gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
                     tanPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
@@ -157,9 +172,9 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
         }
         if (point.nextPoint != null) {
             if (point === selectedPoint && selectedPointType == Path2DPoint.PointType.NEXT_TANGENT)
-                gc.stroke = Color.LIMEGREEN
+                gc.stroke = Color.GOLD
             else
-                gc.stroke = Color.WHITE
+                gc.stroke = Color.PERU
             val tanPoint = world2ScreenWithMirror(point.position + point.nextTangent *
                     1.0 / PathVisualizer.TANGENT_DRAW_FACTOR, path.isMirrored)
             gc.strokeOval(tanPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2,
@@ -398,7 +413,7 @@ fun drawHeadingCurve(path: Path2D?) {
             gc.stroke = Color.CORAL
         else
             gc.stroke = Color.WHITE
-        println("${point.value} is ${getHeadingYVal(point.value)}")
+        //println("${point.value} is ${getHeadingYVal(point.value)}")
         val tPoint = Vector2(easeWorld2ScreenX(point.time), getHeadingYVal(point.value)*gc.canvas.height)
         gc.strokeOval(tPoint.x - PathVisualizer.DRAW_CIRCLE_SIZE / 2, tPoint.y - PathVisualizer.DRAW_CIRCLE_SIZE / 2, PathVisualizer.DRAW_CIRCLE_SIZE, PathVisualizer.DRAW_CIRCLE_SIZE)
         point = point.nextKey

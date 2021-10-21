@@ -1,25 +1,20 @@
 package org.team2471.frc.pathvisualizer
 
-import edu.wpi.first.networktables.ConnectionInfo
 import javafx.event.EventHandler
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
-import javafx.scene.control.Control
-import javafx.scene.control.TableView
 import javafx.scene.image.Image
 import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
+import javafx.scene.text.FontSmoothingType
 
-import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.units.Time
 import java.io.BufferedWriter
-import java.io.File
 import java.net.InetAddress
-import java.nio.file.Path
 import java.util.*
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
@@ -29,12 +24,12 @@ object FieldPane : StackPane() {
     private val replayGC = replayCanvas.graphicsContext2D
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
     private val image = Image("assets/2021Field.png")
-    private val upperLeftOfFieldPixels = Vector2(105.0, 820.0)
-    private val lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
+    private var upperLeftOfFieldPixels = Vector2(105.0, 820.0)
+    private var lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
     var zoomPivot = Vector2(1565.0, 821.0)  // the location in the image where the zoom origin will originate
-    val fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
-    val fieldDimensionFeet = Vector2(27.0, 54.0)
+    var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
+    var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
     var displayActiveRobot = false
     var displayLimeLightRobot = true
     var displayParallax = false
@@ -47,6 +42,7 @@ object FieldPane : StackPane() {
     val recordingTimer = Timer()
     var currentRecordedTime = 0
     var firstRecordedTime : Time = Time(0.0)
+    var mouseVector = Vector2(-1000.0,-1000.0)
 
     // view settings
     var zoom: Double = kotlin.math.round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
@@ -70,6 +66,8 @@ object FieldPane : StackPane() {
 
     private val upperLeftFeet = screen2World(Vector2(0.0, 0.0))  // calculate these when zoom is 1:1, and offset is 0,0
     private val lowerRightFeet = screen2World(Vector2(image.width, image.height))
+    private var upperLeftFieldFeet = screen2World(upperLeftOfFieldPixels)
+    private var lowerRightFieldFeet = screen2World(lowerRightOfFieldPixels)
     private var startMouse = Vector2(0.0, 0.0)
     private var mouseMode = PathVisualizer.MouseMode.EDIT
     private var different = false
@@ -78,23 +76,47 @@ object FieldPane : StackPane() {
     val limelightTable = ControlPanel.networkTableInstance.getTable("limelight-front")
     val shooterTable = ControlPanel.networkTableInstance.getTable("Shooter")
     init {
+        canvas.graphicsContext2D.fontSmoothingType = FontSmoothingType.LCD
         children.add(canvas)
         canvas.widthProperty().bind(widthProperty())
         canvas.heightProperty().bind(heightProperty())
-        replayCanvas.onMousePressed = EventHandler<MouseEvent>(::onMousePressed)
-        replayCanvas.onMouseDragged = EventHandler<MouseEvent>(::onMouseDragged)
-        replayCanvas.onMouseReleased = EventHandler<MouseEvent> { onMouseReleased() }
-        replayCanvas.onZoom = EventHandler<ZoomEvent>(::onZoom)
-        replayCanvas.onKeyPressed = EventHandler<KeyEvent>(::onKeyPressed)
-        replayCanvas.onScroll = EventHandler<ScrollEvent>(::onScroll)
+        replayCanvas.onMousePressed = EventHandler(::onMousePressed)
+        replayCanvas.onMouseDragged = EventHandler(::onMouseDragged)
+        replayCanvas.onMouseReleased = EventHandler{ onMouseReleased() }
+        replayCanvas.onZoom = EventHandler(::onZoom)
+        replayCanvas.onKeyPressed = EventHandler(::onKeyPressed)
+        replayCanvas.onScroll = EventHandler(::onScroll)
+        replayCanvas.onMouseMoved = EventHandler(::onMouseMoved)
+        replayCanvas.onMouseExited = EventHandler(::onMouseExited)
         initActiveRobotDraw()
         initPlaybackRobotDraw()
-        initConnectionStatusDraw()
+        initConnectionStatusCheck()
+        initXYCoordDraw()
     }
+//    fun recalcFieldDimens() {
+//        val preZoomVal = zoom
+//        fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
+//        zoom = kotlin.math.round(feetToPixels(1.0))
+//        zoomFit()
+//        upperLeftFieldFeet = screen2World(upperLeftOfFieldPixels)
+//        lowerRightFieldFeet = screen2World(lowerRightOfFieldPixels)
+//        zoom = preZoomVal
+//    }
 
-    private fun initConnectionStatusDraw(){
-        drawConnectionStatus(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected)
-        val updateFrequencyInSeconds = 1
+    private fun initXYCoordDraw(){
+        val updateFrequencyInMillis = 100L
+        val timer = Timer()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                performPaneDataDraw()
+            }
+        }, 10, updateFrequencyInMillis)
+    }
+    private fun performPaneDataDraw() {
+        drawFieldPaneData(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected, mouseVector)
+    }
+    private fun initConnectionStatusCheck(){
+        val updateFrequencyInSeconds = 5
         val timer = Timer()
         timer.schedule(object : TimerTask() {
             override fun run() {
@@ -102,15 +124,18 @@ object FieldPane : StackPane() {
                 if (InetAddress.getLocalHost().hostAddress.startsWith(ControlPanel.ipAddress.substringBeforeLast(".", "____"))){
                     if (!ControlPanel.networkTableInstance.isConnected) {
                         // attempt to connect
-                        println("found FRC 2471 network. Connecting to network table")
+                        println("found FRC network. Connecting to network table")
                         ControlPanel.connect()
                     }
                 } else {
-                    ControlPanel.networkTableInstance.stopClient()
+                    // stop client only for teams using the ip address format (10.24.71.2). for others don't attempt to stop client.
+                    // the main benefit is to reduce log spamming of failed connection errors, so leaving it in is not inherently harmful
+                    if (!ControlPanel.ipAddress.matches("[1-9](\\d{1,3})?".toRegex())) {
+                        ControlPanel.networkTableInstance.stopClient()
+                    }
                 }
-                drawConnectionStatus(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected)
             }
-        }, 1, 1000L * updateFrequencyInSeconds)
+        }, 10, 1000L * updateFrequencyInSeconds)
     }
 
     private fun initPlaybackRobotDraw() {
@@ -160,11 +185,11 @@ object FieldPane : StackPane() {
     }
 
     fun zoomFit() {
-        val hZoom = width / PixelsToFeet(image.width)
-        val vZoom = height / PixelsToFeet(image.height)
+        val hZoom = width / pixelsToFeet(image.width)
+        val vZoom = height / pixelsToFeet(image.height)
 
         zoom = 1.0
-        zoom = Math.min(hZoom, vZoom)
+        zoom = minOf(hZoom, vZoom)
         offset = Vector2(0.0, 0.0)
 
         val upperLeftPixels = world2Screen(upperLeftFeet)
@@ -272,8 +297,9 @@ object FieldPane : StackPane() {
 
 
     fun deleteSelectedPoint() {
+
         if (selectedPoint != null) {
-            FieldPane.selectedPath?.removePoint(selectedPoint)
+            selectedPath?.removePoint(selectedPoint)
             selectedPoint = null
         }
         draw()
@@ -411,6 +437,12 @@ object FieldPane : StackPane() {
 //            gc.strokeOval(e.x-1.5, e.y-1.5, 3.0, 3.0)
         }
     }
+    private fun onMouseMoved(e: MouseEvent) {
+        mouseVector = screen2World(Vector2(e.x, e.y))
+    }
+    private fun onMouseExited(e: MouseEvent) {
+        mouseVector = Vector2(-1000.0,-1000.0)
+    }
     private fun onMouseDragged(e: MouseEvent) {
         when (mouseMode) {
             PathVisualizer.MouseMode.EDIT -> {
@@ -450,16 +482,27 @@ object FieldPane : StackPane() {
     }
 
     fun draw() {
+        zoom = maxOf(zoom, 1.0)
         var gc = canvas.graphicsContext2D
         gc.fill = Color.LIGHTGRAY
         gc.fillRect(0.0, 0.0, canvas.width, canvas.height)
+
 
         // calculate ImageView corners
         val upperLeftPixels = world2Screen(upperLeftFeet)
         val lowerRightPixels = world2Screen(lowerRightFeet)
         val dimensions = lowerRightPixels - upperLeftPixels
-        //val positionTable = ControlPanel.networkTableInstance.getTable("Drive")
         gc.drawImage(image, 0.0, 0.0, image.width, image.height, upperLeftPixels.x, upperLeftPixels.y, dimensions.x, dimensions.y)
+        performPaneDataDraw()
+
+        if (ControlPanel.displayFieldOverlay.isSelected) {
+            val prevFill = gc.fill
+            gc.fill = Color.rgb(255,255,204,.3)
+            val fieldTopLeft2 = world2Screen(upperLeftFieldFeet)
+            val fieldBottomRight2 = world2Screen(lowerRightFieldFeet) - fieldTopLeft2
+            gc.fillRect(fieldTopLeft2.x, fieldTopLeft2.y, fieldBottomRight2.x, fieldBottomRight2.y)
+            gc.fill = prevFill
+        }
         if (displayRecording && LivePanel.currRecording != null) {
             drawRecording(gc, LivePanel.currRecording!!)
         }
@@ -491,7 +534,7 @@ object FieldPane : StackPane() {
     }
 
     private fun onZoom(e: ZoomEvent) {
-        zoom *= e.zoomFactor
+        zoom = maxOf(zoom*e.zoomFactor, 0.1)
         draw()
     }
 
@@ -561,7 +604,7 @@ object FieldPane : StackPane() {
 
     private fun onScroll(e: ScrollEvent) {
         if (mouseMode != PathVisualizer.MouseMode.PAN) {
-            zoom += e.deltaY / 25 * -1
+            zoom -= e.deltaY / 25 * -1
             draw()
         }
     }

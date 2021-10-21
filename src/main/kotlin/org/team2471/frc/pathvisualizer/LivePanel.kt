@@ -90,7 +90,7 @@ object LivePanel : VBox() {
 
                     animationJob = GlobalScope.launch {
                             for (recording in playbackRecordings) {
-                                LivePanel.playbackSlider.value = 0.0
+                                playbackSlider.value = 0.0
                                 timer.start()
 
                                 while (timer.get() < (FieldPane.selectedPath?.durationWithSpeed ?: 0.0)) {
@@ -132,9 +132,9 @@ object LivePanel : VBox() {
             FieldPane.draw()
         }
 
-playbackSlider.valueProperty().addListener { _, _, newValue ->
-    newSliderSelected(newValue.toDouble())
-}
+        playbackSlider.valueProperty().addListener { _, _, newValue ->
+            newSliderSelected(newValue.toDouble())
+        }
 
         refreshRecordingsList()
         children.addAll(

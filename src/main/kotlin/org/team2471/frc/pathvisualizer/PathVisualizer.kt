@@ -1,13 +1,20 @@
 package org.team2471.frc.pathvisualizer
 
 import javafx.application.Application
+import javafx.application.Platform
 import javafx.geometry.Orientation
 import javafx.geometry.Rectangle2D
 import javafx.scene.Scene
-import javafx.scene.control.*
+import javafx.scene.control.ScrollPane
+import javafx.scene.control.SplitPane
+import javafx.scene.control.Tab
+import javafx.scene.control.TabPane
+import javafx.scene.input.DragEvent
 import javafx.scene.layout.BorderPane
+import javafx.scene.text.Font
 import javafx.stage.Screen
 import javafx.stage.Stage
+import java.util.prefs.Preferences
 
 class PathVisualizer : Application() {
 
@@ -18,7 +25,10 @@ class PathVisualizer : Application() {
         const val TANGENT_DRAW_FACTOR = 3.0
 
         lateinit var stage: Stage
-
+        lateinit var fontAwesome : Font
+        val pref = Preferences.userNodeForPackage(::PathVisualizer.javaClass)
+        var windowResizing = false
+        val verticalSplitPane = SplitPane()
         @JvmStatic
         fun main(args: Array<String>) {
             launch(PathVisualizer::class.java, *args)
@@ -30,11 +40,12 @@ class PathVisualizer : Application() {
     }
 
     override fun start(stage: Stage) {
+        fontAwesome = Font.loadFont(Thread.currentThread().contextClassLoader.getResourceAsStream("assets/fAwesome6FreeSolid.otf"), 16.0)
         stage.title = "Path Visualizer"
         PathVisualizer.stage = stage
 
         // setup the layout
-        val verticalSplitPane = SplitPane(FieldPane, EasePane)
+        verticalSplitPane.items.addAll(FieldPane, EasePane)
         verticalSplitPane.orientation = Orientation.VERTICAL
         verticalSplitPane.setDividerPositions(0.85)
 
@@ -62,7 +73,9 @@ class PathVisualizer : Application() {
         tabPane.tabs.add(tabLive)
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, tabPane)
-        horizontalSplitPane.setDividerPositions(0.68)
+        val preferredPanelSize = minOf(pref.getDouble("horizontalPanelPercent", 0.68), .95)
+        horizontalSplitPane.setDividerPositions(preferredPanelSize)
+        horizontalSplitPane.dividers[0].positionProperty().addListener {  _, oldPos, newPos -> dividerResized(oldPos, newPos) }
 
         val borderPane = BorderPane(horizontalSplitPane)
         borderPane.top = TopBar
@@ -72,6 +85,13 @@ class PathVisualizer : Application() {
         //There is a bug where the default height of the stage leaks under the tool bar in windows 10
         val bounds = Rectangle2D(screen.visualBounds.minX, screen.visualBounds.minY, screen.visualBounds.width, screen.visualBounds.height - 30)
         stage.scene = Scene(borderPane, bounds.width, bounds.height)
+        stage.scene.stylesheets.add("assets/theme.css");
+        stage.scene.addPreLayoutPulseListener {
+            windowResizing = true
+            Platform.runLater {
+                windowResizing = false
+            }
+        }
         FieldPane.draw()
         stage.sizeToScene()
         stage.isMaximized = true
@@ -80,6 +100,21 @@ class PathVisualizer : Application() {
         LivePanel.refresh()
         FieldPane.zoomFit()
     }
+    private fun dividerResized(
+        oldPos: Number,
+        newPos: Number
+    ) {
+        if (windowResizing) {
+            return
+        }
+        pref.putDouble("horizontalPanelPercent", newPos.toDouble())
+       // println("User moved divider position to $newPos from $oldPos")
+    }
+    private fun horizontalSplitDone(dragEvent: DragEvent?) {
+        println("drag is done")
+        println(dragEvent?.sceneX)
+    }
+
 }
 
 // todo list  //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +174,7 @@ class PathVisualizer : Application() {
 // : Be able to turn Robot heading on field
 // : Scrolling on Control Panel
 // : Have an indicator for the front of the robot
+// : make tangent adjustment points a different color than the point
 
 // todo: Be able to create wheel paths for swerves - use swerve modules
 // todo: Be able to add a point anywhere on a path by clicking on it
@@ -157,5 +193,5 @@ class PathVisualizer : Application() {
 // todo: create robot and derivatives for abstraction of drive trains - arcade, swerve, curvature, mecanum, kiwi
 
 // todo: figure out why when there is no file, selectedPath is null and visualizer crashes
+// todo: fix Unrecognized PGCanvas token: 68 (use Platform.runLater() to execute UI updates on Application thread)
 
-// todo: make tangent adjustment points a different color than the point

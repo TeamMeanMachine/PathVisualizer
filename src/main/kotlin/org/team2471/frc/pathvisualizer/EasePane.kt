@@ -19,7 +19,6 @@ import kotlin.math.atan
 
 private var startMouse = Vector2(0.0, 0.0)
 
-var selectedPointType = Path2DPoint.PointType.POINT
 var selectedPointHeading = false
     private set
 private var editPoint: MotionKey? = null
@@ -138,9 +137,12 @@ object EasePane : StackPane() {
 
         if (selectedPoint != null) {
             ControlPanel.currentTime = selectedPoint?.time!!
-            refresh()
-            draw()
+        } else {
+            ControlPanel.currentTime = e.x * selectedPath!!.durationWithSpeed / canvas.width
         }
+        refresh()
+        draw()
+
         if (selectedPoint != null && e.isShiftDown) {
             // deleting selected point
             if (selectedPointHeading) {
@@ -169,33 +171,35 @@ object EasePane : StackPane() {
     
 
     private fun onMouseDragged(e: MouseEvent) {
-        when (mouseMode) {
-            PathVisualizer.MouseMode.DRAG_TIME -> {
-                ControlPanel.currentTime = e.x * selectedPath!!.durationWithSpeed / canvas.width
+        println(editPoint?.timeAndValue)
+        if( mouseMode == PathVisualizer.MouseMode.EDIT)  {
+            if (editPoint != null) {
+                val worldPoint = Vector2(easeScreen2WorldX(e.x), easeScreen2WorldY(e.y))
+                when (selectedPointType) {
+                    Path2DPoint.PointType.POINT -> {
+                        editPoint?.timeAndValue = worldPoint
+                    }
+                    Path2DPoint.PointType.PREV_TANGENT -> {
+                        editPoint!!.prevMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.prevTangent.length
+                        editPoint!!.prevMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.prevTangent.length
+                        editPoint!!.angle = (atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+                    }
+                    Path2DPoint.PointType.NEXT_TANGENT -> {
+                        editPoint!!.nextMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.nextTangent.length
+                        editPoint!!.angle = (atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
+                    }
+                }
                 refresh()
                 draw()
+                ControlPanel.refreshPoints()
+            } else if (!selectedPointHeading) {
+                mouseMode = PathVisualizer.MouseMode.DRAG_TIME
             }
-            PathVisualizer.MouseMode.EDIT -> {
-                if (editPoint != null) {
-                    val worldPoint = Vector2(easeScreen2WorldX(e.x), easeScreen2WorldY(e.y))
-                    when (selectedPointType) {
-                        Path2DPoint.PointType.POINT -> {
-                            editPoint?.timeAndValue = worldPoint
-                        }
-                        Path2DPoint.PointType.PREV_TANGENT -> {
-                            editPoint!!.prevMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.prevTangent.length
-                            editPoint!!.prevMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.prevTangent.length
-                            editPoint!!.angle = (atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
-                        }
-                        Path2DPoint.PointType.NEXT_TANGENT -> {
-                            editPoint!!.nextMagnitude *= (worldPoint - editPoint!!.timeAndValue).length * 3.0 / editPoint!!.nextTangent.length
-                            editPoint!!.angle = (atan((worldPoint.y - editPoint!!.value) / (worldPoint.x - editPoint!!.time)))
-                        }
-                    }
-                    draw()
-                    ControlPanel.refreshPoints()
-                }
-            }
+        }
+        if (mouseMode == PathVisualizer.MouseMode.DRAG_TIME) {
+            ControlPanel.currentTime = e.x * selectedPath!!.durationWithSpeed / canvas.width
+            refresh()
+            draw()
         }
     }
 
