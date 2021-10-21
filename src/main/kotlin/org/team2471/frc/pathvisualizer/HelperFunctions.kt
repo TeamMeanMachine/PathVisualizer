@@ -1,9 +1,11 @@
 package org.team2471.frc.pathvisualizer
 
+import javafx.scene.control.TextField
+import javafx.scene.input.KeyCode
 import org.team2471.frc.lib.math.Vector2
 import java.text.DecimalFormat
 import kotlin.math.pow
-import kotlin.math.roundToInt
+import kotlin.reflect.KClass
 
 fun feetToPixels(feet: Double): Double = feet * FieldPane.fieldDimensionPixels.x / FieldPane.fieldDimensionFeet.x
 fun pixelsToFeet(pixels: Double): Double = pixels * FieldPane.fieldDimensionFeet.x / FieldPane.fieldDimensionPixels.x
@@ -72,4 +74,47 @@ fun Double.round(fracDigits : Int) : Double {
         val powerOf: Double = 10.0.pow(fracDigits)
         kotlin.math.round(this * powerOf) / (powerOf)
     }
+}
+fun <T:Any> TextField.setChangeHandler(dataValidate : KClass<T>, allowBlank: Boolean = true, changeFunc : () -> Unit ) {
+    val verifyAndApplyChange = {
+        if (this.promptText != this.text) {
+            var allowChange = true
+            if (dataValidate == Double::class) {
+                allowChange = false
+                if (this.text.isBlank() || this.text.toDoubleOrNull() == null) {
+                    this.styleClass.add("textfield-error")
+                } else {
+                    allowChange = true
+                    this.styleClass.remove("textfield-error")
+                }
+            }
+            if (dataValidate == String::class && !allowBlank && this.text.isEmpty()) {
+                allowChange = false
+            }
+            if (allowChange) {
+                changeFunc()
+            }
+        }
+    }
+
+    this.setOnKeyPressed { event ->
+        if (event.code === KeyCode.ENTER) {
+            verifyAndApplyChange()
+            this.promptText = this.text
+        }
+    }
+    this.focusedProperty().addListener { _, _, newVal ->
+        if (newVal) {
+            this.promptText = this.text
+        } else {
+            verifyAndApplyChange()
+            this.promptText = ""
+        }
+    }
+}
+fun <T:Any> TextField.setChangeHandler(dataValidate : KClass<T>, changeFunc : () -> Unit ) {
+    setChangeHandler(dataValidate, true, changeFunc )
+}
+fun TextField.setChangeHandler(changeFunc : () -> Unit ) {
+    setChangeHandler(String::class, true, changeFunc )
 }

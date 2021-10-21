@@ -25,3 +25,6 @@
     -fx-padding: 3 6 3 4;
     -fx-text-fill: white;
 }
+.textfield-error{
+    -fx-background-color: Salmon;
+}

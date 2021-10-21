@@ -1,5 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
+import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
@@ -113,7 +114,9 @@ object FieldPane : StackPane() {
         }, 10, updateFrequencyInMillis)
     }
     private fun performPaneDataDraw() {
-        drawFieldPaneData(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected, mouseVector)
+        Platform.runLater {
+            drawFieldPaneData(canvas.graphicsContext2D, ControlPanel.networkTableInstance.isConnected, mouseVector)
+        }
     }
     private fun initConnectionStatusCheck(){
         val updateFrequencyInSeconds = 5
@@ -482,6 +485,9 @@ object FieldPane : StackPane() {
     }
 
     fun draw() {
+        Platform.runLater { drawLater() }
+    }
+    private fun drawLater() {
         zoom = maxOf(zoom, 1.0)
         var gc = canvas.graphicsContext2D
         gc.fill = Color.LIGHTGRAY

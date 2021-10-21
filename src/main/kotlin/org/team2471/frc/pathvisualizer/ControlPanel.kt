@@ -11,7 +11,6 @@ import javafx.scene.layout.*
 import javafx.scene.text.Text
 import javafx.util.Duration
 import kotlinx.coroutines.*
-import kotlinx.coroutines.selects.select
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
@@ -19,8 +18,6 @@ import org.team2471.frc.lib.util.Timer
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPoint
-import java.awt.Checkbox
-import kotlin.io.path.Path
 
 
 object ControlPanel : VBox() {
@@ -53,6 +50,7 @@ object ControlPanel : VBox() {
     private val fieldHeight = TextField()
     private val fieldTopLeftX = TextField()
     private val fieldTopLeftY = TextField()
+    private var animationJob: Job? = null
     val displayFieldOverlay = CheckBox("Field overlay")
     private val curveTypeCombo = ComboBox<String>()
     val deletePointButton = Button("")
@@ -177,7 +175,6 @@ object ControlPanel : VBox() {
         playAutoButton.tooltip = standardizedTooltip("Play Auto")
         playAutoButton.styleClass.add("play-button")
         playAutoButton.setOnAction {
-            var animationJob: Job? = null
 
             if (selectedAutonomous != null) {
                 animationJob?.cancel()
@@ -345,21 +342,11 @@ object ControlPanel : VBox() {
 
         val speedName = Text("Speed Multiplier:")
         speedText.prefWidth = 60.0
-        speedText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                val speed = speedText.text.toDouble()
-                FieldPane.setSelectedPathSpeed(speed)
-            }
-        }
+        speedText.setChangeHandler (Double::class){ FieldPane.setSelectedPathSpeed(speedText.text.toDouble())}
 
         val secondsName = Text("Path Duration:")
         secondsText.prefWidth = 60.0
-        secondsText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                val seconds = secondsText.text.toDouble()
-                FieldPane.setSelectedPathDuration(seconds)
-            }
-        }
+        secondsText.setChangeHandler (Double::class) { FieldPane.setSelectedPathDuration(secondsText.text.toDouble())}
 
         // set up Paths GridPane
 
@@ -404,28 +391,24 @@ object ControlPanel : VBox() {
 
         val posLabelX = Text("Position x:")
         xPosText.prefWidth = 100.0
-        xPosText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                if(FieldPane.selectedPoint != null) {
-                    FieldPane.setSelectedPointX(xPosText.text.toDouble())
-                    refresh()
-                } else if (EasePane.selectedPoint != null) {
-                    EasePane.setSelectedPointX(xPosText.text.toDouble())
-                    refresh()
-                }
+        xPosText.setChangeHandler (Double::class) {
+            if(selectedPoint != null) {
+                FieldPane.setSelectedPointX(xPosText.text.toDouble())
+                refresh()
+            } else if (EasePane.selectedPoint != null) {
+                EasePane.setSelectedPointX(xPosText.text.toDouble())
+                refresh()
             }
         }
         val posLabelY = Text("      y:")
         yPosText.prefWidth = 100.0
-        yPosText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                if(FieldPane.selectedPoint != null) {
-                    FieldPane.setSelectedPointY(yPosText.text.toDouble())
-                    refresh()
-                } else if (EasePane.selectedPoint != null) {
-                    EasePane.setSelectedPointY(yPosText.text.toDouble())
-                    refresh()
-                }
+        yPosText.setChangeHandler (Double::class) {
+            if(selectedPoint != null) {
+                FieldPane.setSelectedPointY(yPosText.text.toDouble())
+                refresh()
+            } else if (EasePane.selectedPoint != null) {
+                EasePane.setSelectedPointY(yPosText.text.toDouble())
+                refresh()
             }
         }
         val posUnit = Text("feet")
@@ -440,27 +423,23 @@ object ControlPanel : VBox() {
         tangentHBox.alignment = Pos.CENTER_LEFT
         val tangentLabel = Text("Tangent:")
         angleText.prefWidth = 100.0
-        angleText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                if (FieldPane.selectedPoint != null) {
-                    FieldPane.setSelectedPointAngle(angleText.text.toDouble())
-                    refresh()
-                } else if (EasePane.selectedPoint != null) {
-                    EasePane.setSelectedPointAngle(angleText.text.toDouble())
-                    refresh()
-                }
+        angleText.setChangeHandler (Double::class) {
+            if (selectedPoint != null) {
+                FieldPane.setSelectedPointAngle(angleText.text.toDouble())
+                refresh()
+            } else if (EasePane.selectedPoint != null) {
+                EasePane.setSelectedPointAngle(angleText.text.toDouble())
+                refresh()
             }
         }
         magnitudeText.prefWidth = 100.0
-        magnitudeText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                if (FieldPane.selectedPoint != null) {
-                    FieldPane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
-                    refresh()
-                } else if (EasePane.selectedPoint != null) {
-                    EasePane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
-                    refresh()
-                }
+        magnitudeText.setChangeHandler (Double::class) {
+            if (selectedPoint != null) {
+                FieldPane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
+                refresh()
+            } else if (EasePane.selectedPoint != null) {
+                EasePane.setSelectedPointMagnitude(magnitudeText.text.toDouble())
+                refresh()
             }
         }
         val angleUnit = Text("deg")
@@ -471,7 +450,6 @@ object ControlPanel : VBox() {
         slopeModeCombo.items.addAll("Smooth", "Manual", "None")
         slopeModeCombo.valueProperty().addListener { _, _, newText ->
             if (refreshing) return@addListener
-
             val method = when (newText) {
                 "Smooth" -> Path2DPoint.SlopeMethod.SLOPE_SMOOTH
                 "Manual" -> Path2DPoint.SlopeMethod.SLOPE_MANUAL
@@ -479,7 +457,6 @@ object ControlPanel : VBox() {
                 else -> throw IllegalStateException("Invalid slope method $newText")
             }
             FieldPane.setSelectedSlopeMethod(method)
-
         }
 
 
@@ -530,38 +507,30 @@ object ControlPanel : VBox() {
 
 
 
-
-
         // Ease and Headings
 
         val currentTimeName = Text("Time:")
         currentTimeText.prefWidth = 100.0
-        currentTimeText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                currentTime = currentTimeText.text.toDouble()
-                refresh()
-            }
+        currentTimeText.setChangeHandler (Double::class) {
+            currentTime = currentTimeText.text.toDouble()
+            refresh()
         }
 
         val easeValue = Text("Ease:")
         val headingValue = Text("Heading:")
 
         easePositionText.prefWidth = 100.0
-        easePositionText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                selectedPath?.easeCurve?.storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
-                println("Edited Ease: ${selectedPath?.easeCurve?.getValue(currentTime)}")
-                draw()
-            }
+        easePositionText.setChangeHandler (Double::class) {
+            selectedPath?.easeCurve?.storeValue(currentTime, easePositionText.text.toDouble() / 100.0)
+//            println("Edited Ease: ${selectedPath?.easeCurve?.getValue(currentTime)}")
+            draw()
         }
 
         headingAngleText.prefWidth = 100.0
-        headingAngleText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                if (headingAngleText.text.isNotEmpty()) {
-                    selectedPath?.headingCurve?.storeValue(currentTime, headingAngleText.text.toDouble())
-                    draw()
-                }
+        headingAngleText.setChangeHandler (Double::class) {
+            if (headingAngleText.text.isNotEmpty()) {
+                selectedPath?.headingCurve?.storeValue(currentTime, headingAngleText.text.toDouble())
+                draw()
             }
         }
 
@@ -607,57 +576,44 @@ object ControlPanel : VBox() {
         easeAndHeadingTitlePane.isExpanded = true
 
 
-
-
-
         // Robot Parameters
 
         val addressName = Text("Robot Address:")
         val addressText = TextField(ipAddress)
-        addressText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                ipAddress = addressText.text
-                PathVisualizer.pref.put("ipAddress", ipAddress)
-                connect()
-            }
+        addressText.setChangeHandler {
+            ipAddress = addressText.text
+            PathVisualizer.pref.put("ipAddress", ipAddress)
+            connect()
         }
         connect()
 
 
         /* ROBOT SPECIFIC PROPERTIES - USE REFLECTION ALONG WITH CURRENT ROBOT TO POPULATE THESE CONTROLS */
         val trackWidthName = Text("Track Width:  ")
-        trackWidthText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                ControlPanel.trackWidthText.text = (autonomi.robotParameters.robotWidth * 12.0).format(1)
-                autonomi.robotParameters.robotWidth = (trackWidthText.text.toDouble()) / 12.0
-                draw()
-            }
+        trackWidthText.setChangeHandler (Double::class)  {
+            trackWidthText.text = (autonomi.robotParameters.robotWidth * 12.0).format(1)
+            autonomi.robotParameters.robotWidth = (trackWidthText.text.toDouble()) / 12.0
+            draw()
         }
         val trackWidthUnit = Text(" inches")
 
         val scrubFactorName = Text("Width Scrub Factor:  ")
-        scrubFactorText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                (autonomi.drivetrainParameters as? ArcadeParameters)?.scrubFactor = scrubFactorText.text.toDouble()
-                draw()
-            }
+        scrubFactorText.setChangeHandler(Double::class)  {
+            (autonomi.drivetrainParameters as? ArcadeParameters)?.scrubFactor = scrubFactorText.text.toDouble()
+            draw()
         }
 
         val widthName = Text("Robot Width:  ")
-        widthText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                autonomi.robotParameters.robotWidth = widthText.text.toDouble() / 12.0
-                draw()
-            }
+        widthText.setChangeHandler (Double::class) {
+            autonomi.robotParameters.robotWidth = widthText.text.toDouble() / 12.0
+            draw()
         }
         val widthUnit = Text(" inches")
 
         val lengthName = Text("Robot Length:  ")
-        lengthText.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                autonomi.robotParameters.robotLength = lengthText.text.toDouble() / 12.0
-                draw()
-            }
+        lengthText.setChangeHandler (Double::class) {
+            autonomi.robotParameters.robotLength = lengthText.text.toDouble() / 12.0
+            draw()
         }
         val lengthUnit = Text(" inches")
 
@@ -708,30 +664,26 @@ object ControlPanel : VBox() {
         val fieldWidthDimens = Text(" feet")
         fieldWidth.prefWidth = 60.0
         fieldWidth.text = FieldPane.fieldDimensionFeet.x.toString()
-        fieldWidth.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                PathVisualizer.pref.putDouble("fieldWidth", fieldWidth.text.toDouble())
-                val alert = Alert(Alert.AlertType.WARNING)
-                alert.title = "Restart required"
-                alert.headerText = "Warning"
-                alert.contentText = "Restart required for field dimension changes"
-                alert.show()
-            }
+        fieldWidth.setChangeHandler (Double::class) {
+            PathVisualizer.pref.putDouble("fieldWidth", fieldWidth.text.toDouble())
+            val alert = Alert(Alert.AlertType.WARNING)
+            alert.title = "Restart required"
+            alert.headerText = "Warning"
+            alert.contentText = "Restart required for field dimension changes"
+            alert.show()
         }
 
         val fieldHeightName = Text("Field Height:  ")
         val fieldHeightDimens = Text(" feet")
         fieldHeight.prefWidth = 60.0
         fieldHeight.text = FieldPane.fieldDimensionFeet.y.toString()
-        fieldHeight.setOnKeyPressed { event ->
-            if (event.code === KeyCode.ENTER) {
-                PathVisualizer.pref.putDouble("fieldHeight", fieldHeight.text.toDouble())
-                val alert = Alert(Alert.AlertType.WARNING)
-                alert.title = "Restart required"
-                alert.headerText = "Warning"
-                alert.contentText = "Restart required for field dimension changes"
-                alert.show()
-            }
+        fieldHeight.setChangeHandler (Double::class) {
+            PathVisualizer.pref.putDouble("fieldHeight", fieldHeight.text.toDouble())
+            val alert = Alert(Alert.AlertType.WARNING)
+            alert.title = "Restart required"
+            alert.headerText = "Warning"
+            alert.contentText = "Restart required for field dimension changes"
+            alert.show()
         }
 
         val fieldParamsTitledPane = TitledPane()
@@ -774,9 +726,7 @@ object ControlPanel : VBox() {
 //        FieldPane.recalcFieldDimens()
 //        draw()
 //    }
-    fun playSelectedPath() {
-        var animationJob: Job? = null
-
+private fun playSelectedPath() {
         if (selectedPath != null) {
             animationJob?.cancel()
 
@@ -974,7 +924,7 @@ object ControlPanel : VBox() {
             pathsTitlePane.text = "Path - ${selectedPath?.name ?: ""}"
             curveTypeCombo.value = selectedPath?.curveType.toString().capitalize()
         }
-
+//
 //        trackWidthText.text = (autonomi.arcadeParameters.trackWidth * 12.0).format(1)
 //        scrubFactorText.text = autonomi.arcadeParameters.scrubFactor.format(3)
 //        widthText.text = (autonomi.robotParameters.robotWidth * 12.0).format(1)
