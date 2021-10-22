@@ -10,6 +10,7 @@ import javafx.scene.control.SplitPane
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.input.DragEvent
+import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.text.Font
 import javafx.stage.Screen
@@ -70,6 +71,13 @@ class PathVisualizer : Application() {
             TopBar.toggleVisualizeActiveRobot()
             (liveScrollPane.content as LivePanel).refresh()
         }
+        tabPane.addEventFilter(KeyEvent.ANY) { event: KeyEvent ->
+            if (event.code.isArrowKey && event.target === tabPane) {
+                event.consume()
+            }
+        }
+
+
         tabPane.tabs.add(tabLive)
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, tabPane)
