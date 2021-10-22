@@ -1,7 +1,11 @@
 package org.team2471.frc.pathvisualizer
 
+import javafx.scene.control.Button
 import javafx.scene.control.TextField
+import javafx.scene.control.Tooltip
 import javafx.scene.input.KeyCode
+import javafx.util.Duration
+import kotlinx.coroutines.Job
 import org.team2471.frc.lib.math.Vector2
 import java.text.DecimalFormat
 import kotlin.math.pow

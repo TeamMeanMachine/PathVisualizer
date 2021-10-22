@@ -25,6 +25,36 @@
     -fx-padding: 3 6 3 4;
     -fx-text-fill: white;
 }
+.align-button {
+    -fx-background-color: DimGrey;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+.forwardstep-button {
+    -fx-background-color: DarkGrey;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+.backwardstep-button {
+    -fx-background-color: DarkGrey;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+.angledown-button {
+    -fx-background-color: DarkGrey;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
+.angleup-button {
+    -fx-background-color: DarkGrey;
+    -fx-background-radius: 3,2,2,2;
+    -fx-padding: 3 5 3 5;
+    -fx-text-fill: white;
+}
 .textfield-error{
     -fx-background-color: Salmon;
 }

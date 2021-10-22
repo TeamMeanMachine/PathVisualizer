@@ -140,6 +140,7 @@ object EasePane : StackPane() {
         } else {
             ControlPanel.currentTime = e.x * selectedPath!!.durationWithSpeed / canvas.width
         }
+        ControlPanel.selectedEasePointType = if (selectedPointHeading) {"Heading"} else {"Ease"}
         refresh()
         draw()
 

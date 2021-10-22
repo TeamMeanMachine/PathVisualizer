@@ -6,11 +6,11 @@ import javafx.geometry.HPos
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
-import javafx.scene.input.KeyCode
 import javafx.scene.layout.*
 import javafx.scene.text.Text
 import javafx.util.Duration
 import kotlinx.coroutines.*
+import kotlinx.coroutines.selects.select
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
@@ -50,28 +50,24 @@ object ControlPanel : VBox() {
     private val fieldHeight = TextField()
     private val fieldTopLeftX = TextField()
     private val fieldTopLeftY = TextField()
-    private var animationJob: Job? = null
-    val displayFieldOverlay = CheckBox("Field overlay")
     private val curveTypeCombo = ComboBox<String>()
-    val deletePointButton = Button("")
+    private val deletePointButton = Button().fontAwesome(FontAwesome.Icon.Delete,"Delete Point")
+    private var animationJob: Job? = null
+    private var connectionJob: Job? = null
+    var selectedEasePointType = ""
 
     var ipAddress = ""
     var pathWeaverFormat = false
-
+    val displayFieldOverlay = CheckBox("Field overlay")
     var maxVelocity = 20.0
     var maxAcceleration = 20.0
     val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
-
-    private var connectionJob: Job? = null
-
     var autonomi = Autonomi()
-
     var currentTime = 0.0
         set(value) {
             field = value
-            FieldPane.draw()
+            draw()
         }
-
     var selectedAutonomous: Autonomous? = null
         private set
 
@@ -114,11 +110,7 @@ object ControlPanel : VBox() {
             }
         }
 
-        val newAutoButton = Button("")
-        newAutoButton.font = PathVisualizer.fontAwesome
-        newAutoButton.text = "\u002b"
-        newAutoButton.tooltip = standardizedTooltip("New Auto")
-        newAutoButton.styleClass.add("add-button")
+        val newAutoButton = Button().fontAwesome(FontAwesome.Icon.Add,"New Auto")
         newAutoButton.setOnAction {
             val newAutoName: String
             val defaultName = "Auto"
@@ -141,11 +133,7 @@ object ControlPanel : VBox() {
             setAuto(newAutoName)
         }
 
-        val renameAutoButton = Button("")
-        renameAutoButton.font = PathVisualizer.fontAwesome
-        renameAutoButton.text = "\uf044"
-        renameAutoButton.tooltip = standardizedTooltip("Rename Auto")
-        renameAutoButton.styleClass.add("edit-button")
+        val renameAutoButton = Button().fontAwesome(FontAwesome.Icon.Edit,"Rename Auto")
         renameAutoButton.setOnAction {
             val auto = selectedAutonomous ?: return@setOnAction
             val dialog = TextInputDialog(auto.name)
@@ -158,23 +146,20 @@ object ControlPanel : VBox() {
             }
         }
 
-        val deleteAutoButton = Button("Delete Auto")
-        deleteAutoButton.font = PathVisualizer.fontAwesome
-        deleteAutoButton.text = "\uf1f8"
-        deleteAutoButton.tooltip = standardizedTooltip("Delete Auto")
-        deleteAutoButton.styleClass.add("delete-button")
+        val deleteAutoButton = Button().fontAwesome(FontAwesome.Icon.Delete,"Delete Auto")
         deleteAutoButton.setOnAction {
             if (selectedAutonomous != null) {
-                deleteSelectedAuto()
+                val alert = Alert(Alert.AlertType.CONFIRMATION)
+                alert.contentText = "Are you sure you want to delete the entire auto?"
+                alert.showAndWait()
+                if (alert.result == ButtonType.OK) {
+                    deleteSelectedAuto()
+                }
             }
         }
 
-        val playAutoButton = Button("")
-        playAutoButton.font = PathVisualizer.fontAwesome
-        playAutoButton.text = "\uf04b"
-        playAutoButton.tooltip = standardizedTooltip("Play Auto")
-        playAutoButton.styleClass.add("play-button")
-        playAutoButton.setOnAction {
+       val playAutoButton = Button().fontAwesome(FontAwesome.Icon.Play,"Play Auto")
+       playAutoButton.setOnAction {
 
             if (selectedAutonomous != null) {
                 animationJob?.cancel()
@@ -255,11 +240,7 @@ object ControlPanel : VBox() {
             setSelectedPath(pathName)
         }
 
-        val newPathButton = Button("")
-        newPathButton.font = PathVisualizer.fontAwesome
-        newPathButton.text = "\u002b"
-        newPathButton.tooltip = standardizedTooltip("New Path")
-        newPathButton.styleClass.add("add-button")
+        val newPathButton = Button().fontAwesome(FontAwesome.Icon.Add,"New Path")
         newPathButton.setOnAction {
             val newPathName: String?
             val defaultName = "Path"
@@ -281,22 +262,33 @@ object ControlPanel : VBox() {
             }
         }
 
-        val deletePathButton = Button("")
-        deletePathButton.font = PathVisualizer.fontAwesome
-        deletePathButton.text = "\uf1f8"
-        deletePathButton.tooltip = standardizedTooltip("Delete Path")
-        deletePathButton.styleClass.add("delete-button")
+        val deletePathButton = Button().fontAwesome(FontAwesome.Icon.Delete,"Delete Path")
         deletePathButton.setOnAction {
             if (selectedPath != null && selectedAutonomous != null) {
-                deleteSelectedPath()
+                val alert = Alert(Alert.AlertType.CONFIRMATION)
+                alert.contentText = "Are you sure you want to delete this path?"
+                alert.showAndWait()
+                if (alert.result == ButtonType.OK) {
+                    deleteSelectedPath()
+                }
+            }
+        }
+        val alignPathButton = Button().fontAwesome(FontAwesome.Icon.Align,"Align Path to Previous")
+        alignPathButton.setOnAction {
+            if (selectedPath != null && selectedAutonomous != null && pathListView.selectionModel.selectedIndex > 0) {
+                val prevPath = selectedAutonomous!!.paths[pathListView.items[pathListView.selectionModel.selectedIndex-1]]
+                if (prevPath != null) {
+                    selectedPath!!.xyCurve.headPoint.position = prevPath.xyCurve.tailPoint.position
+//                    selectedPath!!.headingCurve.headKey.angle = prevPath.headingCurve.tailKey.angle
+                    println("prev ${prevPath.headingCurve.getValue(prevPath.duration)}")
+                    selectedPath!!.headingCurve.storeValue(selectedPath!!.headingCurve.headKey.time,prevPath.headingCurve.getValue(prevPath.duration))
+                }
+                refresh()
+                draw( )
             }
         }
 
-        val renamePathButton = Button("")
-        renamePathButton.font = PathVisualizer.fontAwesome
-        renamePathButton.text = "\uf044"
-        renamePathButton.tooltip = standardizedTooltip("Rename Path")
-        renamePathButton.styleClass.add("edit-button")
+        val renamePathButton = Button().fontAwesome(FontAwesome.Icon.Edit,"Rename Path")
         renamePathButton.setOnAction {
             val selectedPath = selectedPath ?: return@setOnAction
 
@@ -310,11 +302,7 @@ object ControlPanel : VBox() {
             }
         }
 
-        val playPathButton = Button("")
-        playPathButton.font = PathVisualizer.fontAwesome
-        playPathButton.text = "\uf04b"
-        playPathButton.tooltip = standardizedTooltip("Play Path")
-        playPathButton.styleClass.add("play-button")
+        val playPathButton = Button().fontAwesome(FontAwesome.Icon.Play,"Play Path")
         playPathButton.setOnAction {
             playSelectedPath()
         }
@@ -323,7 +311,7 @@ object ControlPanel : VBox() {
 
         val pathButtonsVBox = HBox()
         pathButtonsVBox.spacing = 10.0
-        pathButtonsVBox.children.addAll(newPathButton, renamePathButton, playPathButton,spacerPathDelete, deletePathButton)
+        pathButtonsVBox.children.addAll(newPathButton, renamePathButton, playPathButton,spacerPathDelete, deletePathButton, alignPathButton)
 
         val pathLengthLabel = Text("Length:")
         val pathLengthUnits = Text("feet")
@@ -412,11 +400,22 @@ object ControlPanel : VBox() {
             }
         }
         val posUnit = Text("feet")
-        deletePointButton.font = PathVisualizer.fontAwesome
-        deletePointButton.text = "\uf1f8"
-        deletePointButton.tooltip = standardizedTooltip("Delete Point")
-        deletePointButton.styleClass.add("delete-button")
-        deletePointButton.setOnAction { FieldPane.deleteSelectedPoint() }
+        deletePointButton.setOnAction {
+            val alert = Alert(Alert.AlertType.CONFIRMATION)
+            alert.contentText = "Are you sure you want to delete this point?"
+            alert.showAndWait()
+            if (alert.result == ButtonType.OK) {
+                if (selectedPoint != null) {
+                    FieldPane.deleteSelectedPoint()
+                } else if (EasePane.selectedPoint != null){
+                    if (selectedEasePointType == "Heading") {
+                        selectedPath?.removeHeadingPoint(EasePane.selectedPoint)
+                    } else if (selectedEasePointType == "Ease") {
+                        selectedPath?.removeEasePoint(EasePane.selectedPoint)
+                    }
+                }
+            }
+        }
 
 
         val tangentHBox = HBox()
@@ -942,7 +941,7 @@ private fun playSelectedPath() {
     }
 
     fun refreshPoints() {
-        val fieldPaneSelectedPoint = FieldPane.selectedPoint
+        val fieldPaneSelectedPoint = selectedPoint
         val easePaneSelectedPoint = EasePane.selectedPoint
         refreshing = true
         magnitudeText.isDisable = true
@@ -951,7 +950,6 @@ private fun playSelectedPath() {
         xPosText.isDisable = true
         yPosText.isDisable = true
         deletePointButton.isDisable = true
-
         if (fieldPaneSelectedPoint == null && easePaneSelectedPoint == null) {
             xPosText.text = ""
             yPosText.text = ""
@@ -1008,7 +1006,8 @@ private fun playSelectedPath() {
                 }
             } else if (easePaneSelectedPoint != null) {
                 pointsAndTangentsTitlePane.isExpanded = (EasePane.selectedPointType != Path2DPoint.PointType.POINT)
-                when (EasePane.selectedPointType){
+                deletePointButton.isDisable = (EasePane.selectedPointType != Path2DPoint.PointType.POINT)
+                    when (EasePane.selectedPointType){
                     Path2DPoint.PointType.POINT -> {
                         xPosText.text = ""
                         yPosText.text = ""
