@@ -9,6 +9,7 @@ import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import javafx.scene.text.FontSmoothingType
+import javafx.scene.text.Text
 
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -23,6 +24,7 @@ object FieldPane : StackPane() {
     private val replayCanvas = ResizableCanvas()
     private val arbitraryGC = arbitraryCanvas.graphicsContext2D
     private val replayGC = replayCanvas.graphicsContext2D
+    var connectionStringWidth = 70.0
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
     private val image = Image("assets/2021Field.png")
     private var upperLeftOfFieldPixels = Vector2(105.0, 820.0)
@@ -105,6 +107,8 @@ object FieldPane : StackPane() {
 //    }
 
     private fun initXYCoordDraw(){
+        val testText = Text("10.99.99.2")
+        connectionStringWidth = testText.boundsInLocal.width + 20.0
         val updateFrequencyInMillis = 100L
         val timer = Timer()
         timer.schedule(object : TimerTask() {
