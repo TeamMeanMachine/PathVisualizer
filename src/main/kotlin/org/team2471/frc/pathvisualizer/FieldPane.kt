@@ -370,8 +370,8 @@ object FieldPane : StackPane() {
             }
         }
 
-        if ((e.isMiddleButtonDown || e.isSecondaryButtonDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
-            canvas.cursor = Cursor.CROSSHAIR
+        if ((e.isMiddleButtonDown || e.isSecondaryButtonDown || e.isControlDown) && shortestDistance >= PathVisualizer.CLICK_CIRCLE_SIZE * 2) {
+            replayCanvas.cursor = Cursor.CROSSHAIR
             mouseMode = PathVisualizer.MouseMode.PAN
         }
 
@@ -387,7 +387,7 @@ object FieldPane : StackPane() {
                 ControlPanel.refresh()
             }
             PathVisualizer.MouseMode.PAN -> {
-                canvas.cursor = ImageCursor.CROSSHAIR
+                replayCanvas.cursor = ImageCursor.CROSSHAIR
                 oCoord = Vector2(e.x, e.y) - offset
             }
         }
@@ -480,8 +480,8 @@ object FieldPane : StackPane() {
             }  // no longer editing
             PathVisualizer.MouseMode.PAN -> mouseMode = PathVisualizer.MouseMode.EDIT
         }
-        canvas.cursor = Cursor.DEFAULT
-        canvas.requestFocus()
+        replayCanvas.cursor = Cursor.DEFAULT
+        replayCanvas.requestFocus()
     }
 
     fun draw() {
@@ -545,38 +545,41 @@ object FieldPane : StackPane() {
     }
 
     private fun onKeyPressed(e: KeyEvent) {
-
         //monitoring keyboard input for "p", if pressed, will enable pan ability
-        when (e.text) {
-            "a" -> {
+        when (e.code) {
+            KeyCode.A -> {
                 mouseMode = PathVisualizer.MouseMode.ADD
             }
-            "p" -> {
-                canvas.cursor = ImageCursor.CROSSHAIR
+            KeyCode.P -> {
+                replayCanvas.cursor = ImageCursor.CROSSHAIR
                 mouseMode = PathVisualizer.MouseMode.PAN
             }
-            "f" -> {
+            KeyCode.F -> {
                 zoomFit()
             }
-            "z" -> {
+            KeyCode.Z -> {
                 if (e.isControlDown) {
                     if (e.isShiftDown) TopBar.redo()
                     else TopBar.undo()
                 }
             }
-            "=" -> {
+            KeyCode.EQUALS -> {
                 zoom *= if (e.isControlDown)
                     1.01
                 else
                     1.10
                 draw()
             }
-            "-" -> {
+            KeyCode.MINUS -> {
                 zoom /= if (e.isControlDown)
                     1.01
                 else
                     1.10
                 draw()
+            }
+            KeyCode.RIGHT -> {
+                println("have key code Right")
+                offset.x += 1.0 / 12.0
             }
         }
         if (selectedPoint != null && e.isControlDown) {
@@ -602,7 +605,7 @@ object FieldPane : StackPane() {
             }
             if (offset != Vector2(0.0, 0.0)) {
                 draw()
-                canvas.requestFocus()
+                replayCanvas.requestFocus()
             }
             ControlPanel.refresh()
         }
