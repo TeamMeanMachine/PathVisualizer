@@ -21,7 +21,7 @@ fun drawConnectionStatus(gc: GraphicsContext, isConnected : Boolean){
 }
 fun drawFieldPaneData(gc: GraphicsContext, isConnected : Boolean, fieldVector: Vector2) {
     gc.fill = Color.BLACK
-    gc.fillRect(0.0, 0.0, 70.0, 50.0)
+    gc.fillRect(0.0, 0.0, FieldPane.connectionStringWidth, 50.0)
     gc.fill = Color.WHITE
     gc.stroke = Color.WHITE
     if (fieldVector.x > -1000.0 && fieldVector.y > -1000.0) {

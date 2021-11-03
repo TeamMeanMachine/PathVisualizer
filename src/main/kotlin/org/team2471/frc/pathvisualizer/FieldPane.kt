@@ -9,6 +9,7 @@ import javafx.scene.input.*
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import javafx.scene.text.FontSmoothingType
+import javafx.scene.text.Text
 
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -23,12 +24,13 @@ object FieldPane : StackPane() {
     private val replayCanvas = ResizableCanvas()
     private val arbitraryGC = arbitraryCanvas.graphicsContext2D
     private val replayGC = replayCanvas.graphicsContext2D
-    //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and fieldOrigin
+    var connectionStringWidth = 70.0
+    //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
     private val image = Image("assets/2021Field.png")
     private var upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private var lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
-    var fieldOrigin = Vector2(1565.0, 821.0)  // the location in the image where the zoom origin will originate
+    var zoomPivot = Vector2(1565.0, 821.0)  // the location in the image where the zoom origin will originate
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
     var displayActiveRobot = false
@@ -105,6 +107,8 @@ object FieldPane : StackPane() {
 //    }
 
     private fun initXYCoordDraw(){
+        val testText = Text("10.99.99.2")
+        connectionStringWidth = testText.boundsInLocal.width + 20.0
         val updateFrequencyInMillis = 100L
         val timer = Timer()
         timer.schedule(object : TimerTask() {
@@ -613,13 +617,7 @@ object FieldPane : StackPane() {
 
     private fun onScroll(e: ScrollEvent) {
         if (mouseMode != PathVisualizer.MouseMode.PAN) {
-            val prevZoom = zoom
             zoom -= e.deltaY / 25 * -1
-//            val zoomDiff = (zoom - prevZoom)/zoom
-//            //offset = offset.times(zoomDiff)
-//            val offsetAdjustmentFromMouse = world2ScreenWithMirror(screen2World(Vector2(e.x, e.y)),true).times(zoomDiff)
-//            println("$zoom $zoomDiff ${e.x} ${e.y} $offsetAdjustmentFromMouse")
-//            offset = offset.minus(offsetAdjustmentFromMouse)
             draw()
         }
     }
