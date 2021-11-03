@@ -1,11 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
-import javafx.scene.control.Button
 import javafx.scene.control.TextField
-import javafx.scene.control.Tooltip
 import javafx.scene.input.KeyCode
-import javafx.util.Duration
-import kotlinx.coroutines.Job
 import org.team2471.frc.lib.math.Vector2
 import java.text.DecimalFormat
 import kotlin.math.pow
@@ -20,11 +16,11 @@ inline fun <T : Any, R> whenNotNull(input: T?, callback: (T) -> R): R? {
 
 fun world2Screen(vector2: Vector2): Vector2 {
     val temp = (vector2 * FieldPane.zoom).mirrorYAxis()
-    return temp + FieldPane.zoomPivot + FieldPane.offset
+    return temp + FieldPane.fieldOrigin + FieldPane.offset
 }
 
 fun screen2World(vector2: Vector2): Vector2 {
-    val temp = (vector2 - FieldPane.offset - FieldPane.zoomPivot).mirrorYAxis()
+    val temp = (vector2 - FieldPane.offset - FieldPane.fieldOrigin).mirrorYAxis()
     return temp / FieldPane.zoom
 }
 
@@ -33,11 +29,11 @@ fun world2ScreenWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
     temp.y = -temp.y
     if (mirror)
         temp.x = -temp.x
-    return temp + FieldPane.zoomPivot + FieldPane.offset
+    return temp + FieldPane.fieldOrigin + FieldPane.offset
 }
 
 fun screen2WorldWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
-    val temp = vector2 - FieldPane.offset - FieldPane.zoomPivot
+    val temp = vector2 - FieldPane.offset - FieldPane.fieldOrigin
     temp.y = -temp.y
     if (mirror)
         temp.x = -temp.x
