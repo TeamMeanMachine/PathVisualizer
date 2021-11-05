@@ -71,7 +71,7 @@ object EasePane : StackPane() {
             while (point != null) {
                 println("found a point ${point.value}")
                 val tPoint = Vector2(easeWorld2ScreenX(point.time), headingWorld2ScreenY(point.value))
-                var dist = tPoint.minus(mouseVec).length
+                var dist = (tPoint - mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
@@ -88,7 +88,7 @@ object EasePane : StackPane() {
             point = selectedPath?.easeCurve?.headKey
             while (point != null) {
                 val tPoint = Vector2(easeWorld2ScreenX(point.time), easeWorld2ScreenY(point.value))
-                var dist = tPoint.minus(mouseVec).length
+                var dist = (tPoint - mouseVec).length
                 if (dist <= shortestDistance) {
                     shortestDistance = dist
                     closestPoint = point
@@ -98,7 +98,7 @@ object EasePane : StackPane() {
                 if (point.prevKey != null) {
                     val prevTanPoint = point.timeAndValue - point.prevTangent / PathVisualizer.TANGENT_DRAW_FACTOR
                     val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
-                    dist = tanPoint.minus(mouseVec).length
+                    dist = (tanPoint - mouseVec).length
                     if (dist <= shortestDistance) {
                         shortestDistance = dist
                         closestPoint = point
@@ -109,7 +109,7 @@ object EasePane : StackPane() {
                 if (point.nextKey != null) {
                     val prevTanPoint = point.timeAndValue + point.nextTangent / PathVisualizer.TANGENT_DRAW_FACTOR
                     val tanPoint = Vector2(easeWorld2ScreenX(prevTanPoint.x), easeWorld2ScreenY(prevTanPoint.y))
-                    dist = tanPoint.minus(mouseVec).length
+                    dist = (tanPoint - mouseVec).length
                     if (dist <= shortestDistance) {
                         shortestDistance = dist
                         closestPoint = point

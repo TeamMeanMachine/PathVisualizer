@@ -1,7 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
-import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil
-import edu.wpi.first.wpilibj.util.Units
+import edu.wpi.first.math.trajectory.TrajectoryUtil
+import edu.wpi.first.math.util.Units
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem

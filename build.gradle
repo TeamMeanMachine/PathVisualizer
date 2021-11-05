@@ -19,18 +19,19 @@ buildConfig {
     buildConfigField "long", "BUILD_TIME", "${System.currentTimeMillis()}L"
 }
 
+def wpiLibVersion = "2022.1.1-beta-1"
 repositories {
     mavenCentral()
-    maven {setUrl("https://plugins.gradle.org/m2/")}
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
-    maven { setUrl("https://raw.githubusercontent.com/Open-RIO/Maven-Mirror/master/m2")}
+    maven { setUrl("https://plugins.gradle.org/m2/")}
+    maven {setUrl("https://maven.ctr-electronics.com/release/")}
+    maven {setUrl("https://www.revrobotics.com/content/sw/max/sdk/maven/")}
 }
 
 javafx {
     version = "17"
     modules = [ 'javafx.controls']
 }
-def wpiLibVersion = "2021.3.1"
 mainClassName = 'PathVisualizer'
 
 dependencies {
@@ -42,7 +43,7 @@ dependencies {
 //    nativeZip wpi.deps.vendor.jni(wpi.platforms.roborio)
 //    nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
 //    compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31"
 //    implementation "edu.wpi.first.ntcore:ntcore-jni:2021.3.1"
     implementation "edu.wpi.first.ntcore:ntcore-java:$wpiLibVersion"
     implementation "edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion"
@@ -50,11 +51,11 @@ dependencies {
     implementation "edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:osxx86-64"
     implementation "edu.wpi.first.wpiutil:wpiutil-java:$wpiLibVersion"
     implementation("edu.wpi.first.wpimath:wpimath-java:$wpiLibVersion")
-    compile project("meanlib")
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt'
+    implementation("org.team2471.lib:meanlib")
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
     implementation 'com.github.gmazzo.buildconfig:com.github.gmazzo.buildconfig.gradle.plugin:3.0.0'
     //implementation group: 'com.github.gmazzo.buildconfig', name: 'com.github.gmazzo.buildconfig.gradle.plugin', version: '3.0.0', ext: 'pom'
-    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'com.google.code.gson:gson:2.8.9'
     implementation("com.squareup.moshi:moshi:1.12.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
     implementation("com.squareup.moshi:moshi-adapters:1.12.0")

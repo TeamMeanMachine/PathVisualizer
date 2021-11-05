@@ -1,7 +1,7 @@
 package org.team2471.frc.pathvisualizer
 
-import edu.wpi.first.wpilibj.trajectory.Trajectory
-import edu.wpi.first.wpilibj.util.Units
+import edu.wpi.first.math.trajectory.Trajectory
+import edu.wpi.first.math.util.Units
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
