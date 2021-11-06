@@ -1,12 +1,7 @@
 package org.team2471.frc.pathvisualizer
 import javafx.scene.Node
-import javafx.scene.control.Label
-import javafx.scene.control.TextField
 import javafx.scene.layout.FlowPane
-import javafx.scene.layout.HBox
 import org.team2471.frc.lib.motion_profiling.following.DrivetrainParameters
-import java.lang.IllegalStateException
-import kotlin.reflect.KMutableProperty1
 
 // this function is magical -tyler
 inline fun <reified T : DrivetrainParameters> DriveParametersEditor(params: T): Node {
