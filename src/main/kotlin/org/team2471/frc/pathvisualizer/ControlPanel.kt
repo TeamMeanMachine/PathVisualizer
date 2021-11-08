@@ -14,6 +14,7 @@ import kotlinx.coroutines.selects.select
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
+import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
 import org.team2471.frc.lib.util.Timer
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
@@ -68,23 +69,70 @@ object ControlPanel : VBox() {
             field = value
             draw()
         }
+    var robotWidth : Double
+        get() {
+            return widthText.text.toDoubleOrNull() ?: 0.0
+        }
+        set (value) {
+            widthText.text = value.toString()
+        }
+    var robotLength : Double
+        get() {
+            return lengthText.text.toDoubleOrNull() ?: 0.0
+        }
+        set (value) {
+            lengthText.text = value.toString()
+        }
+    var trackWidth : Double
+        get() {
+            return trackWidthText.text.toDoubleOrNull() ?: 0.0
+        }
+        set (value) {
+            trackWidthText.text = value.toString()
+        }
+    var trackScrubFactor : Double
+        get() {
+            return scrubFactorText.text.toDoubleOrNull() ?: 0.0
+        }
+        set (value) {
+            scrubFactorText.text = value.toString()
+        }
+
     var selectedAutonomous: Autonomous? = null
         private set
 
     fun initializeParameters() {
-        autonomi.robotParameters = RobotParameters(
+        if (autonomi.robotParameters.robotWidth > 0 && autonomi.robotParameters.robotLength > 0) {
+            robotWidth = (autonomi.robotParameters.robotWidth * 12)
+            robotLength = (autonomi.robotParameters.robotLength * 12)
+        } else {
+            // provide default robotParameters if none exist
+            autonomi.robotParameters = RobotParameters(
                 robotWidth = 28.0 / 12.0,
-                robotLength = 32.0 /12.0
-        )
+                robotLength = 32.0 / 12.0
+            )
+        }
+        when (val driveParams = autonomi.drivetrainParameters) {
+            is ArcadeParameters -> {
+                trackWidth = driveParams.trackWidth * 12.0
+                trackScrubFactor = driveParams.scrubFactor
+            }
+            is SwerveParameters -> {
+                println("found swerve params")
 
-        autonomi.drivetrainParameters = ArcadeParameters(
-                trackWidth = 25.0/12.0,
-                scrubFactor = 1.12,
-                leftFeedForwardCoefficient = 0.070541988198899,
-                leftFeedForwardOffset = 0.021428882425651,
-                rightFeedForwardCoefficient = 0.071704891069425,
-                rightFeedForwardOffset = 0.020459379452296
-        )
+            }
+            else -> {
+                autonomi.drivetrainParameters = ArcadeParameters(
+                    trackWidth = 25.0/12.0,
+                    scrubFactor = 1.12,
+                    leftFeedForwardCoefficient = 0.070541988198899,
+                    leftFeedForwardOffset = 0.021428882425651,
+                    rightFeedForwardCoefficient = 0.071704891069425,
+                    rightFeedForwardOffset = 0.020459379452296
+                )
+            }
+        }
+        setDrivetrainType()
     }
 
     init {
@@ -586,19 +634,17 @@ object ControlPanel : VBox() {
         }
         connect()
 
-
         /* ROBOT SPECIFIC PROPERTIES - USE REFLECTION ALONG WITH CURRENT ROBOT TO POPULATE THESE CONTROLS */
         val trackWidthName = Text("Track Width:  ")
         trackWidthText.setChangeHandler (Double::class)  {
-            trackWidthText.text = (autonomi.robotParameters.robotWidth * 12.0).format(1)
-            autonomi.robotParameters.robotWidth = (trackWidthText.text.toDouble()) / 12.0
+            (autonomi.drivetrainParameters as? ArcadeParameters)?.trackWidth = (trackWidth / 12.0)
             draw()
         }
         val trackWidthUnit = Text(" inches")
 
         val scrubFactorName = Text("Width Scrub Factor:  ")
         scrubFactorText.setChangeHandler(Double::class)  {
-            (autonomi.drivetrainParameters as? ArcadeParameters)?.scrubFactor = scrubFactorText.text.toDouble()
+            (autonomi.drivetrainParameters as? ArcadeParameters)?.scrubFactor = trackScrubFactor
             draw()
         }
 
@@ -1060,5 +1106,10 @@ private fun playSelectedPath() {
         tooltip.style = "-fx-font-size: 12";
         tooltip.showDelay = Duration(400.0)
         return tooltip
+    }
+    private fun setDrivetrainType() {
+        val isSwerve = (autonomi.drivetrainParameters is SwerveParameters)
+        trackWidthText.isDisable = isSwerve
+        scrubFactorText.isDisable = isSwerve
     }
 }

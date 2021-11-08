@@ -9,9 +9,7 @@ plugins {
 }
 
 group "org.team2471.frc"
-version "1.0-SNAPSHOT"
-
-
+version "1.1"
 
 buildConfig {
     buildConfigField ("long", "BUILD_TIME", "${System.currentTimeMillis()}L")

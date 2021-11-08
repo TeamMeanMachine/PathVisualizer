@@ -99,11 +99,14 @@ private fun drawPath(gc: GraphicsContext, path: Path2D?) {
 private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: Path2DPoint?, selectedPointType: Path2DPoint.PointType) {
     if (path == null || !path.hasPoints())
         return
+    val driveParams = ControlPanel.autonomi.drivetrainParameters
+    val finalTrackWidth : Double = if (driveParams is ArcadeParameters) {
+            driveParams.trackWidth * driveParams.scrubFactor
+        } else {
+            maxOf(ControlPanel.robotWidth, ControlPanel.robotLength)
+        }
 
-    val parameters = (ControlPanel.autonomi.drivetrainParameters as? ArcadeParameters) ?: return
-
-    val arcadePath = ArcadePath(path, parameters.trackWidth *
-            parameters.scrubFactor)
+    val arcadePath = ArcadePath(path, finalTrackWidth)
 
     if (path.durationWithSpeed > 0.0) {
         val deltaT = path.durationWithSpeed / 200.0
