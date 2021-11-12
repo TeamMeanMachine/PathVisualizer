@@ -58,3 +58,6 @@
 .textfield-error{
     -fx-background-color: Salmon;
 }
+.textfield-readonly{
+    -fx-background-color: LightGrey;
+}

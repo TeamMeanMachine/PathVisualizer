@@ -67,6 +67,13 @@ object ControlPanel : VBox() {
     val displayFieldOverlay = CheckBox("Field overlay")
     val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
     var autonomi = Autonomi()
+    var pathDuration : Double
+        get() {
+            return secondsText.text.toDoubleOrNull() ?: 0.0
+        }
+        set (value) {
+            secondsText.text = value.toString()
+        }
     var currentTime = 0.0
         set(value) {
             field = value
@@ -130,16 +137,16 @@ object ControlPanel : VBox() {
         }
         when (val driveParams = autonomi.drivetrainParameters) {
             is ArcadeParameters -> {
-                trackWidth = driveParams.trackWidth / 12.0
+                trackWidth = driveParams.trackWidth * 12.0
                 trackScrubFactor = driveParams.scrubFactor
             }
             is SwerveParameters -> {
-                trackWidth = robotWidth / 12.0
+                trackWidth = robotWidth * 12.0
                 trackScrubFactor = 1.0
             }
             else -> {
                 autonomi.drivetrainParameters = ArcadeParameters(
-                    trackWidth = 25.0/12.0,
+                    trackWidth = 25.0,
                     scrubFactor = 1.12,
                     leftFeedForwardCoefficient = 0.070541988198899,
                     leftFeedForwardOffset = 0.021428882425651,
@@ -271,6 +278,7 @@ object ControlPanel : VBox() {
         pathWeaverFormatCheckBox.setOnAction {
             pathWeaverFormat = pathWeaverFormatCheckBox.isSelected
             PathVisualizer.pref.putBoolean("pathWeaverFormat", pathWeaverFormat)
+            updatePathWeaverDisplay()
             draw()
         }
         val spacerAutoDelete = Region()
@@ -380,6 +388,8 @@ object ControlPanel : VBox() {
         val pathLengthLabel = Text("Length:")
         val pathLengthUnits = Text("feet")
         pathLengthText.prefWidth = 60.0
+        pathLengthText.isEditable = false
+        pathLengthText.styleClass.add("textfield-readonly")
 
         val robotDirectionName = Text("Robot Direction:")
         robotDirectionBox.items.add(Path2D.RobotDirection.FORWARD.name.lowercase().capitalize())
@@ -726,16 +736,20 @@ object ControlPanel : VBox() {
         robotParamsGridPane.vgap = 4.0
 //        robotParamsGridPane.alignment = Pos.CENTER_LEFT
         robotParamsGridPane.padding = Insets(5.0, 5.0, 5.0, 5.0)
-        // row 1
         robotParamsGridPane.add(addressName, 0,currRow)
         robotParamsGridPane.add(addressText, 1,currRow)
         currRow++
-        // row 2
+
+        robotParamsGridPane.add(driveTrainTypeComboText,0,currRow)
+        robotParamsGridPane.add(driveTrainTypeCombo,1,currRow)
+        robotParamsGridPane.add(displaySwerveTracks,2,currRow)
+        currRow++
+
         robotParamsGridPane.add(widthName,0,currRow)
         robotParamsGridPane.add(widthText,1,currRow)
         robotParamsGridPane.add(widthUnit,2,currRow)
         currRow++
-        // row 3
+
         robotParamsGridPane.add(lengthName,0,currRow)
         robotParamsGridPane.add(lengthText,1,currRow)
         robotParamsGridPane.add(lengthUnit,2,currRow)
@@ -751,18 +765,11 @@ object ControlPanel : VBox() {
         robotParamsGridPane.add(maxVelocityUnit,2,currRow)
         currRow++
 
-        // row 4
-        robotParamsGridPane.add(driveTrainTypeComboText,0,currRow)
-        robotParamsGridPane.add(driveTrainTypeCombo,1,currRow)
-        robotParamsGridPane.add(displaySwerveTracks,2,currRow)
-
-        currRow++
-        //row 5
         robotParamsGridPane.add(trackWidthName,0,currRow)
         robotParamsGridPane.add(trackWidthText,1,currRow)
         robotParamsGridPane.add(trackWidthUnit,2,currRow)
         currRow++
-        // row 5
+
         robotParamsGridPane.add(scrubFactorName,0,currRow)
         robotParamsGridPane.add(scrubFactorText,1,currRow)
 
@@ -1218,5 +1225,15 @@ private fun playSelectedPath() {
             }
         }
         autonomi.drivetrainParameters = driveParams
+    }
+    private fun updatePathWeaverDisplay() {
+        if (pathWeaverFormat) {
+            secondsText.styleClass.add("textfield-readonly")
+            secondsText.isEditable = false
+        } else {
+            secondsText.styleClass.remove("textfield-readonly")
+            secondsText.isEditable = true
+            secondsText.text = selectedPath?.durationWithSpeed.toString()
+        }
     }
 }

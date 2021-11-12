@@ -11,7 +11,7 @@ import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion.following.ArcadePath
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
-import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.*
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.time.Instant
@@ -67,29 +67,37 @@ private fun drawPath(gc: GraphicsContext, path: Path2D?) {
     var totalTime = path.durationWithSpeed
     var deltaT = totalTime / 200.0
     var prevPos = path.getPosition(0.0)
+    var maxVelocity = ControlPanel.maxVelocity
     var pos: Vector2 = path.getPosition(0.0)
     var pwPath : Trajectory? = null
     if (ControlPanel.pathWeaverFormat) {
-        pwPath = path.generateTrajectory(ControlPanel.maxVelocity, ControlPanel.maxAcceleration)!!
+        pwPath = path.generateTrajectory(ControlPanel.maxVelocity.feet.asMeters, ControlPanel.maxAcceleration.feet.asMeters)!!
+        totalTime = pwPath.totalTimeSeconds
+        ControlPanel.pathDuration = totalTime.round(3)
         deltaT = pwPath.totalTimeSeconds / 200.0
         prevPos = Vector2(Units.metersToFeet(pwPath.initialPose.x), Units.metersToFeet(pwPath.initialPose.y))
     }
     gc.stroke = Color.WHITE
     var t = deltaT
     while (t <= totalTime) {
-        val ease = t / totalTime
         if (ControlPanel.pathWeaverFormat) {
-            val currPose = pwPath?.sample(ease)?.poseMeters
+            val currPose = pwPath?.sample(t)?.poseMeters
             if (currPose != null) {
-                pos = Vector2(Units.metersToFeet(currPose.x), Units.metersToFeet(currPose.y))
+                pos = Vector2(currPose.x.meters.asFeet, currPose.y.meters.asFeet)
             }
+            val percentMaxVelocity = 1.0-((pos - prevPos).length / deltaT / maxVelocity).coerceIn(0.0,1.0)
+
+            gc.stroke = Color(percentMaxVelocity * Color.WHITE.red, percentMaxVelocity * Color.WHITE.green, percentMaxVelocity * Color.WHITE.blue, 1.0)
         } else {
+            val ease = t / totalTime
             pos = path.getPosition(t)
+            gc.stroke = Color(ease * Color.WHITE.red, ease * Color.WHITE.green, ease * Color.WHITE.blue, 1.0)
         }
         // center line
-        gc.stroke = Color(ease * Color.WHITE.red, ease * Color.WHITE.green, ease * Color.WHITE.blue, 1.0)
+
         drawPathLine(gc, prevPos, pos)
         prevPos = Vector2(pos.x, pos.y)
+        //println(pos.y)
         t += deltaT
     }
 }
