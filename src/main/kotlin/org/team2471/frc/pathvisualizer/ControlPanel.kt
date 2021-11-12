@@ -15,6 +15,8 @@ import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
 import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
+import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.util.Timer
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
@@ -243,21 +245,7 @@ object ControlPanel : VBox() {
                         val sortedPaths = paths.toSortedMap()
                         for (kvPath in sortedPaths) {
                             selectedPath = kvPath.value
-                            currentTime = 0.0
-                            timer.start()
-
-                            while (timer.get() < (selectedPath?.durationWithSpeed ?: 0.0)) {
-                                if (!isActive) return@launch
-
-                                Platform.runLater {
-                                    currentTime = timer.get()
-                                    draw()
-                                    refresh()
-                                }
-
-                                // Playback @ approx 30fps (1000ms/30fps = 33ms)
-                                delay(1000L / 30L)
-                            }
+                            animateSelectedPath()
                         }
                         if (selectedPath != null) {
                             Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
@@ -856,7 +844,7 @@ object ControlPanel : VBox() {
 //        FieldPane.recalcFieldDimens()
 //        draw()
 //    }
-private fun playSelectedPath() {
+    private fun playSelectedPath() {
         if (selectedPath != null) {
             animationJob?.cancel()
 
@@ -864,22 +852,29 @@ private fun playSelectedPath() {
             timer.start()
 
             animationJob = GlobalScope.launch {
-                while (timer.get() < (selectedPath?.durationWithSpeed ?: 0.0)) {
-                    if (!isActive) return@launch
-
-                    Platform.runLater {
-                        currentTime = timer.get()
-                        draw()
-                        refresh()
-                    }
-
-                    // Playback @ approx 30fps (1000ms/30fps = 33ms)
-                    delay(1000L / 30L)
-                }
+                animateSelectedPath()
                 if (selectedPath != null) {
                     Platform.runLater { currentTime = selectedPath!!.durationWithSpeed }
                 }
             }
+        }
+    }
+    private suspend fun animateSelectedPath(){
+        var pathDuration = selectedPath?.durationWithSpeed ?: 0.0
+        if (pathWeaverFormat) {
+            pathDuration = selectedPath?.generateTrajectory(maxVelocity.feet.asMeters, maxAcceleration.feet.asMeters)?.totalTimeSeconds ?: 0.0
+        }
+        currentTime = 0.0
+        val timer = Timer()
+        timer.start()
+
+        while (timer.get() < pathDuration ) {
+            Platform.runLater {
+                currentTime = timer.get()
+                refresh()
+            }
+            // Playback @ approx 30fps (1000ms/30fps = 33ms)
+            delay(1000L / 30L)
         }
     }
 
@@ -1065,7 +1060,7 @@ private fun playSelectedPath() {
             easePositionText.text = (selectedPath!!.easeCurve.getValue(currentTime) * 100.0).format(1)
             headingAngleText.text = selectedPath!!.headingCurve.getValue(currentTime).format(1)
         }
-
+        updatePathWeaverDisplay()
         refreshPoints()
         draw()
         refreshing = false
@@ -1228,10 +1223,11 @@ private fun playSelectedPath() {
     }
     private fun updatePathWeaverDisplay() {
         if (pathWeaverFormat) {
-            secondsText.styleClass.add("textfield-readonly")
+            secondsText.style = "-fx-background-color: LightGrey;"
             secondsText.isEditable = false
+            secondsText.text = selectedPath?.generateTrajectory(maxVelocity.feet.asMeters, maxAcceleration.feet.asMeters)?.totalTimeSeconds?.round(2).toString()
         } else {
-            secondsText.styleClass.remove("textfield-readonly")
+            secondsText.style = "-fx-background-color: White;"
             secondsText.isEditable = true
             secondsText.text = selectedPath?.durationWithSpeed.toString()
         }

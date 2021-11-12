@@ -61,3 +61,6 @@
 .textfield-readonly{
     -fx-background-color: LightGrey;
 }
+.textfield-normal{
+    -fx-background-color: White;
+}

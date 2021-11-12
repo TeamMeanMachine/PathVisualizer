@@ -1,5 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.math.trajectory.Trajectory
 import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.scene.Cursor
@@ -46,6 +47,7 @@ object FieldPane : StackPane() {
     var currentRecordedTime = 0
     var firstRecordedTime : Time = Time(0.0)
     var mouseVector = Vector2(-1000.0,-1000.0)
+    var selectedPathWeaverTrajectory : Trajectory? = null
 
     // view settings
     var zoom: Double = kotlin.math.round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
@@ -58,6 +60,8 @@ object FieldPane : StackPane() {
             field = value
             selectedPoint = null
             EasePane.selectedPoint = null
+            selectedPathWeaverTrajectory =
+                selectedPath?.trajectory()
         }
 
     private var editPoint: Path2DPoint? = null

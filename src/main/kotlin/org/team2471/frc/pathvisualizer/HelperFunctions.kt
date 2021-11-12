@@ -1,8 +1,12 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.math.trajectory.Trajectory
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import org.team2471.frc.lib.math.Vector2
+import org.team2471.frc.lib.motion_profiling.Path2D
+import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.feet
 import java.text.DecimalFormat
 import kotlin.math.pow
 import kotlin.reflect.KClass
@@ -74,6 +78,9 @@ fun Double.round(fracDigits : Int) : Double {
         val powerOf: Double = 10.0.pow(fracDigits)
         kotlin.math.round(this * powerOf) / (powerOf)
     }
+}
+fun Path2D.trajectory() : Trajectory {
+    return this.generateTrajectory(ControlPanel.maxVelocity.feet.asMeters, ControlPanel.maxAcceleration.feet.asMeters)
 }
 fun <T:Any> TextField.setChangeHandler(dataValidate : KClass<T>, allowBlank: Boolean = true, changeFunc : () -> Unit ) {
     val verifyAndApplyChange = {

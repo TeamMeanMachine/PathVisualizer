@@ -67,15 +67,14 @@ private fun drawPath(gc: GraphicsContext, path: Path2D?) {
     var totalTime = path.durationWithSpeed
     var deltaT = totalTime / 200.0
     var prevPos = path.getPosition(0.0)
-    var maxVelocity = ControlPanel.maxVelocity
+    val maxVelocity = ControlPanel.maxVelocity
     var pos: Vector2 = path.getPosition(0.0)
     var pwPath : Trajectory? = null
     if (ControlPanel.pathWeaverFormat) {
-        pwPath = path.generateTrajectory(ControlPanel.maxVelocity.feet.asMeters, ControlPanel.maxAcceleration.feet.asMeters)!!
+        pwPath = path.trajectory()
         totalTime = pwPath.totalTimeSeconds
-        ControlPanel.pathDuration = totalTime.round(3)
         deltaT = pwPath.totalTimeSeconds / 200.0
-        prevPos = Vector2(Units.metersToFeet(pwPath.initialPose.x), Units.metersToFeet(pwPath.initialPose.y))
+        prevPos = Vector2(pwPath.initialPose.x.meters.asFeet, pwPath.initialPose.y.meters.asFeet)
     }
     gc.stroke = Color.WHITE
     var t = deltaT
@@ -197,13 +196,18 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
         }
         point = point.nextPoint
     }
-
     drawRobot(gc, path)
 }
 
 fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.stroke = Color.YELLOW
-    val corners = FieldPane.getWheelPositions(ControlPanel.currentTime)
+    val corners = if (ControlPanel.pathWeaverFormat) {
+            val poseInMeters = selectedPath.trajectory().sample(ControlPanel.currentTime).poseMeters
+            val poseInFeet = Vector2(poseInMeters.x.meters.asFeet, poseInMeters.y.meters.asFeet)
+            FieldPane.getWheelPositions(poseInFeet, poseInFeet.angle.degrees.asDegrees)
+        } else  {
+            FieldPane.getWheelPositions(ControlPanel.currentTime)
+        }
     corners[0] = world2ScreenWithMirror(corners[0], selectedPath.isMirrored)
     corners[1] = world2ScreenWithMirror(corners[1], selectedPath.isMirrored)
     corners[2] = world2ScreenWithMirror(corners[2], selectedPath.isMirrored)

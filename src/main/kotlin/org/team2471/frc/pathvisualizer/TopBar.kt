@@ -200,8 +200,7 @@ object TopBar : MenuBar() {
                     for (currPath in currAutos.value.paths) {
                         val pathToSave = folder.resolve("AutoPW.${currAutos.key}.${currPath.key}.json")
                         println(pathToSave)
-                        val trajectory  = currPath.value.generateTrajectory(Units.feetToMeters(ControlPanel.maxVelocity),Units.feetToMeters(ControlPanel.maxAcceleration))
-                        TrajectoryUtil.toPathweaverJson(trajectory, pathToSave)
+                        TrajectoryUtil.toPathweaverJson(currPath.value.trajectory(), pathToSave)
                     }
                 }
             }
