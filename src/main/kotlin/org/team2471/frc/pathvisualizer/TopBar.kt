@@ -10,13 +10,11 @@ import javafx.stage.FileChooser
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
-import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
 import java.util.Stack
-import kotlin.io.path.Path
 
 object TopBar : MenuBar() {
     private const val userFilenameKey = "org-frc2471-PathVisualizer-FileName"
@@ -202,8 +200,8 @@ object TopBar : MenuBar() {
                     for (currPath in currAutos.value.paths) {
                         val pathToSave = folder.resolve("AutoPW.${currAutos.key}.${currPath.key}.json")
                         println(pathToSave)
-                        val traj  = currPath.value.generateTrajectory(Units.feetToMeters(ControlPanel.maxVelocity),Units.feetToMeters(ControlPanel.maxAcceleration))
-                        TrajectoryUtil.toPathweaverJson(traj, pathToSave)
+                        val trajectory  = currPath.value.generateTrajectory(Units.feetToMeters(ControlPanel.maxVelocity),Units.feetToMeters(ControlPanel.maxAcceleration))
+                        TrajectoryUtil.toPathweaverJson(trajectory, pathToSave)
                     }
                 }
             }

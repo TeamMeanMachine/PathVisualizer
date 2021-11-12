@@ -10,15 +10,12 @@ import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion.following.ArcadePath
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
+import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
 import org.team2471.frc.lib.units.degrees
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.time.Instant
 
-fun drawConnectionStatus(gc: GraphicsContext, isConnected : Boolean){
-
-    //println("filled the oval")
-}
 fun drawFieldPaneData(gc: GraphicsContext, isConnected : Boolean, fieldVector: Vector2) {
     gc.fill = Color.BLACK
     gc.fillRect(0.0, 0.0, FieldPane.connectionStringWidth, 50.0)
@@ -39,6 +36,7 @@ fun drawFieldPaneData(gc: GraphicsContext, isConnected : Boolean, fieldVector: V
 private fun drawPathLine(gc: GraphicsContext, p1: Vector2, p2: Vector2) {
     val tp1 = world2Screen(p1)
     val tp2 = world2Screen(p2)
+    gc.lineWidth = 2.0
     gc.strokeLine(tp1.x, tp1.y, tp2.x, tp2.y)
 }
 
@@ -100,53 +98,56 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
     if (path == null || !path.hasPoints())
         return
     val driveParams = ControlPanel.autonomi.drivetrainParameters
+    val displaySwerve = (driveParams is SwerveParameters) && ControlPanel.trackDisplaySwerve
     val finalTrackWidth : Double = if (driveParams is ArcadeParameters) {
             driveParams.trackWidth * driveParams.scrubFactor
         } else {
-            maxOf(ControlPanel.robotWidth, ControlPanel.robotLength)
+            maxOf(ControlPanel.robotWidth, ControlPanel.robotLength) / 12.0
         }
 
-    val arcadePath = ArcadePath(path, finalTrackWidth)
-
     if (path.durationWithSpeed > 0.0) {
-        val deltaT = path.durationWithSpeed / 200.0
-        var prevLeftPos = arcadePath.getLeftPosition(0.0)
-        var prevRightPos = arcadePath.getRightPosition(0.0)
-        var leftPos: Vector2
-        var rightPos: Vector2
-        val maxSpeed = 8.0
-        var t = deltaT
-        arcadePath.resetDistances()
-        while (t <= path.durationWithSpeed) {
-            leftPos = arcadePath.getLeftPosition(t)
-            rightPos = arcadePath.getRightPosition(t)
+        if (displaySwerve) {
+            drawWheelPaths(gc, path)
+        } else {
+            val arcadePath = ArcadePath(path, finalTrackWidth)
+            val deltaT = path.durationWithSpeed / 200.0
+            var prevLeftPos = arcadePath.getLeftPosition(0.0)
+            var prevRightPos = arcadePath.getRightPosition(0.0)
+            var leftPos: Vector2
+            var rightPos: Vector2
+            val maxSpeed = 8.0
+            var t = deltaT
+            arcadePath.resetDistances()
+            while (t <= path.durationWithSpeed) {
+                leftPos = arcadePath.getLeftPosition(t)
+                rightPos = arcadePath.getRightPosition(t)
+                // left wheel
+                var leftSpeed = (leftPos - prevLeftPos).length / deltaT / maxSpeed
+                leftSpeed = Math.max(Math.min(1.0, leftSpeed), 0.0)
+                val leftDelta = arcadePath.getLeftPositionDelta(t)
+                if (leftDelta >= 0) {
+                    gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)  // green fast, red slow
+                } else {
+                    gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)  // blue fast, red slow
+                }
+                drawPathLine(gc, prevLeftPos, leftPos)
 
-            // left wheel
-            var leftSpeed = (leftPos - prevLeftPos).length / deltaT / maxSpeed
-            leftSpeed = Math.max(Math.min(1.0, leftSpeed),0.0)
-            val leftDelta = arcadePath.getLeftPositionDelta(t)
-            if (leftDelta >= 0) {
-                gc.stroke = Color(1.0 - leftSpeed, leftSpeed, 0.0, 1.0)  // green fast, red slow
-            } else {
-                gc.stroke = Color(1.0 - leftSpeed, 0.0, leftSpeed, 1.0)  // blue fast, red slow
+                // right wheel
+                var rightSpeed = (rightPos - prevRightPos).length / deltaT / maxSpeed
+                rightSpeed = Math.max(Math.min(1.0, rightSpeed), 0.0)
+                val rightDelta = arcadePath.getRightPositionDelta(t)
+                if (rightDelta >= 0) {
+                    gc.stroke = Color(1.0 - rightSpeed, rightSpeed, 0.0, 1.0)
+                } else {
+                    gc.stroke = Color(1.0 - rightSpeed, 0.0, rightSpeed, 1.0)
+                }
+                drawPathLine(gc, prevRightPos, rightPos)
+
+                // set the prevs for the next loop
+                prevLeftPos = leftPos.copy()
+                prevRightPos = rightPos.copy()
+                t += deltaT
             }
-            drawPathLine(gc, prevLeftPos, leftPos)
-
-            // right wheel
-            var rightSpeed = (rightPos - prevRightPos).length / deltaT / maxSpeed
-            rightSpeed = Math.max(Math.min(1.0, rightSpeed),0.0)
-            val rightDelta = arcadePath.getRightPositionDelta(t)
-            if (rightDelta >= 0) {
-                gc.stroke = Color(1.0 - rightSpeed, rightSpeed, 0.0, 1.0)
-            } else {
-                gc.stroke = Color(1.0 - rightSpeed, 0.0, rightSpeed, 1.0)
-            }
-            drawPathLine(gc, prevRightPos, rightPos)
-
-            // set the prevs for the next loop
-            prevLeftPos = leftPos.copy()
-            prevRightPos = rightPos.copy()
-            t += deltaT
         }
     }
 
@@ -347,28 +348,60 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
     }
 }
 
-
-fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D?) {
+fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D) {
     gc.stroke = Color.GHOSTWHITE
-    for (i in 1..selectedPath!!.xyCurve.length.toInt()) {
-        val corners = FieldPane.getWheelPositions(i/selectedPath.duration)
-        corners[0] = world2ScreenWithMirror(corners[0], selectedPath.isMirrored)
-        corners[1] = world2ScreenWithMirror(corners[1], selectedPath.isMirrored)
-        corners[2] = world2ScreenWithMirror(corners[2], selectedPath.isMirrored)
-        corners[3] = world2ScreenWithMirror(corners[3], selectedPath.isMirrored)
-
-        val prevCorners = FieldPane.getWheelPositions((i - 1)/selectedPath.duration)
-        prevCorners[0] = world2ScreenWithMirror(prevCorners[0], selectedPath.isMirrored)
-        prevCorners[1] = world2ScreenWithMirror(prevCorners[1], selectedPath.isMirrored)
-        prevCorners[2] = world2ScreenWithMirror(prevCorners[2], selectedPath.isMirrored)
-        prevCorners[3] = world2ScreenWithMirror(prevCorners[3], selectedPath.isMirrored)
-
-        gc.strokeLine(prevCorners[0].x, prevCorners[0].y, corners[0].x, corners[0].y)
-        gc.strokeLine(prevCorners[1].x, prevCorners[1].y, corners[1].x, corners[1].y)
-        gc.strokeLine(prevCorners[2].x, prevCorners[2].y, corners[2].x, corners[2].y)
-        gc.strokeLine(prevCorners[3].x, prevCorners[3].y, corners[3].x, corners[3].y)
-
+    val deltaT = .05 // selectedPath.durationWithSpeed / 200.0 (20 points per second fixed)
+    val maxSpeed = ControlPanel.maxVelocity
+    val maxAcceleration = ControlPanel.maxAcceleration
+    var t = 0.0
+    val prevCorners = FieldPane.getWheelPositions(deltaT)
+    for (i in 0..3) {
+        prevCorners[i] = world2ScreenWithMirror(prevCorners[i], selectedPath.isMirrored)
     }
+    var hasWarnings = false
+    while (t <= selectedPath.durationWithSpeed) {
+        val corners = FieldPane.getWheelPositions(t)
+        val currAcceleration = selectedPath.getAccelerationAtEase(t/selectedPath.length)
+        for (i in 0..3) {
+            val wheelSpeed = (corners[i] - screen2WorldWithMirror(prevCorners[i], selectedPath.isMirrored)).length / deltaT
+            val percentMaxSpeed = wheelSpeed / maxSpeed
+            if (percentMaxSpeed > 1.0 || currAcceleration > maxAcceleration) {
+                hasWarnings = true
+            }
+            val corner = world2ScreenWithMirror(corners[i], selectedPath.isMirrored)
+            drawWheelPathSegment(gc, corner, prevCorners[i], percentMaxSpeed, i.mod(2) == 1)
+            prevCorners[i] = corner
+        }
+        t+=deltaT
+    }
+    drawWarning(gc, hasWarnings)
+}
+fun drawWarning(gc: GraphicsContext, hasWarning : Boolean) {
+    gc.fill = if (hasWarning) {Color.YELLOW} else {Color.DARKGREEN}
+    val size = 40
+    val xPoints = DoubleArray(3)
+    xPoints[0] = gc.canvas.width - 60
+    xPoints[1] = xPoints[0] + size/2
+    xPoints[2] = xPoints[0] + size
+    val yPoints = DoubleArray(3)
+    yPoints[0] = gc.canvas.height - 20
+    yPoints[1] = yPoints[0] - size
+    yPoints[2] = yPoints[0]
+    gc.fillPolygon(xPoints, yPoints, 3)
+}
+fun drawWheelPathSegment(gc : GraphicsContext, corner : Vector2, prevCorner: Vector2, wheelSpeed: Double, altColor: Boolean) {
+
+    var wheelSpeedClean = wheelSpeed.coerceIn(0.0,1.0)
+    val opacity = if (altColor) { 0.1 } else { 1.0 }
+    gc.stroke = if (wheelSpeed > 1.0) {
+        gc.lineWidth = 4.0
+        wheelSpeedClean = (wheelSpeed - 1.0).coerceIn(0.0, 1.0)
+        Color(0.5+(wheelSpeedClean/2), 0.0, 0.0, opacity)
+    } else {
+        gc.lineWidth = 2.0
+        Color(0.0, wheelSpeedClean, 1.0- wheelSpeedClean, opacity)
+    }
+    gc.strokeLine(prevCorner.x, prevCorner.y, corner.x, corner.y)
 }
 
 fun getHeadingYVal(headingVal : Double) : Double {

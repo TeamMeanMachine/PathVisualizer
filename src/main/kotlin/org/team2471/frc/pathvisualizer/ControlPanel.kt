@@ -8,9 +8,9 @@ import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.layout.*
 import javafx.scene.text.Text
+import javafx.scene.text.TextFlow
 import javafx.util.Duration
 import kotlinx.coroutines.*
-import kotlinx.coroutines.selects.select
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
@@ -19,6 +19,7 @@ import org.team2471.frc.lib.util.Timer
 import org.team2471.frc.pathvisualizer.FieldPane.draw
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPath
 import org.team2471.frc.pathvisualizer.FieldPane.selectedPoint
+import kotlin.math.roundToInt
 
 
 object ControlPanel : VBox() {
@@ -32,6 +33,7 @@ object ControlPanel : VBox() {
     private val trackWidthText = TextField()
     private val widthText = TextField()
     private val lengthText = TextField()
+    private val displaySwerveTracks = CheckBox("Show Swerve Tracks")
     private val scrubFactorText = TextField()
     private val xPosText = TextField()
     private val yPosText = TextField()
@@ -49,9 +51,12 @@ object ControlPanel : VBox() {
     private val easePositionText = TextField()
     private val fieldWidth = TextField()
     private val fieldHeight = TextField()
+    private val maxAccelerationText = TextField()
+    private val maxVelocityText = TextField()
     private val fieldTopLeftX = TextField()
     private val fieldTopLeftY = TextField()
     private val curveTypeCombo = ComboBox<String>()
+    private val driveTrainTypeCombo = ComboBox<String>()
     private val deletePointButton = Button().fontAwesome(FontAwesome.Icon.Delete,"Delete Point")
     private var animationJob: Job? = null
     private var connectionJob: Job? = null
@@ -60,8 +65,6 @@ object ControlPanel : VBox() {
     var ipAddress = ""
     var pathWeaverFormat = false
     val displayFieldOverlay = CheckBox("Field overlay")
-    var maxVelocity = 20.0
-    var maxAcceleration = 20.0
     val networkTableInstance : NetworkTableInstance = NetworkTableInstance.create()
     var autonomi = Autonomi()
     var currentTime = 0.0
@@ -98,6 +101,19 @@ object ControlPanel : VBox() {
             scrubFactorText.text = value.toString()
         }
 
+    val trackDisplaySwerve : Boolean
+        get() {
+            return displaySwerveTracks.isSelected
+        }
+    val maxVelocity : Double
+        get(){
+            return maxVelocityText.text.toDoubleOrNull() ?: 20.0
+        }
+    val maxAcceleration : Double
+        get(){
+            return maxAccelerationText.text.toDoubleOrNull() ?: 20.0
+        }
+
     var selectedAutonomous: Autonomous? = null
         private set
 
@@ -114,12 +130,12 @@ object ControlPanel : VBox() {
         }
         when (val driveParams = autonomi.drivetrainParameters) {
             is ArcadeParameters -> {
-                trackWidth = driveParams.trackWidth * 12.0
+                trackWidth = driveParams.trackWidth / 12.0
                 trackScrubFactor = driveParams.scrubFactor
             }
             is SwerveParameters -> {
-                println("found swerve params")
-
+                trackWidth = robotWidth / 12.0
+                trackScrubFactor = 1.0
             }
             else -> {
                 autonomi.drivetrainParameters = ArcadeParameters(
@@ -634,8 +650,59 @@ object ControlPanel : VBox() {
         }
         connect()
 
+        val widthName = Text("Robot Width:  ")
+        widthText.setChangeHandler (Double::class) {
+            autonomi.robotParameters.robotWidth = widthText.text.toDouble() / 12.0
+            draw()
+        }
+        val widthUnit = Text(" inches")
+
+        val lengthName = Text("Robot Length:")
+        lengthText.setChangeHandler (Double::class) {
+            autonomi.robotParameters.robotLength = lengthText.text.toDouble() / 12.0
+            draw()
+        }
+        val lengthUnit = Text(" inches")
+
+        val driveTrainTypeComboText = Text("Drive Type:")
+        driveTrainTypeCombo.items.addAll("Arcade", "Swerve")
+        driveTrainTypeCombo.value = if (autonomi.drivetrainParameters is ArcadeParameters) {"Arcade"} else {"Swerve"}
+        driveTrainTypeCombo.valueProperty().addListener { _, _, newText ->
+            if (refreshing) return@addListener
+           updateDriveTrainParams()
+           setDrivetrainType()
+           draw()
+        }
+        displaySwerveTracks.isSelected = PathVisualizer.pref.getBoolean("displaySwerveTracks", false)
+        displaySwerveTracks.setOnAction {
+            PathVisualizer.pref.putBoolean("displaySwerveTracks", displaySwerveTracks.isSelected)
+            draw()
+        }
+
+        val maxAccelerationName = Text("Max Acceleration:")
+        val maxAccelerationUnitTextFlow = TextFlow()
+        val maxAccelerationUnit = Text(" ft/s")
+        val maxAccelerationUnitSuper = Text("2")
+        maxAccelerationUnitSuper.translateY = maxAccelerationUnit.font.size * -0.3
+        val smallerFontSize = (maxAccelerationUnit.font.size * 0.6).roundToInt()
+        maxAccelerationUnitSuper.style = "-fx-font-size: $smallerFontSize;"
+        maxAccelerationUnitTextFlow.children.addAll(maxAccelerationUnit, maxAccelerationUnitSuper)
+        maxAccelerationText.text = PathVisualizer.pref.getDouble("maxAcceleration", 20.0).toString()
+        maxAccelerationText.setChangeHandler (Double::class)  {
+            PathVisualizer.pref.putDouble("maxAcceleration", maxAcceleration)
+            draw()
+        }
+
+        val maxVelocityName = Text("Max Velocity:")
+        val maxVelocityUnit = Text(" ft/s")
+        maxVelocityText.text = PathVisualizer.pref.getDouble("maxVelocity", 20.0).toString()
+        maxVelocityText.setChangeHandler (Double::class)  {
+            PathVisualizer.pref.putDouble("maxVelocity", maxVelocity)
+            draw()
+        }
+
         /* ROBOT SPECIFIC PROPERTIES - USE REFLECTION ALONG WITH CURRENT ROBOT TO POPULATE THESE CONTROLS */
-        val trackWidthName = Text("Track Width:  ")
+        val trackWidthName = Text("Track Width:")
         trackWidthText.setChangeHandler (Double::class)  {
             (autonomi.drivetrainParameters as? ArcadeParameters)?.trackWidth = (trackWidth / 12.0)
             draw()
@@ -648,46 +715,57 @@ object ControlPanel : VBox() {
             draw()
         }
 
-        val widthName = Text("Robot Width:  ")
-        widthText.setChangeHandler (Double::class) {
-            autonomi.robotParameters.robotWidth = widthText.text.toDouble() / 12.0
-            draw()
-        }
-        val widthUnit = Text(" inches")
 
-        val lengthName = Text("Robot Length:  ")
-        lengthText.setChangeHandler (Double::class) {
-            autonomi.robotParameters.robotLength = lengthText.text.toDouble() / 12.0
-            draw()
-        }
-        val lengthUnit = Text(" inches")
 
         /* END - ROBOT SPECIFIC PROPERTIES - USE REFLECTION ALONG WITH CURRENT ROBOT TO POPULATE THESE CONTROLS */
 
 
         val robotParamsTitledPane = TitledPane()
         val robotParamsGridPane = GridPane()
+        var currRow = 0
         robotParamsGridPane.vgap = 4.0
 //        robotParamsGridPane.alignment = Pos.CENTER_LEFT
         robotParamsGridPane.padding = Insets(5.0, 5.0, 5.0, 5.0)
         // row 1
-        robotParamsGridPane.add(addressName, 0,0)
-        robotParamsGridPane.add(addressText, 1,0)
+        robotParamsGridPane.add(addressName, 0,currRow)
+        robotParamsGridPane.add(addressText, 1,currRow)
+        currRow++
         // row 2
-        robotParamsGridPane.add(trackWidthName,0,1)
-        robotParamsGridPane.add(trackWidthText,1,1)
-        robotParamsGridPane.add(trackWidthUnit,2,1)
+        robotParamsGridPane.add(widthName,0,currRow)
+        robotParamsGridPane.add(widthText,1,currRow)
+        robotParamsGridPane.add(widthUnit,2,currRow)
+        currRow++
         // row 3
-        robotParamsGridPane.add(scrubFactorName,0,2)
-        robotParamsGridPane.add(scrubFactorText,1,2)
+        robotParamsGridPane.add(lengthName,0,currRow)
+        robotParamsGridPane.add(lengthText,1,currRow)
+        robotParamsGridPane.add(lengthUnit,2,currRow)
+        currRow++
+
+        robotParamsGridPane.add(maxAccelerationName,0,currRow)
+        robotParamsGridPane.add(maxAccelerationText,1,currRow)
+        robotParamsGridPane.add(maxAccelerationUnitTextFlow,2,currRow)
+        currRow++
+
+        robotParamsGridPane.add(maxVelocityName,0,currRow)
+        robotParamsGridPane.add(maxVelocityText,1,currRow)
+        robotParamsGridPane.add(maxVelocityUnit,2,currRow)
+        currRow++
+
         // row 4
-        robotParamsGridPane.add(widthName,0,3)
-        robotParamsGridPane.add(widthText,1,3)
-        robotParamsGridPane.add(widthUnit,2,3)
+        robotParamsGridPane.add(driveTrainTypeComboText,0,currRow)
+        robotParamsGridPane.add(driveTrainTypeCombo,1,currRow)
+        robotParamsGridPane.add(displaySwerveTracks,2,currRow)
+
+        currRow++
+        //row 5
+        robotParamsGridPane.add(trackWidthName,0,currRow)
+        robotParamsGridPane.add(trackWidthText,1,currRow)
+        robotParamsGridPane.add(trackWidthUnit,2,currRow)
+        currRow++
         // row 5
-        robotParamsGridPane.add(lengthName,0,4)
-        robotParamsGridPane.add(lengthText,1,4)
-        robotParamsGridPane.add(lengthUnit,2,4)
+        robotParamsGridPane.add(scrubFactorName,0,currRow)
+        robotParamsGridPane.add(scrubFactorText,1,currRow)
+
 
         robotParamsTitledPane.text = "Robot Parameters"
         robotParamsTitledPane.content = robotParamsGridPane
@@ -1111,5 +1189,34 @@ private fun playSelectedPath() {
         val isSwerve = (autonomi.drivetrainParameters is SwerveParameters)
         trackWidthText.isDisable = isSwerve
         scrubFactorText.isDisable = isSwerve
+        driveTrainTypeCombo.selectionModel.select(if (isSwerve) {"Swerve"} else {"Arcade"})
+    }
+    private fun updateDriveTrainParams(){
+        var driveParams = autonomi.drivetrainParameters
+        when(driveTrainTypeCombo.value) {
+            "Arcade"-> {
+                if (driveParams is ArcadeParameters) {
+                   driveParams.trackWidth = trackWidth / 12.0
+                   driveParams.scrubFactor = trackScrubFactor
+                } else {
+                    driveParams = ArcadeParameters(
+                        trackWidth / 12.0,
+                        trackScrubFactor,
+                        leftFeedForwardCoefficient = 0.070541988198899,
+                        leftFeedForwardOffset = 0.021428882425651,
+                        rightFeedForwardCoefficient = 0.071704891069425,
+                        rightFeedForwardOffset = 0.020459379452296
+                    )
+                }
+            }
+            "Swerve"-> {
+                if (driveParams is SwerveParameters) {
+                    driveParams.alignRobotToPath = false
+                } else {
+                    driveParams = SwerveParameters(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false)
+                }
+            }
+        }
+        autonomi.drivetrainParameters = driveParams
     }
 }
