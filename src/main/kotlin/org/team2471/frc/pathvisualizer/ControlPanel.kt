@@ -31,6 +31,7 @@ object ControlPanel : VBox() {
     private val pathWeaverFormatCheckBox = CheckBox("PathWeaver")
     private val robotDirectionBox = ComboBox<String>()
     private val secondsText = TextField()
+    private val displayOnlySelectedPath = CheckBox("")
     private val speedText = TextField()
     private val trackWidthText = TextField()
     private val widthText = TextField()
@@ -123,6 +124,11 @@ object ControlPanel : VBox() {
             return maxAccelerationText.text.toDoubleOrNull() ?: 20.0
         }
 
+    val displayOnlyCurrentPath : Boolean
+     get() {
+         return displayOnlySelectedPath.isSelected
+     }
+
     var selectedAutonomous: Autonomous? = null
         private set
 
@@ -143,7 +149,7 @@ object ControlPanel : VBox() {
                 trackScrubFactor = driveParams.scrubFactor
             }
             is SwerveParameters -> {
-                trackWidth = robotWidth * 12.0
+                trackWidth = robotWidth
                 trackScrubFactor = 1.0
             }
             else -> {
@@ -398,6 +404,12 @@ object ControlPanel : VBox() {
         secondsText.prefWidth = 60.0
         secondsText.setChangeHandler (Double::class) { FieldPane.setSelectedPathDuration(secondsText.text.toDouble())}
 
+        val displayOnlySelectedPathName = Text("Hide other paths")
+        displayOnlySelectedPath.setOnAction {
+            draw()
+        }
+
+
         // set up Paths GridPane
 
         val pathsGridPane = GridPane()
@@ -424,8 +436,11 @@ object ControlPanel : VBox() {
         pathsGridPane.add(robotDirectionName,1,3)
         pathsGridPane.add(robotDirectionBox,2,3)
 
+        // row 5
+        pathsGridPane.add(displayOnlySelectedPathName, 1, 4)
+        pathsGridPane.add(displayOnlySelectedPath, 2, 4 )
 
-        // row 8
+
 
         pathsGridPane.add(pathButtonsVBox, 0,7,4,1)
         pathsTitlePane.text = "Paths - " + selectedPath?.name

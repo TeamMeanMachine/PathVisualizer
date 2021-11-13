@@ -44,7 +44,9 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
     if (paths == null) return
 
     for (path in paths) {
-        drawPath(gc, path)
+        if (!ControlPanel.displayOnlyCurrentPath || path.name == selectedPath?.name) {
+            drawPath(gc, path)
+        }
     }
     if (selectedPath != null) {
         drawSelectedPath(gc, selectedPath, selectedPoint, selectedPointType)
@@ -111,7 +113,6 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
         } else {
             maxOf(ControlPanel.robotWidth, ControlPanel.robotLength) / 12.0
         }
-
     if (path.durationWithSpeed > 0.0) {
         if (displaySwerve) {
             drawWheelPaths(gc, path)
@@ -381,7 +382,7 @@ fun drawWheelPaths(gc: GraphicsContext, selectedPath: Path2D) {
                 hasWarnings = true
             }
             val corner = world2ScreenWithMirror(corners[i], selectedPath.isMirrored)
-            drawWheelPathSegment(gc, corner, prevCorners[i], percentMaxSpeed, i.mod(2) == 1)
+            drawWheelPathSegment(gc, corner, prevCorners[i], percentMaxSpeed, currAcceleration/maxAcceleration, i.mod(2) == 1)
             prevCorners[i] = corner
         }
         t+=deltaT
@@ -401,7 +402,7 @@ fun drawWarning(gc: GraphicsContext, hasWarning : Boolean) {
     yPoints[2] = yPoints[0]
     gc.fillPolygon(xPoints, yPoints, 3)
 }
-fun drawWheelPathSegment(gc : GraphicsContext, corner : Vector2, prevCorner: Vector2, wheelSpeed: Double, altColor: Boolean) {
+fun drawWheelPathSegment(gc : GraphicsContext, corner : Vector2, prevCorner: Vector2, wheelSpeed: Double, percentMaxAcceleration: Double, altColor: Boolean) {
 
     var wheelSpeedClean = wheelSpeed.coerceIn(0.0,1.0)
     val opacity = if (altColor) { 0.1 } else { 1.0 }
@@ -409,11 +410,15 @@ fun drawWheelPathSegment(gc : GraphicsContext, corner : Vector2, prevCorner: Vec
         gc.lineWidth = 4.0
         wheelSpeedClean = (wheelSpeed - 1.0).coerceIn(0.0, 1.0)
         Color(0.5+(wheelSpeedClean/2), 0.0, 0.0, opacity)
+    } else if (percentMaxAcceleration > 1.0) {
+        gc.lineWidth = 4.0
+        val yellowMax = (percentMaxAcceleration-1.0).coerceIn(0.0,1.0)
+        Color(0.5+(yellowMax/2), 0.5+(yellowMax/2), 0.0, opacity)
     } else {
-        gc.lineWidth = 2.0
         Color(0.0, wheelSpeedClean, 1.0- wheelSpeedClean, opacity)
     }
     gc.strokeLine(prevCorner.x, prevCorner.y, corner.x, corner.y)
+    gc.lineWidth = 2.0
 }
 
 fun getHeadingYVal(headingVal : Double) : Double {
