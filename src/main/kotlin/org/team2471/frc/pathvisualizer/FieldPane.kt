@@ -219,11 +219,14 @@ object FieldPane : StackPane() {
     }
 
     fun setSelectedPathDuration(seconds: Double) {
-        val prevDuration = selectedPath?.duration
-        selectedPath?.scaleEasePoints(seconds)
-        println("new duration is ${selectedPath?.duration}")
-        selectedPath?.duration = seconds
-        println("new duration explicitly set is ${selectedPath?.duration}")
+        selectedPath?.also { currPath ->
+            val prevDuration = currPath.duration
+            currPath.scaleEasePoints(seconds)
+            println("new duration is ${currPath.duration}")
+            currPath.duration = seconds
+            TopBar.undoStack.add(Actions.ChangedDurationAction(currPath, prevDuration, seconds))
+            println("new duration explicitly set is ${currPath.duration}")
+        }
         draw()
     }
 
@@ -482,7 +485,7 @@ object FieldPane : StackPane() {
             PathVisualizer.MouseMode.EDIT -> {
                 if (different && editPoint != null) {
                     TopBar.redoStack.clear()
-                    TopBar.undoStack.add(TopBar.MovedPointAction(editPoint!!, from!!, selectedPointType))
+                    TopBar.undoStack.add(Actions.MovedPointAction(selectedPath!!, editPoint!!, from!!, selectedPointType))
                 }
                 editPoint = null
             }  // no longer editing

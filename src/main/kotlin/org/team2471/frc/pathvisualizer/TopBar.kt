@@ -1,7 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.math.trajectory.TrajectoryUtil
-import edu.wpi.first.math.util.Units
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
@@ -237,33 +236,7 @@ object TopBar : MenuBar() {
     interface Action {
         fun undo()
         fun redo()
-    }
-
-    class MovedPointAction(private val point: Path2DPoint, private val from: Vector2, private val pointType: Path2DPoint.PointType) : Action {
-        private val to = when(pointType) {
-            Path2DPoint.PointType.POINT -> point.position
-            Path2DPoint.PointType.PREV_TANGENT -> point.prevTangent
-            Path2DPoint.PointType.NEXT_TANGENT -> point.nextTangent
-        }
-
-        override fun undo() {
-            when (pointType) {
-                Path2DPoint.PointType.POINT -> point.position = from
-                Path2DPoint.PointType.PREV_TANGENT -> point.prevTangent = from
-                Path2DPoint.PointType.NEXT_TANGENT -> point.nextTangent = from
-            }
-        }
-
-        override fun redo() {
-            println("redo")
-            when (pointType) {
-                Path2DPoint.PointType.POINT -> point.position = to
-                Path2DPoint.PointType.PREV_TANGENT -> point.prevTangent = to
-                Path2DPoint.PointType.NEXT_TANGENT -> point.nextTangent = to
-            }
-            //point.prevTangent = to.prevTangent
-            //point.nextTangent = to.nextTangent
-        }
+        override fun toString() : String
     }
 }
 

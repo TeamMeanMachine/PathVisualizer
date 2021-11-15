@@ -58,6 +58,10 @@ class PathVisualizer : Application() {
         liveScrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
         liveScrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
 
+        val undoScrollPane = ScrollPane(UndoPanel)
+        undoScrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+        undoScrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.AS_NEEDED
+
         val tabPane = TabPane()
         val tabScroll = Tab("Path Editing")
         tabScroll.content = pathScrollPane

@@ -40,6 +40,7 @@ dependencies {
     implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:osxx86-64")
     implementation("edu.wpi.first.wpiutil:wpiutil-java:$wpiLibVersion")
     implementation("edu.wpi.first.wpimath:wpimath-java:$wpiLibVersion")
+    implementation("edu.wpi.first.wpilibj:wpilibj-java:$wpiLibVersion")
     implementation("org.team2471.lib:meanlib")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("com.github.gmazzo.buildconfig:com.github.gmazzo.buildconfig.gradle.plugin:3.0.0")

@@ -1004,6 +1004,11 @@ object ControlPanel : VBox() {
         refresh()
     }
 
+    fun setSelectedPath(path: Path2D) {
+        selectedAutonomous = path.autonomous
+        setSelectedPath(path.name)
+    }
+
     fun setSelectedPath(pathName: String?) {
         if (selectedAutonomous != null) {
             selectedPath = selectedAutonomous?.get(pathName)
