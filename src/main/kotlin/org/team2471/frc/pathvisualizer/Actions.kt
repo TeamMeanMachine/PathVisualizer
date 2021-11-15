@@ -6,6 +6,20 @@ import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import javax.naming.ldap.Control
 
 object Actions {
+    class RenamePathAction(private val path : Path2D, private val from: String, private val to: String) : TopBar.Action {
+        override fun undo(){
+            ControlPanel.setSelectedPath(path)
+            ControlPanel.renamePath(path, from)
+        }
+
+        override fun redo() {
+            ControlPanel.setSelectedPath(path)
+            ControlPanel.renamePath(path, to)
+        }
+        override fun toString() : String {
+            return "Rename path : $from to $to for ${path.autonomous.name}-${path.name}"
+        }
+    }
     class ChangedDurationAction(private val path : Path2D, private val from: Double, private val to: Double) : TopBar.Action {
         override fun undo(){
             // select path in UI

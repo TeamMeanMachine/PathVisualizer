@@ -224,7 +224,7 @@ object FieldPane : StackPane() {
             currPath.scaleEasePoints(seconds)
             println("new duration is ${currPath.duration}")
             currPath.duration = seconds
-            TopBar.undoStack.add(Actions.ChangedDurationAction(currPath, prevDuration, seconds))
+            TopBar.addUndo(Actions.ChangedDurationAction(currPath, prevDuration, seconds))
             println("new duration explicitly set is ${currPath.duration}")
         }
         draw()
@@ -485,7 +485,7 @@ object FieldPane : StackPane() {
             PathVisualizer.MouseMode.EDIT -> {
                 if (different && editPoint != null) {
                     TopBar.redoStack.clear()
-                    TopBar.undoStack.add(Actions.MovedPointAction(selectedPath!!, editPoint!!, from!!, selectedPointType))
+                    TopBar.addUndo(Actions.MovedPointAction(selectedPath!!, editPoint!!, from!!, selectedPointType))
                 }
                 editPoint = null
             }  // no longer editing
@@ -568,12 +568,12 @@ object FieldPane : StackPane() {
             KeyCode.F -> {
                 zoomFit()
             }
-            KeyCode.Z -> {
-                if (e.isControlDown) {
-                    if (e.isShiftDown) TopBar.redo()
-                    else TopBar.undo()
-                }
-            }
+//            KeyCode.Z -> {
+//                if (e.isControlDown) {
+//                    if (e.isShiftDown) TopBar.redo()
+//                    else TopBar.undo()
+//                }
+//            }
             KeyCode.EQUALS -> {
                 zoom *= if (e.isControlDown)
                     1.01

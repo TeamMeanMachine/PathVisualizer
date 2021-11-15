@@ -66,7 +66,6 @@ class PathVisualizer : Application() {
         val tabScroll = Tab("Path Editing")
         tabScroll.content = pathScrollPane
         tabScroll.isClosable = false
-        tabPane.tabs.add(tabScroll)
 
         val tabLive = Tab("Live View")
         tabLive.isClosable = false
@@ -75,14 +74,20 @@ class PathVisualizer : Application() {
             TopBar.toggleVisualizeActiveRobot()
             (liveScrollPane.content as LivePanel).refresh()
         }
+
+        val tabUndo = Tab("Undo List")
+        tabUndo.isClosable = false
+        tabUndo.content = undoScrollPane
+        tabUndo.setOnSelectionChanged {
+            (undoScrollPane.content as UndoPanel).refresh()
+        }
+        tabPane.tabs.addAll(tabScroll, tabLive, tabUndo)
+
         tabPane.addEventFilter(KeyEvent.ANY) { event: KeyEvent ->
             if (event.code.isArrowKey && event.target === tabPane) {
                 event.consume()
             }
         }
-
-
-        tabPane.tabs.add(tabLive)
 
         val horizontalSplitPane = SplitPane(verticalSplitPane, tabPane)
         val preferredPanelSize = minOf(pref.getDouble("horizontalPanelPercent", 0.68), .95)

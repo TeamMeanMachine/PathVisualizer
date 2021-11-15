@@ -6,10 +6,8 @@ import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
 import javafx.scene.input.KeyCombination
 import javafx.stage.FileChooser
-import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.motion_profiling.Autonomous
-import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import java.io.File
 import java.io.PrintWriter
 import java.util.prefs.Preferences
@@ -90,7 +88,7 @@ object TopBar : MenuBar() {
             undo()
         }
         val redoMenuItem = MenuItem("Redo")
-        redoMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + Shift + Z")
+        redoMenuItem.accelerator = KeyCombination.keyCombination("Ctrl + Y")
         redoMenuItem.setOnAction {
             redo()
         }
@@ -215,6 +213,11 @@ object TopBar : MenuBar() {
     }
     //TopBar.undoStack.add(MovedPointAction(point, original))
 
+    fun addUndo(action : Action) {
+        undoStack.add(action)
+        UndoPanel.refresh()
+    }
+
     fun undo() {
         if (undoStack.isEmpty()) return
 
@@ -222,6 +225,7 @@ object TopBar : MenuBar() {
         action.undo()
         redoStack.push(action)
         FieldPane.draw()
+        UndoPanel.refresh()
     }
 
     fun redo() {
@@ -231,6 +235,7 @@ object TopBar : MenuBar() {
         action.redo()
         undoStack.push(action)
         FieldPane.draw()
+        UndoPanel.refresh()
     }
 
     interface Action {

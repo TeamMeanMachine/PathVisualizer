@@ -364,7 +364,10 @@ object ControlPanel : VBox() {
             dialog.contentText = "Path name:"
             val result = dialog.showAndWait()
             if (result.isPresent) {
-                renamePath(selectedPath, result.get())
+                val from = selectedPath.name
+                val to = result.get()
+                renamePath(selectedPath, to)
+                TopBar.addUndo(Actions.RenamePathAction(selectedPath, from, to))
             }
         }
 
@@ -982,7 +985,7 @@ object ControlPanel : VBox() {
         refresh()
     }
 
-    private fun renamePath(path: Path2D, newName: String) {
+    fun renamePath(path: Path2D, newName: String) {
         selectedAutonomous?.paths?.remove(path.name)
         path.name = newName
         selectedAutonomous?.paths?.put(newName, path)
