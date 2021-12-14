@@ -39,8 +39,8 @@ object LivePanel : VBox() {
     val smartDashboardTable = ControlPanel.networkTableInstance.getTable("SmartDashboard")
     val autosTable = smartDashboardTable.getSubTable("Autos")
     val autoTestsTable = smartDashboardTable.getSubTable("Tests")
-
     val recording_lookup = HashMap<String, String>()
+    var playBackTime = 0.0
     init {
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
@@ -65,11 +65,10 @@ object LivePanel : VBox() {
             FieldPane.draw()
         }
 
-        playbackSlider.setOnDragDone {
+        playbackSlider.valueProperty().addListener { _, _, newValue ->
             // adjust current time for playback
-            val playbackTime = playbackSlider.value
-            println("set time to ${playbackSlider.value}")
-            println("$")
+            playBackTime = newValue.toDouble()
+            println("set time to ${playBackTime}")
         }
 
         playButton.setOnAction {

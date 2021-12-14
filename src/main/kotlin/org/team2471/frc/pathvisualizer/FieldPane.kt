@@ -514,7 +514,7 @@ object FieldPane : StackPane() {
 
         if (ControlPanel.displayFieldOverlay.isSelected) {
             val prevFill = gc.fill
-            gc.fill = Color.rgb(255,255,204,.3)
+            gc.fill = Color.rgb(255,255,204,ControlPanel.fieldOverlayOpacity)
             val fieldTopLeft2 = world2Screen(upperLeftFieldFeet)
             val fieldBottomRight2 = world2Screen(lowerRightFieldFeet) - fieldTopLeft2
             gc.fillRect(fieldTopLeft2.x, fieldTopLeft2.y, fieldBottomRight2.x, fieldBottomRight2.y)

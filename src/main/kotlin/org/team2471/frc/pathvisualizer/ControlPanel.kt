@@ -54,6 +54,7 @@ object ControlPanel : VBox() {
     private val easePositionText = TextField()
     private val fieldWidth = TextField()
     private val fieldHeight = TextField()
+    private val fieldOverlayOpacitySlider = Slider(0.0, 1.0, 0.5)
     private val maxAccelerationText = TextField()
     private val maxVelocityText = TextField()
     private val fieldTopLeftX = TextField()
@@ -128,6 +129,11 @@ object ControlPanel : VBox() {
      get() {
          return displayOnlySelectedPath.isSelected
      }
+
+    val fieldOverlayOpacity : Double
+        get() {
+            return fieldOverlayOpacitySlider.value
+        }
 
     var selectedAutonomous: Autonomous? = null
         private set
@@ -796,6 +802,17 @@ object ControlPanel : VBox() {
             draw()
         }
 
+        // fieldOpacity
+        val fieldOverlayOpacityText = Text("        Opacity:")
+        fieldOverlayOpacitySlider.value = PathVisualizer.pref.getDouble("fieldOverlayOpacity", 0.5)
+        fieldOverlayOpacitySlider.valueProperty().addListener { _, _, newValue ->
+            if (displayFieldOverlay.isSelected) {
+                println(newValue)
+                PathVisualizer.pref.putDouble("fieldOverlayOpacity", newValue.toDouble())
+                draw()
+            }
+        }
+
         val fieldWidthName = Text("Field Width:  ")
         val fieldWidthDimens = Text(" feet")
         fieldWidth.prefWidth = 60.0
@@ -830,7 +847,9 @@ object ControlPanel : VBox() {
 
         // row 1
 
-        fieldParamsGridPane.add(displayFieldOverlay, 0,0,3,1)
+        fieldParamsGridPane.add(displayFieldOverlay, 0,0)
+        fieldParamsGridPane.add(fieldOverlayOpacityText, 1, 0)
+        fieldParamsGridPane.add(fieldOverlayOpacitySlider, 2,0)
         // row 1
         fieldParamsGridPane.add(fieldWidthName, 0,1)
         fieldParamsGridPane.add(fieldWidth, 1,1)
