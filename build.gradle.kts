@@ -8,9 +8,6 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.0.10"
 }
 
-group "org.team2471.frc"
-version "1.1"
-
 buildConfig {
     buildConfigField ("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
 }
@@ -20,8 +17,6 @@ repositories {
     mavenCentral()
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
     maven { setUrl("https://plugins.gradle.org/m2/")}
-    maven {setUrl("https://maven.ctr-electronics.com/release/")}
-    maven {setUrl("https://www.revrobotics.com/content/sw/max/sdk/maven/")}
 }
 
 javafx {
