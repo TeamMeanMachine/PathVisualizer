@@ -31,7 +31,7 @@ object FieldPane : StackPane() {
     private var upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private var lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
-    var zoomPivot = Vector2(1565.0, 821.0)  // the location in the image where the zoom origin will originate
+    var zoomPivot = Vector2(1138.0, 2822.0)  // the location in the image where the zoom origin will originate
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
     var displayActiveRobot = false
