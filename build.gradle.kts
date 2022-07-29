@@ -17,6 +17,8 @@ repositories {
     mavenCentral()
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
     maven { setUrl("https://plugins.gradle.org/m2/")}
+    maven { setUrl("https://maven.ctr-electronics.com/release/") }
+    maven { setUrl("https://maven.revrobotics.com/") }
 }
 
 javafx {
