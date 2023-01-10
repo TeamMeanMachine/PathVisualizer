@@ -27,7 +27,7 @@ object FieldPane : StackPane() {
     private val replayGC = replayCanvas.graphicsContext2D
     var connectionStringWidth = 70.0
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
-    private val image = Image("assets/2022.1Field.png")
+    private val image = Image("assets/2023Field.png")
     private var upperLeftOfFieldPixels = Vector2(105.0, 820.0)
     private var lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
 
