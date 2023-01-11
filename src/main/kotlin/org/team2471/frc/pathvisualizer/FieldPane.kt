@@ -282,6 +282,7 @@ object FieldPane : StackPane() {
             Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(angle, selectedPoint!!.nextMagnitude)
             }
+            else -> {}
         }
         draw()
     }
@@ -295,6 +296,7 @@ object FieldPane : StackPane() {
             Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(selectedPoint!!.nextAngle, magnitude)
             }
+            else -> {}
         }
         draw()
     }
@@ -401,6 +403,7 @@ object FieldPane : StackPane() {
                 replayCanvas.cursor = ImageCursor.CROSSHAIR
                 oCoord = Vector2(e.x, e.y) - offset
             }
+            else -> {}
         }
 
         /*
@@ -477,6 +480,7 @@ object FieldPane : StackPane() {
                 offset.y = e.y - oCoord.y
                 draw()
             }
+            else -> {}
         }
     }
 
@@ -490,6 +494,7 @@ object FieldPane : StackPane() {
                 editPoint = null
             }  // no longer editing
             PathVisualizer.MouseMode.PAN -> mouseMode = PathVisualizer.MouseMode.EDIT
+            else -> {}
         }
         replayCanvas.cursor = Cursor.DEFAULT
         replayCanvas.requestFocus()
@@ -592,6 +597,7 @@ object FieldPane : StackPane() {
                 println("have key code Right")
                 offset.x += 1.0 / 12.0
             }
+            else -> {}
         }
         if (selectedPoint != null && e.isControlDown) {
             val offset = Vector2(0.0, 0.0)
@@ -602,6 +608,7 @@ object FieldPane : StackPane() {
                 KeyCode.DOWN -> offset.y -= 1.0 / 12.0
                 KeyCode.LEFT -> offset.x -= 1.0 / 12.0
                 KeyCode.RIGHT -> offset.x += 1.0 / 12.0
+                else -> {}
             }
             when (selectedPointType) {
                 Path2DPoint.PointType.POINT -> {

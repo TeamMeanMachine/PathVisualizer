@@ -167,6 +167,7 @@ object EasePane : StackPane() {
             }
            PathVisualizer.MouseMode.PAN -> {
             }
+            else -> {}
         }
     }
     
@@ -213,6 +214,7 @@ object EasePane : StackPane() {
             PathVisualizer.MouseMode.DRAG_TIME -> {
                 mouseMode = PathVisualizer.MouseMode.EDIT
             }
+            else -> {}
         }
     }
 
@@ -269,6 +271,7 @@ object EasePane : StackPane() {
             Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(angle, selectedPoint!!.nextMagnitude)
             }
+            else -> {}
         }
         draw()
     }
@@ -281,6 +284,7 @@ object EasePane : StackPane() {
             Path2DPoint.PointType.NEXT_TANGENT -> {
                 selectedPoint!!.nextAngleAndMagnitude = Vector2(selectedPoint!!.nextAngle, magnitude)
             }
+            else -> {}
         }
         draw()
     }

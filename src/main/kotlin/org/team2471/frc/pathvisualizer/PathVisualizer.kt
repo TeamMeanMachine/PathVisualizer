@@ -16,7 +16,6 @@ import javafx.scene.text.Font
 import javafx.stage.Screen
 import javafx.stage.Stage
 import java.util.prefs.Preferences
-
 class PathVisualizer : Application() {
 
     companion object {

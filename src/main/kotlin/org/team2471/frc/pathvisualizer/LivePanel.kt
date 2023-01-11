@@ -1,7 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
 import com.google.gson.Gson
-import edu.wpi.first.networktables.EntryListenerFlags
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.scene.control.Button
@@ -45,11 +44,11 @@ object LivePanel : VBox() {
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
 
-        smartDashboardTable.getEntry("autoStatus").addListener( { event ->
+     /*   smartDashboardTable.getEntry("autoStatus").addListener( { event ->
             println("saw status change in autoStatus ${event.value.string}")
             // set recording to start or complete on status change
             FieldPane.recording = (event.value.string == "init")
-        }, EntryListenerFlags.kImmediate or EntryListenerFlags.kNew or EntryListenerFlags.kUpdate)
+        }, EntryListenerFlags.kImmediate or EntryListenerFlags.kNew or EntryListenerFlags.kUpdate) */
 
         viewActiveRobotCheckBox.setOnAction{
             FieldPane.displayActiveRobot = viewActiveRobotCheckBox.isSelected

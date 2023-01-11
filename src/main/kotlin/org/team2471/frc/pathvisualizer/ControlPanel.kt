@@ -926,16 +926,14 @@ object ControlPanel : VBox() {
             if (networkTableInstance.isConnected) {
                 networkTableInstance.stopDSClient()
                 networkTableInstance.stopClient()
-                networkTableInstance.deleteAllEntries()
             }
 
             // reconnect with new address
-            networkTableInstance.setNetworkIdentity("PathVisualizer")
-
+            networkTableInstance.startClient4("PathVisualizer")
             if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
-                networkTableInstance.startClientTeam(address.toInt(), NetworkTableInstance.kDefaultPort)
+                networkTableInstance.setServerTeam(address.toInt())
             } else {
-                networkTableInstance.startClient(address, NetworkTableInstance.kDefaultPort)
+                networkTableInstance.setServer(address)
             }
         }
     }
@@ -1153,6 +1151,7 @@ object ControlPanel : VBox() {
                         when (fieldPaneSelectedPoint.prevSlopeMethod) {
                             Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
                             Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                            else -> {}
                         }
                     }
                     Path2DPoint.PointType.NEXT_TANGENT -> {
@@ -1169,6 +1168,7 @@ object ControlPanel : VBox() {
                         when (fieldPaneSelectedPoint.nextSlopeMethod) {
                             Path2DPoint.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
                             Path2DPoint.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                            else -> {}
                         }
                     }
                 }
@@ -1192,6 +1192,7 @@ object ControlPanel : VBox() {
                         when (easePaneSelectedPoint.prevSlopeMethod) {
                             MotionKey.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
                             MotionKey.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                            else -> {}
                         }
                         xPosText.isDisable = false
                         yPosText.isDisable = false
@@ -1208,6 +1209,7 @@ object ControlPanel : VBox() {
                         when (easePaneSelectedPoint.nextSlopeMethod) {
                             MotionKey.SlopeMethod.SLOPE_SMOOTH -> slopeModeCombo.selectionModel.select("Smooth")
                             MotionKey.SlopeMethod.SLOPE_MANUAL -> slopeModeCombo.selectionModel.select("Manual")
+                            else -> {}
                         }
                         xPosText.isDisable = false
                         yPosText.isDisable = false

@@ -3,16 +3,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     java
     application
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version "1.7.20"
     id("com.github.gmazzo.buildconfig") version "3.0.0"
-    id("org.openjfx.javafxplugin") version "0.0.10"
+    id("org.openjfx.javafxplugin") version "0.0.13"
 }
 
 buildConfig {
     buildConfigField ("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
 }
 
-val wpiLibVersion = "2022.1.1"
+val wpiLibVersion = "2023.1.1"
 repositories {
     mavenCentral()
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
@@ -22,19 +22,17 @@ repositories {
 }
 
 javafx {
-    version = "17"
-    modules = "javafx.controls".split(",").toMutableList()
+    version = "19"
+    modules = "javafx.controls,javafx.fxml".split(",").toMutableList()
 }
 application {
     mainClass.set("org.team2471.frc.pathvisualizer.PathVisualizer")
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.31")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.20")
     implementation("edu.wpi.first.ntcore:ntcore-java:$wpiLibVersion")
     implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion")
-    implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:windowsx86-64")
-    implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:osxx86-64")
     implementation("edu.wpi.first.wpiutil:wpiutil-java:$wpiLibVersion")
     implementation("edu.wpi.first.wpimath:wpimath-java:$wpiLibVersion")
     implementation("edu.wpi.first.wpilibj:wpilibj-java:$wpiLibVersion")
@@ -49,10 +47,11 @@ java {
 }
 
 configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
 }
+
