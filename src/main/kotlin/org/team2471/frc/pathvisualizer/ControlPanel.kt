@@ -211,7 +211,8 @@ object ControlPanel : VBox() {
                 newAutoName = result.get()
                 val newAuto = Autonomous(newAutoName)
                 autonomi.put(newAuto)
-                autoComboBox.items.add(autoComboBox.items.count() - 1, newAutoName)
+                autoComboBox.items.add( newAutoName)
+                Platform.runLater{autoComboBox.selectionModel.select(newAutoName)}
             } else {
                 newAutoName = selectedAutonomous?.name ?: ""
             }
@@ -330,7 +331,8 @@ object ControlPanel : VBox() {
                 newPath.addEasePoint(0.0, 0.0);
                 newPath.addEasePoint(5.0, 1.0) // always begin with an ease curve
                 selectedAutonomous!!.putPath(newPath)
-                if (pathListView.items.isEmpty()) pathListView.items.add(pathListView.items.count(), newPathName)
+                pathListView.items.add(newPathName)
+                Platform.runLater{ pathListView.selectionModel.select(newPathName)}
             }
         }
 
