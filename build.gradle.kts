@@ -32,8 +32,9 @@ application {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.20")
     implementation("edu.wpi.first.ntcore:ntcore-java:$wpiLibVersion")
-    implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion")
+    implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:windowsx86-64")
     implementation("edu.wpi.first.wpiutil:wpiutil-java:$wpiLibVersion")
+    implementation("edu.wpi.first.wpiutil:wpiutil-jni:$wpiLibVersion:windowsx86-64")
     implementation("edu.wpi.first.wpimath:wpimath-java:$wpiLibVersion")
     implementation("edu.wpi.first.wpilibj:wpilibj-java:$wpiLibVersion")
     implementation("org.team2471.lib:meanlib")
