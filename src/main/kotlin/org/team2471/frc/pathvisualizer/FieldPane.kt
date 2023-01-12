@@ -542,10 +542,11 @@ object FieldPane : StackPane() {
                 val tag = fieldTags.getTagPose(tagRaw.ID)
                 println("found a tag ${tagRaw.ID}")
                 val prevFill = gc.fill
-                val tagHalfSize = 0.3
+                val tagHalfSize = 0.2
 
                 val halfField = fieldDimensionFeet / 2.0
-                val tagCenter = Vector2(tag.get().y.meters.asFeet, tag.get().x.meters.asFeet) - halfField
+                val tagCenterOrig = Vector2(tag.get().y.meters.asFeet, tag.get().x.meters.asFeet) - halfField
+                val tagCenter = Vector2(tagCenterOrig.x, -tagCenterOrig.y)
                 val tagTopLeft = world2Screen(Vector2(tagCenter.x - tagHalfSize, tagCenter.y + tagHalfSize))
                 val tagBottomRight = world2Screen(Vector2(tagCenter.x + tagHalfSize, tagCenter.y - tagHalfSize)) - tagTopLeft
                 //if (tag.ID == 1) {
@@ -556,11 +557,11 @@ object FieldPane : StackPane() {
                 val worldTagCenter = world2Screen(tagCenter)
                 val rad  = 1.0
 
-                gc.fill = Color.rgb(206,66, 245)
+                gc.fill = Color.rgb(66,245, 218)
                 gc.fillRect(tagTopLeft.x, tagTopLeft.y, tagBottomRight.x.absoluteValue, tagBottomRight.y.absoluteValue)
                 gc.fill = Color.rgb(0, 0, 0)
                 gc.fillOval(worldTagCenter.x - rad, worldTagCenter.y - rad, 2*rad, 2*rad)
-                gc.fill = Color.rgb(255, 255, 255)
+                gc.fill = Color.rgb(0, 0, 0)
                 gc.textAlign = TextAlignment.CENTER
                 gc.textBaseline = VPos.CENTER
                 gc.fillText(tagRaw.ID.toString(), worldTagCenter.x, worldTagCenter.y)
