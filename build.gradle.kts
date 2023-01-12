@@ -31,6 +31,7 @@ application {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.20")
+    implementation("edu.wpi.first.apriltag:apriltag-java:$wpiLibVersion")
     implementation("edu.wpi.first.ntcore:ntcore-java:$wpiLibVersion")
     implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:windowsx86-64")
     implementation("edu.wpi.first.wpiutil:wpiutil-java:$wpiLibVersion")
@@ -41,6 +42,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("com.github.gmazzo.buildconfig:com.github.gmazzo.buildconfig.gradle.plugin:3.0.0")
     implementation("com.google.code.gson:gson:2.8.9")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.1")
 }
 java {
     withSourcesJar()
