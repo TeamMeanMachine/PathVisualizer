@@ -668,6 +668,7 @@ object ControlPanel : VBox() {
         val addressName = Text("Robot Address:")
         val addressText = TextField(ipAddress)
         addressText.setChangeHandler {
+            println("text changed")
             ipAddress = addressText.text
             PathVisualizer.pref.put("ipAddress", ipAddress)
             connect()

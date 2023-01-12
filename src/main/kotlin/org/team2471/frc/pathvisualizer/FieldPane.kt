@@ -5,6 +5,7 @@ import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.trajectory.Trajectory
 import javafx.application.Platform
 import javafx.event.EventHandler
+import javafx.geometry.VPos
 import javafx.scene.Cursor
 import javafx.scene.ImageCursor
 import javafx.scene.image.Image
@@ -13,6 +14,7 @@ import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import javafx.scene.text.FontSmoothingType
 import javafx.scene.text.Text
+import javafx.scene.text.TextAlignment
 
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -35,13 +37,14 @@ object FieldPane : StackPane() {
     private val replayGC = replayCanvas.graphicsContext2D
     var connectionStringWidth = 70.0
     //When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
-    private val image = Image("assets/2023Field.png")
-    private var upperLeftOfFieldPixels = Vector2(105.0, 820.0)
-    private var lowerRightOfFieldPixels = Vector2(2175.0, 4850.0)
+    private val image = Image("assets/2023Field.v3.png")
+    private var upperLeftOfFieldPixels = Vector2(352.0, 756.0) //  Vector2(105.0, 820.0)
+    private var lowerRightOfFieldPixels = Vector2(2374.0 , 4917.0) //Vector2(2175.0, 4850.0)
     val fieldTags = AprilTagFieldLayout(Paths.get(this.javaClass.classLoader.getResource("assets/2023-chargedup.json").toURI()).toAbsolutePath())
-    var zoomPivot = Vector2(1138.0, 2822.0)  // the location in the image where the zoom origin will originate
+    var zoomPivot = Vector2(image.width/2, image.height/2)
+//    var zoomPivot = Vector2(1138.0, 2822.0)  // the location in the image where the zoom origin will originate
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
-    var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
+    var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 26.29), PathVisualizer.pref.getDouble("fieldHeight", 54.27))
     var displayActiveRobot = false
     var displayLimeLightRobot = true
     var displayParallax = false
@@ -144,12 +147,13 @@ object FieldPane : StackPane() {
                 if (InetAddress.getLocalHost().hostAddress.startsWith(ControlPanel.ipAddress.substringBeforeLast(".", "____"))){
                     if (!ControlPanel.networkTableInstance.isConnected) {
                         // attempt to connect
-                        println("found FRC network. Connecting to network table")
+                        println("found FRC network. Connecting to network table - ${ControlPanel.networkTableInstance.isConnected}")
                         ControlPanel.connect()
                     }
                 } else {
                     // stop client only for teams using the ip address format (10.24.71.2). for others don't attempt to stop client.
                     // the main benefit is to reduce log spamming of failed connection errors, so leaving it in is not inherently harmful
+                    println("stopping networktable connection")
                     if (!ControlPanel.ipAddress.matches("[1-9](\\d{1,3})?".toRegex())) {
                         ControlPanel.networkTableInstance.stopClient()
                     }
@@ -538,22 +542,29 @@ object FieldPane : StackPane() {
                 val tag = fieldTags.getTagPose(tagRaw.ID)
                 println("found a tag ${tagRaw.ID}")
                 val prevFill = gc.fill
-                val tagHalfSize = 0.5
-                gc.fill = Color.rgb(100,100, 100 )
+                val tagHalfSize = 0.3
+
                 val halfField = fieldDimensionFeet / 2.0
                 val tagCenter = Vector2(tag.get().y.meters.asFeet, tag.get().x.meters.asFeet) - halfField
-                val tagTopLeft = world2Screen(Vector2(tagCenter.x - tagHalfSize, tagCenter.y - tagHalfSize))
-                val tagBottomRight = world2Screen(Vector2(tagCenter.x + tagHalfSize, tagCenter.y + tagHalfSize)) - tagTopLeft
+                val tagTopLeft = world2Screen(Vector2(tagCenter.x - tagHalfSize, tagCenter.y + tagHalfSize))
+                val tagBottomRight = world2Screen(Vector2(tagCenter.x + tagHalfSize, tagCenter.y - tagHalfSize)) - tagTopLeft
                 //if (tag.ID == 1) {
                     println ("tag ${tagRaw.ID}:$tagCenter .... $tagTopLeft  .... $tagBottomRight")
                // }
-                val rad  = 10.0
+
 
                 val worldTagCenter = world2Screen(tagCenter)
+                val rad  = 1.0
+
+                gc.fill = Color.rgb(206,66, 245)
+                gc.fillRect(tagTopLeft.x, tagTopLeft.y, tagBottomRight.x.absoluteValue, tagBottomRight.y.absoluteValue)
+                gc.fill = Color.rgb(0, 0, 0)
                 gc.fillOval(worldTagCenter.x - rad, worldTagCenter.y - rad, 2*rad, 2*rad)
                 gc.fill = Color.rgb(255, 255, 255)
-                gc.fillText(tagRaw.ID.toString(), worldTagCenter.x - tagBottomRight.x / 2, worldTagCenter.y - tagBottomRight.y / 2)
-                //gc.fillRect(tagTopLeft.x, tagTopLeft.y, tagBottomRight.x.absoluteValue, tagBottomRight.y.absoluteValue)
+                gc.textAlign = TextAlignment.CENTER
+                gc.textBaseline = VPos.CENTER
+                gc.fillText(tagRaw.ID.toString(), worldTagCenter.x, worldTagCenter.y)
+
                 gc.fill = prevFill
             }
         }
