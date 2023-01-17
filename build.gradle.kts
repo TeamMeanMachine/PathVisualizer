@@ -12,13 +12,15 @@ buildConfig {
     buildConfigField ("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
 }
 
-val wpiLibVersion = "2023.1.1"
+val wpiLibVersion = "2023.2.1"
 repositories {
     mavenCentral()
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
     maven { setUrl("https://plugins.gradle.org/m2/")}
     maven { setUrl("https://maven.ctr-electronics.com/release/") }
     maven { setUrl("https://maven.revrobotics.com/") }
+    maven { setUrl("https://maven.photonvision.org/repository/snapshots")}
+    maven { setUrl("https://maven.photonvision.org/repository/internal")}
 }
 
 javafx {
@@ -38,11 +40,15 @@ dependencies {
     implementation("edu.wpi.first.wpiutil:wpiutil-jni:$wpiLibVersion:windowsx86-64")
     implementation("edu.wpi.first.wpimath:wpimath-java:$wpiLibVersion")
     implementation("edu.wpi.first.wpilibj:wpilibj-java:$wpiLibVersion")
+    implementation("edu.wpi.first.hal:hal-jni:$wpiLibVersion:windowsx86-64")
     implementation("org.team2471.lib:meanlib")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("com.github.gmazzo.buildconfig:com.github.gmazzo.buildconfig.gradle.plugin:3.0.0")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.1")
+    implementation("org.photonvision:PhotonLib-java:v2023.1.2")
+    implementation("org.photonvision:PhotonTargeting-java:v2023.1.2")
+
 }
 java {
     withSourcesJar()

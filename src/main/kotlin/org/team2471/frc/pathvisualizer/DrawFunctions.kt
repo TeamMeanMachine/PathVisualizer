@@ -1,14 +1,16 @@
 package org.team2471.frc.pathvisualizer
 
+import edu.wpi.first.math.geometry.*
 import edu.wpi.first.math.trajectory.Trajectory
-import edu.wpi.first.math.util.Units
+import edu.wpi.first.wpilibj.Timer
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
+import org.photonvision.PhotonCamera
+import org.team2471.frc.lib.math.Vector2
+import org.team2471.frc.lib.motion.following.ArcadePath
+import org.team2471.frc.lib.motion_profiling.MotionKey
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
-import org.team2471.frc.lib.math.Vector2
-import org.team2471.frc.lib.motion_profiling.MotionKey
-import org.team2471.frc.lib.motion.following.ArcadePath
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
 import org.team2471.frc.lib.units.*
@@ -16,6 +18,24 @@ import java.io.BufferedWriter
 import java.io.FileWriter
 import java.time.Instant
 
+
+
+fun getEstimatedGlobalPose(prevEstimatedRobotPose: Pose2d?): edu.wpi.first.math.Pair<Pose2d?, Double?> {
+//    if (prevEstimatedRobotPose != null) {
+//        FieldPane.robotPoseEstimator.setReferencePose(prevEstimatedRobotPose)
+//    }
+
+    val result = FieldPane.robotPoseEstimator.update()
+    val camResult = FieldPane.pvCamera.latestResult
+    println("camResult: ${camResult.latencyMillis}")
+    return if (result.isPresent) {
+        println("got result")
+        edu.wpi.first.math.Pair<Pose2d?, Double?>(result.get().first?.toPose2d(), result.get().second)
+    } else {
+        println("no result: cam connected = ${FieldPane.pvCamera.isConnected}")
+        edu.wpi.first.math.Pair(null, 0.0)
+    }
+}
 fun drawFieldPaneData(gc: GraphicsContext, isConnected : Boolean, fieldVector: Vector2) {
     gc.fill = Color.BLACK
     gc.fillRect(0.0, 0.0, FieldPane.connectionStringWidth, 50.0)
@@ -254,8 +274,23 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
     gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
     gc.strokeLine(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+    if (FieldPane.displayAprilTagRobot || FieldPane.recording) {
 
-    if (FieldPane.displayLimeLightRobot || FieldPane.recording) {
+
+
+
+// ... Add other cameras here
+
+// Assemble the list of cameras & mount locations
+
+// ... Add other cameras here
+
+// Assemble the list of cameras & mount locations
+
+        val apriltagPose = getEstimatedGlobalPose(FieldPane.lastPose)
+        println("${apriltagPose?.first?.x ?: -100.0} is current x pos")
+        FieldPane.lastPose = apriltagPose?.first ?: Pose2d(0.0, 0.0, Rotation2d(0.0))
+
         val tx = FieldPane.limelightTable.getEntry("tx").getDouble(0.0).round(2)
         val parallax = FieldPane.limelightTable.getEntry("Parallax").getDouble(0.0).round(2)
         val distance = FieldPane.limelightTable.getEntry("Distance").getDouble(0.0).round(2)
@@ -293,7 +328,7 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
             }
         }
         // Parallax Robot
-        val cornersParallax = FieldPane.getWheelPositions(Vector2(positionX, positionY), heading)
+        val cornersParallax = FieldPane.getWheelPositions(Vector2(FieldPane.lastPose!!.x, FieldPane.lastPose!!.y), FieldPane.lastPose!!.rotation.degrees)
         cornersParallax[0] = world2ScreenWithMirror(cornersParallax[0], false)
         cornersParallax[1] = world2ScreenWithMirror(cornersParallax[1], false)
         cornersParallax[2] = world2ScreenWithMirror(cornersParallax[2], false)

@@ -22,7 +22,7 @@ import kotlin.collections.HashMap
 
 object LivePanel : VBox() {
     private val viewActiveRobotCheckBox = CheckBox("Odometry Robot")
-    private val viewLimelightRobot = CheckBox("Limelight Robot")
+    private val viewAprilTagRobot = CheckBox("AprilTag Robot")
     private val viewParralaxCheckBox = CheckBox("Parralax")
     private val viewRecordingPathCheckBox = CheckBox("Recording")
     private val recordButton = Button("Start Recording")
@@ -53,11 +53,11 @@ object LivePanel : VBox() {
         viewActiveRobotCheckBox.setOnAction{
             FieldPane.displayActiveRobot = viewActiveRobotCheckBox.isSelected
         }
-        viewLimelightRobot.setOnAction {
-            FieldPane.displayLimeLightRobot = viewLimelightRobot.isSelected
+        viewAprilTagRobot.setOnAction {
+            FieldPane.displayAprilTagRobot = viewAprilTagRobot.isSelected
         }
         viewParralaxCheckBox.setOnAction {
-            FieldPane.displayParallax = viewLimelightRobot.isSelected
+            FieldPane.displayParallax = viewAprilTagRobot.isSelected
         }
         viewRecordingPathCheckBox.setOnAction{
             FieldPane.displayRecording = viewRecordingPathCheckBox.isSelected
@@ -137,7 +137,7 @@ object LivePanel : VBox() {
         refreshRecordingsList()
         children.addAll(
                 viewActiveRobotCheckBox,
-                viewLimelightRobot,
+                viewAprilTagRobot,
                 viewParralaxCheckBox,
                 viewRecordingPathCheckBox,
                 recordButton,
@@ -156,7 +156,7 @@ object LivePanel : VBox() {
     }
     fun setValues(){
         viewParralaxCheckBox.isSelected = FieldPane.displayParallax
-        viewLimelightRobot.isSelected = FieldPane.displayLimeLightRobot
+        viewAprilTagRobot.isSelected = FieldPane.displayAprilTagRobot
         viewActiveRobotCheckBox.isSelected = FieldPane.displayActiveRobot
     }
     fun loadAutosList(){
@@ -262,7 +262,7 @@ object LivePanel : VBox() {
                         playbackSlider.isDisable = true
                     }
                 } catch (ex: Exception) {
-                    println("Exception encountered when opening json: $ex")
+                    println("Exception encountered when opening json: for playback")
                 }
             }
         }
@@ -272,7 +272,7 @@ object LivePanel : VBox() {
         if (currRecording != null) {
             val filename = recording_lookup[currRecording]
             val jsonKjkjed = File("$savePath$filename" ).readLines()
-            println (jsonKjkjed)
+            //println (jsonKjkjed)
 
             println("recording: ${selectRecordingForPlayback.value} $filename")
             val startTime = Instant.ofEpochMilli(1629255631201)

@@ -11,6 +11,7 @@ import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 import javafx.util.Duration
 import kotlinx.coroutines.*
+import org.photonvision.PhotonCamera
 import org.team2471.frc.lib.motion_profiling.*
 import org.team2471.frc.lib.motion_profiling.following.ArcadeParameters
 import org.team2471.frc.lib.motion_profiling.following.RobotParameters
@@ -926,6 +927,7 @@ object ControlPanel : VBox() {
 
         connectionJob = GlobalScope.launch {
             // shut down previous server, if connected
+            println("restarting networktables")
             if (networkTableInstance.isConnected) {
                 networkTableInstance.stopDSClient()
                 networkTableInstance.stopClient()
@@ -933,11 +935,14 @@ object ControlPanel : VBox() {
 
             // reconnect with new address
             networkTableInstance.startClient4("PathVisualizer")
+
             if (address.matches("[1-9](\\d{1,3})?".toRegex())) {
                 networkTableInstance.setServerTeam(address.toInt())
             } else {
                 networkTableInstance.setServer(address)
             }
+            FieldPane.pvCamera = PhotonCamera(NetworkTableInstance.getDefault(), "camFront")
+
         }
     }
 

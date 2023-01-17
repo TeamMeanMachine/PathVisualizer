@@ -2,7 +2,9 @@ package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.apriltag.AprilTagFields
+import edu.wpi.first.math.geometry.*
 import edu.wpi.first.math.trajectory.Trajectory
+import edu.wpi.first.networktables.NetworkTableInstance
 import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.geometry.VPos
@@ -15,19 +17,20 @@ import javafx.scene.paint.Color
 import javafx.scene.text.FontSmoothingType
 import javafx.scene.text.Text
 import javafx.scene.text.TextAlignment
+import org.photonvision.PhotonCamera
+import org.photonvision.RobotPoseEstimator
 
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
 import org.team2471.frc.lib.math.Vector2
-import org.team2471.frc.lib.units.Time
-import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.meters
+import org.team2471.frc.lib.motion_profiling.pathFromNetworkTables
+import org.team2471.frc.lib.units.*
 import java.io.BufferedWriter
 import java.net.InetAddress
 import java.nio.file.Paths
 import java.util.*
-import kotlin.io.path.Path
 import kotlin.math.absoluteValue
+
 
 object FieldPane : StackPane() {
     private val canvas = ResizableCanvas()
@@ -41,12 +44,13 @@ object FieldPane : StackPane() {
     private var upperLeftOfFieldPixels = Vector2(352.0, 756.0) //  Vector2(105.0, 820.0)
     private var lowerRightOfFieldPixels = Vector2(2374.0 , 4917.0) //Vector2(2175.0, 4850.0)
     val fieldTags = AprilTagFieldLayout(Paths.get(this.javaClass.classLoader.getResource("assets/2023-chargedup.json").toURI()).toAbsolutePath())
+    //val fieldTags = AprilTagFieldLayout()
     var zoomPivot = Vector2(image.width/2, image.height/2)
 //    var zoomPivot = Vector2(1138.0, 2822.0)  // the location in the image where the zoom origin will originate
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
     var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 26.29), PathVisualizer.pref.getDouble("fieldHeight", 54.27))
     var displayActiveRobot = false
-    var displayLimeLightRobot = true
+    var displayAprilTagRobot = true
     var displayParallax = false
     var displayRecording = false
     var playing = false
@@ -59,6 +63,9 @@ object FieldPane : StackPane() {
     var firstRecordedTime : Time = Time(0.0)
     var mouseVector = Vector2(-1000.0,-1000.0)
     var selectedPathWeaverTrajectory : Trajectory? = null
+    var pvCamera : PhotonCamera
+    val robotPoseEstimator:RobotPoseEstimator
+    var lastPose: Pose2d = Pose2d(0.0, 0.0, Rotation2d(0.0))
 
     // view settings
     var zoom: Double = kotlin.math.round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
@@ -108,9 +115,20 @@ object FieldPane : StackPane() {
         replayCanvas.onMouseMoved = EventHandler(::onMouseMoved)
         replayCanvas.onMouseExited = EventHandler(::onMouseExited)
         initActiveRobotDraw()
-        initPlaybackRobotDraw()
+
         initConnectionStatusCheck()
         initXYCoordDraw()
+
+        val robotToCam = Transform3d(
+            Translation3d(17.inches.asMeters, 0.0, 8.517.inches.asMeters),
+            Rotation3d(0.0, 0.0, 0.0)
+        ) //Cam mounted facing forward, half a meter forward of center, half a meter up from center.
+        pvCamera = PhotonCamera(NetworkTableInstance.getDefault(), "camFront")
+        val camList = ArrayList<edu.wpi.first.math.Pair<PhotonCamera, Transform3d>>()
+        camList.add(edu.wpi.first.math.Pair(pvCamera, robotToCam))
+        val aprilField = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile)
+        robotPoseEstimator = RobotPoseEstimator(aprilField, RobotPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY, camList.toMutableList())
+        initPlaybackRobotDraw()
     }
 //    fun recalcFieldDimens() {
 //        val preZoomVal = zoom
@@ -198,11 +216,10 @@ object FieldPane : StackPane() {
         val timer = Timer()
         timer.schedule(object : TimerTask() {
             override fun run() {
-                if (playing) {
+                if (playing || (displayAprilTagRobot && pvCamera.name == "camFront")) {
                     //println("displaying arbitrary robot")
-
                     arbitraryGC.clearRect(0.0, 0.0, arbitraryCanvas.width, arbitraryCanvas.height);
-                    drawArbitraryRobot(arbitraryGC, Vector2(positionTable.getEntry("X").getDouble(0.0), positionTable.getEntry("Y").getDouble(0.0)), ControlPanel.autonomi.robotParameters.robotLength, ControlPanel.autonomi.robotParameters.robotWidth, positionTable.getEntry("Heading").getDouble(0.0))
+                   drawArbitraryRobot(arbitraryGC, Vector2(positionTable.getEntry("X").getDouble(0.0), positionTable.getEntry("Y").getDouble(0.0)), ControlPanel.autonomi.robotParameters.robotLength, ControlPanel.autonomi.robotParameters.robotWidth, positionTable.getEntry("Heading").getDouble(0.0))
                 }
             }
         }, 1, 1000L/framesPerSecond)
@@ -540,7 +557,7 @@ object FieldPane : StackPane() {
         if (true) {// (ControlPanel.displayAprilTags.isSelected) {
             for (tagRaw in fieldTags.tags) {
                 val tag = fieldTags.getTagPose(tagRaw.ID)
-                println("found a tag ${tagRaw.ID}")
+                //println("found a tag ${tagRaw.ID}")
                 val prevFill = gc.fill
                 val tagHalfSize = 0.2
 
@@ -550,7 +567,7 @@ object FieldPane : StackPane() {
                 val tagTopLeft = world2Screen(Vector2(tagCenter.x - tagHalfSize, tagCenter.y + tagHalfSize))
                 val tagBottomRight = world2Screen(Vector2(tagCenter.x + tagHalfSize, tagCenter.y - tagHalfSize)) - tagTopLeft
                 //if (tag.ID == 1) {
-                    println ("tag ${tagRaw.ID}:$tagCenter .... $tagTopLeft  .... $tagBottomRight")
+                    //println ("tag ${tagRaw.ID}:$tagCenter .... $tagTopLeft  .... $tagBottomRight")
                // }
 
 
