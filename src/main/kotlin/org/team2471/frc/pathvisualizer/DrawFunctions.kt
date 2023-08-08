@@ -1,7 +1,6 @@
 package org.team2471.frc.pathvisualizer
 
 import edu.wpi.first.math.trajectory.Trajectory
-import edu.wpi.first.math.util.Units
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 import org.team2471.frc.lib.motion_profiling.Path2D
@@ -63,7 +62,7 @@ fun drawPaths(gc: GraphicsContext, paths: Iterable<Path2D>?, selectedPath: Path2
     }
 }
 
-private fun drawPath(gc: GraphicsContext, path: Path2D?) {
+fun drawPath(gc: GraphicsContext, path: Path2D?) {
     if (path == null || path.duration == 0.0)
         return
     var totalTime = path.durationWithSpeed
@@ -339,25 +338,6 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
 //        gc.stroke = Color(1.0, 0.5, 0.31, 0.60)
 //        gc.strokePolygon(xVal, yVal, 3)
 //        gc.fillPolygon(xVal, yVal, 3)
-    }
-    if (FieldPane.displayParallax) {
-        var xVal = DoubleArray(3)
-        var yVal = DoubleArray(3)
-        val shooterTarget = world2ScreenWithMirror(Vector2(0.0, 0.0), false)
-        val threePointTarget = world2ScreenWithMirror(Vector2(0.0, 2.0), false)
-
-        xVal[0] = shooterTarget.x
-        xVal[1] = threePointTarget.x
-        xVal[2] = (corners[1].x + corners[0].x) / 2.0
-        //val xVals = DoubleArray(0.0, -1.0, (corners[1].x + corners[0].x)/2)
-        yVal[0] = shooterTarget.y
-        yVal[1] = threePointTarget.y
-        yVal[2] = (corners[1].y + corners[0].y) / 2.0
-        //val yVals = arrayOf<Double>(0.0, -1.0, (corners[1].y + corners[0].y)/2)
-        gc.fill = Color(1.0, 0.5, 0.31, 0.60)
-        gc.stroke = Color(1.0, 0.5, 0.31, 0.60)
-        gc.strokePolygon(xVal, yVal, 3)
-        gc.fillPolygon(xVal, yVal, 3)
     }
 }
 
