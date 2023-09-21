@@ -80,7 +80,7 @@ private fun drawPath(gc: GraphicsContext, path: Path2D?) {
     }
     gc.stroke = Color.WHITE
     var t = deltaT
-    while (t <= totalTime) {
+    while (t <= totalTime && !(ControlPanel.pathWeaverFormat && totalTime == 0.0)) {
         if (ControlPanel.pathWeaverFormat) {
             val currPose = pwPath?.sample(t)?.poseMeters
             if (currPose != null) {
@@ -99,6 +99,7 @@ private fun drawPath(gc: GraphicsContext, path: Path2D?) {
         drawPathLine(gc, prevPos, pos)
         prevPos = Vector2(pos.x, pos.y)
         //println(pos.y)
+        deltaT += 0.00000
         t += deltaT
     }
 }

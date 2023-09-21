@@ -175,7 +175,7 @@ object ControlPanel : VBox() {
     init {
         // get ipAddress from preferences
         ipAddress = PathVisualizer.pref.get("ipAddress", "10.24.71.2")
-        pathWeaverFormat = false //pref.getBoolean("pathWeaverFormat", false)
+        pathWeaverFormat = PathVisualizer.pref.getBoolean("pathWeaverFormat", false)
 
 
         spacing = 10.0
@@ -1271,7 +1271,9 @@ object ControlPanel : VBox() {
         if (pathWeaverFormat) {
             secondsText.style = "-fx-background-color: LightGrey;"
             secondsText.isEditable = false
+            println("inside pathweaverdispay()")
             secondsText.text = selectedPath?.generateTrajectory(maxVelocity.feet.asMeters, maxAcceleration.feet.asMeters)?.totalTimeSeconds?.round(2).toString()
+            println("generated tregectory")
         } else {
             secondsText.style = "-fx-background-color: White;"
             secondsText.isEditable = true
