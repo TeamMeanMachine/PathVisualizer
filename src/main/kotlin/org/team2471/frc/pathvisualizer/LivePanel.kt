@@ -1,6 +1,8 @@
 package org.team2471.frc.pathvisualizer
 
 import com.google.gson.Gson
+import edu.wpi.first.networktables.NetworkTableEvent
+import edu.wpi.first.wpilibj.DriverStation
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.scene.control.Button
@@ -10,6 +12,13 @@ import javafx.scene.control.Slider
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import kotlinx.coroutines.*
+import org.team2471.frc.lib.math.Vector2
+import org.team2471.frc.lib.motion.following.driveAlongPath
+import org.team2471.frc.lib.motion_profiling.MotionCurve
+import org.team2471.frc.lib.motion_profiling.Path2D
+import org.team2471.frc.lib.units.asFeet
+import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.util.Timer
 import java.io.File
 import java.io.FileReader
@@ -18,12 +27,13 @@ import java.time.Instant
 import java.util.*
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.HashMap
+import kotlin.math.absoluteValue
 
 
 object LivePanel : VBox() {
     private val viewActiveRobotCheckBox = CheckBox("Odometry Robot")
     private val viewLimelightRobot = CheckBox("Limelight Robot")
-    private val viewParralaxCheckBox = CheckBox("Parralax")
+    private val viewLastPathBox = CheckBox("Show Last Path")
     private val viewRecordingPathCheckBox = CheckBox("Recording")
     private val recordButton = Button("Start Recording")
     private val txtRecordTime = Text("00:00")
@@ -40,6 +50,9 @@ object LivePanel : VBox() {
     val autoTestsTable = smartDashboardTable.getSubTable("Tests")
     val recording_lookup = HashMap<String, String>()
     var playBackTime = 0.0
+    var plannedPathEntrySub = ControlPanel.networkTableInstance.getTable("Drive").getStringTopic("Planned Path").subscribe("")
+    var lastPath : Path2D? = null
+
     init {
         spacing = 10.0
         padding = Insets(10.0, 10.0, 10.0, 10.0)
@@ -50,14 +63,56 @@ object LivePanel : VBox() {
             FieldPane.recording = (event.value.string == "init")
         }, EntryListenerFlags.kImmediate or EntryListenerFlags.kNew or EntryListenerFlags.kUpdate) */
 
+        ControlPanel.networkTableInstance.addListener(
+            plannedPathEntrySub,
+            EnumSet.of(
+                NetworkTableEvent.Kind.kImmediate,
+                NetworkTableEvent.Kind.kPublish,
+                NetworkTableEvent.Kind.kValueAll
+            )
+        ) { event ->
+            println("Automous change detected")
+            val json = event.valueData.value.string
+            if (json.isNotEmpty()) {
+                lastPath = Path2D.fromJsonString(json)
+            }
+        }
+
+        val newPath = Path2D("GoToScore")
+        newPath.addEasePoint(0.0, 0.0)
+        val p1 = Vector2(0.0, 0.0)
+        var p2 = Vector2(58.0.inches.asFeet, 16.0)
+        var p3 = Vector2(20.0, -20.0)
+
+        val rateCurve = MotionCurve()
+
+        rateCurve.setMarkBeginOrEndKeysToZeroSlope(false)
+        rateCurve.storeValue(1.0, 3.0)  // distance, rate
+        rateCurve.storeValue(8.0, 6.0)  // distance, rate
+        newPath.addVector2(p1)
+        newPath.addVector2(p2)
+        newPath.addVector2(p3)
+//        println("Final: $finalHeading  heading: ${heading.asDegrees}")
+        val distance = newPath.length
+
+        val rate = rateCurve.getValue(distance)
+        var time = distance / rate
+        var finalHeading = 0.0
+        newPath.addEasePoint(time, 1.0)
+
+        newPath.addHeadingPoint(time, finalHeading)
+
+        lastPath = newPath
+
+
         viewActiveRobotCheckBox.setOnAction{
             FieldPane.displayActiveRobot = viewActiveRobotCheckBox.isSelected
         }
         viewLimelightRobot.setOnAction {
             FieldPane.displayLimeLightRobot = viewLimelightRobot.isSelected
         }
-        viewParralaxCheckBox.setOnAction {
-            FieldPane.displayParallax = viewLimelightRobot.isSelected
+        viewLastPathBox.setOnAction {
+            FieldPane.displayLastPath = viewLastPathBox.isSelected
         }
         viewRecordingPathCheckBox.setOnAction{
             FieldPane.displayRecording = viewRecordingPathCheckBox.isSelected
@@ -138,7 +193,7 @@ object LivePanel : VBox() {
         children.addAll(
                 viewActiveRobotCheckBox,
                 viewLimelightRobot,
-                viewParralaxCheckBox,
+                viewLastPathBox,
                 viewRecordingPathCheckBox,
                 recordButton,
                 txtRecordTime,
@@ -155,7 +210,7 @@ object LivePanel : VBox() {
         refreshRecordingsList()
     }
     fun setValues(){
-        viewParralaxCheckBox.isSelected = FieldPane.displayParallax
+        viewLastPathBox.isSelected = FieldPane.displayLastPath
         viewLimelightRobot.isSelected = FieldPane.displayLimeLightRobot
         viewActiveRobotCheckBox.isSelected = FieldPane.displayActiveRobot
     }

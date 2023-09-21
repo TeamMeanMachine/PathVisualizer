@@ -36,7 +36,7 @@ object FieldPane : StackPane() {
     var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
     var displayActiveRobot = false
     var displayLimeLightRobot = true
-    var displayParallax = false
+    var displayLastPath = true
     var displayRecording = false
     var playing = false
     var recording = false
@@ -552,6 +552,10 @@ object FieldPane : StackPane() {
                 }
             }
             EasePane.drawTimeScrubber()
+        }
+
+        if (FieldPane.displayLastPath) {
+            drawPath(gc, LivePanel.lastPath)
         }
     }
 

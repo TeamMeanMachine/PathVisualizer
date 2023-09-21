@@ -129,8 +129,8 @@ object TopBar : MenuBar() {
         FieldPane.draw()
     }
     private fun toggleVisualizeTarget() {
-        FieldPane.displayParallax = !FieldPane.displayParallax
-        toggleVisualizeTargetMenuItem.text = if (FieldPane.displayParallax) "☑ Display Target" else "☐ Display Target"
+        FieldPane.displayLastPath = !FieldPane.displayLastPath
+        toggleVisualizeTargetMenuItem.text = if (FieldPane.displayLastPath) "☑ Display Target" else "☐ Display Target"
 
         // redraw screen in case we removed the arbitrary bot
         FieldPane.draw()
