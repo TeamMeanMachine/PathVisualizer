@@ -79,7 +79,7 @@ fun Double.round(fracDigits : Int) : Double {
         kotlin.math.round(this * powerOf) / (powerOf)
     }
 }
-fun Path2D.trajectory() : Trajectory {
+fun Path2D.trajectory() : Trajectory? {
     return this.generateTrajectory(ControlPanel.maxVelocity.feet.asMeters, ControlPanel.maxAcceleration.feet.asMeters)
 }
 fun <T:Any> TextField.setChangeHandler(dataValidate : KClass<T>, allowBlank: Boolean = true, changeFunc : () -> Unit ) {

@@ -73,9 +73,15 @@ fun drawPath(gc: GraphicsContext, path: Path2D?) {
     var pwPath : Trajectory? = null
     if (ControlPanel.pathWeaverFormat) {
         pwPath = path.trajectory()
-        totalTime = pwPath.totalTimeSeconds
-        deltaT = pwPath.totalTimeSeconds / 200.0
-        prevPos = Vector2(pwPath.initialPose.x.meters.asFeet, pwPath.initialPose.y.meters.asFeet)
+        if (pwPath != null) {
+            totalTime = pwPath.totalTimeSeconds
+        }
+        if (pwPath != null) {
+            deltaT = pwPath.totalTimeSeconds / 200.0
+        }
+        if (pwPath != null) {
+            prevPos = Vector2(pwPath.initialPose.x.meters.asFeet, pwPath.initialPose.y.meters.asFeet)
+        }
     }
     gc.stroke = Color.WHITE
     var t = deltaT
@@ -203,19 +209,19 @@ private fun drawSelectedPath(gc: GraphicsContext, path: Path2D?, selectedPoint: 
 fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     gc.stroke = Color.YELLOW
     val corners = if (ControlPanel.pathWeaverFormat) {
-            val poseInMeters = selectedPath.trajectory().sample(ControlPanel.currentTime).poseMeters
-            val poseInFeet = Vector2(poseInMeters.x.meters.asFeet, poseInMeters.y.meters.asFeet)
-            FieldPane.getWheelPositions(poseInFeet, poseInFeet.angle.degrees.asDegrees)
+            val poseInMeters = selectedPath.trajectory()?.sample(ControlPanel.currentTime)?.poseMeters
+            val poseInFeet = poseInMeters?.x?.meters?.let { poseInMeters.y.meters.let { it1 -> Vector2(it.asFeet, it1.asFeet) } }
+        poseInFeet?.angle?.let { FieldPane.getWheelPositions(poseInFeet, it.asDegrees) }
         } else  {
             FieldPane.getWheelPositions(ControlPanel.currentTime)
         }
-    corners[0] = world2ScreenWithMirror(corners[0], selectedPath.isMirrored)
-    corners[1] = world2ScreenWithMirror(corners[1], selectedPath.isMirrored)
-    corners[2] = world2ScreenWithMirror(corners[2], selectedPath.isMirrored)
-    corners[3] = world2ScreenWithMirror(corners[3], selectedPath.isMirrored)
+    corners?.set(0, world2ScreenWithMirror(corners.get(0) ?: Vector2(0.0, 0.0) , selectedPath.isMirrored))
+    corners?.set(1, world2ScreenWithMirror(corners[1], selectedPath.isMirrored))
+    corners?.set(2, world2ScreenWithMirror(corners[2], selectedPath.isMirrored))
+    corners?.set(3, world2ScreenWithMirror(corners[3], selectedPath.isMirrored))
 
-    gc.strokeLine(corners[0].x, corners[0].y, corners[1].x, corners[1].y)
-    gc.strokeText("F", (corners[1].x + corners[0].x)/2, (corners[1].y + corners[0].y)/2)
+    corners?.get(0)?.let { gc.strokeLine(it.x, corners[0].y, corners[1].x, corners[1].y) }
+    gc.strokeText("F", ((corners?.get(1)?.x ?: 0.0 ) + corners?.get(0)?.x as Double)/2, ((corners[1].y ?: 0.0 ) + corners[0].y as Double)/2)
     gc.stroke = Color.BLUE
     gc.strokeLine(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
     gc.strokeLine(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
