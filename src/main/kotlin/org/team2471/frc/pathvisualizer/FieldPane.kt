@@ -30,7 +30,7 @@ object FieldPane : StackPane() {
     // When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
     private val image = Image("assets/2024Field.png")
     private var upperLeftOfFieldPixels = Vector2(64.0, 509.0)
-    private var lowerRightOfFieldPixels = Vector2(1556.0, 3840.0)
+    private var lowerRightOfFieldPixels = Vector2(1473.0, 3322.0)
     var zoomPivot = Vector2(776.0, 1920.0)  // the location in the image where the zoom origin will originate
 
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
@@ -522,8 +522,9 @@ object FieldPane : StackPane() {
             val prevFill = gc.fill
             gc.fill = Color.rgb(255,255, 100,ControlPanel.fieldOverlayOpacity)
             val fieldTopLeft2 = world2Screen(upperLeftFieldFeet)
-            val fieldBottomRight2 = world2Screen(lowerRightFieldFeet) - fieldTopLeft2
-            gc.fillRect(fieldTopLeft2.x, fieldTopLeft2.y, fieldBottomRight2.x, fieldBottomRight2.y)
+            val fieldBottomRight2 = world2Screen(lowerRightFieldFeet)
+            val size = fieldBottomRight2 - fieldTopLeft2
+            gc.fillRect(fieldTopLeft2.x, fieldTopLeft2.y, size.x, size.y)
             gc.fill = prevFill
         }
         if (displayRecording && LivePanel.currRecording != null) {
