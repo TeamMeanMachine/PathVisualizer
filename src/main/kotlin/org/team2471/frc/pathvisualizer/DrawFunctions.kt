@@ -204,7 +204,7 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     val corners = if (ControlPanel.pathWeaverFormat) {
             val poseInMeters = selectedPath.trajectory().sample(ControlPanel.currentTime).poseMeters
             val poseInFeet = Vector2(poseInMeters.x.meters.asFeet, poseInMeters.y.meters.asFeet)
-            FieldPane.getWheelPositions(poseInFeet, poseInFeet.angle.degrees.asDegrees)
+            FieldPane.getWheelPositions(poseInFeet, poseInFeet.angle.asDegrees)
         } else  {
             FieldPane.getWheelPositions(ControlPanel.currentTime)
         }

@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     java
     application
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.9.22"
     id("com.github.gmazzo.buildconfig") version "3.0.0"
     id("org.openjfx.javafxplugin") version "0.0.13"
 }
@@ -12,7 +12,7 @@ buildConfig {
     buildConfigField ("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
 }
 
-val wpiLibVersion = "2023.1.1"
+val wpiLibVersion = "2024.2.1"
 repositories {
     mavenCentral()
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
@@ -30,7 +30,7 @@ application {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
     implementation("edu.wpi.first.ntcore:ntcore-java:$wpiLibVersion")
     implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:windowsx86-64")
     implementation("edu.wpi.first.ntcore:ntcore-jni:$wpiLibVersion:osxuniversal")
@@ -43,6 +43,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("com.github.gmazzo.buildconfig:com.github.gmazzo.buildconfig.gradle.plugin:3.0.0")
     implementation("com.google.code.gson:gson:2.8.9")
+    implementation("us.hebi.quickbuf:quickbuf-runtime:1.4")
+    implementation("org.ejml:ejml-all:0.43.1")
 }
 java {
     withSourcesJar()
