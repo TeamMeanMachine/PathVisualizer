@@ -20,7 +20,7 @@ import java.time.Instant
 
 
 
-fun getEstimatedGlobalPose(prevEstimatedRobotPose: Pose2d?): edu.wpi.first.math.Pair<Pose2d?, Double?> {
+fun getEstimatedGlobalPose(prevEstimatedRobotPose: Pose2d?): Pose2d? {
 //    if (prevEstimatedRobotPose != null) {
 //        FieldPane.robotPoseEstimator.setReferencePose(prevEstimatedRobotPose)
 //    }
@@ -29,11 +29,9 @@ fun getEstimatedGlobalPose(prevEstimatedRobotPose: Pose2d?): edu.wpi.first.math.
     val camResult = FieldPane.pvCamera.latestResult
     println("camResult: ${camResult.latencyMillis}")
     return if (result.isPresent) {
-        println("got result")
-        edu.wpi.first.math.Pair<Pose2d?, Double?>(result.get().first?.toPose2d(), result.get().second)
+        result.get().estimatedPose?.toPose2d()
     } else {
-        println("no result: cam connected = ${FieldPane.pvCamera.isConnected}")
-        edu.wpi.first.math.Pair(null, 0.0)
+        null
     }
 }
 fun drawFieldPaneData(gc: GraphicsContext, isConnected : Boolean, fieldVector: Vector2) {
@@ -225,7 +223,7 @@ fun drawRobot(gc: GraphicsContext, selectedPath: Path2D) {
     val corners = if (ControlPanel.pathWeaverFormat) {
             val poseInMeters = selectedPath.trajectory().sample(ControlPanel.currentTime).poseMeters
             val poseInFeet = Vector2(poseInMeters.x.meters.asFeet, poseInMeters.y.meters.asFeet)
-            FieldPane.getWheelPositions(poseInFeet, poseInFeet.angle.degrees.asDegrees)
+            FieldPane.getWheelPositions(poseInFeet, poseInFeet.angle.asDegrees)
         } else  {
             FieldPane.getWheelPositions(ControlPanel.currentTime)
         }
@@ -288,8 +286,8 @@ fun drawArbitraryRobot(gc: GraphicsContext, pos:Vector2, height:Double, width:Do
 // Assemble the list of cameras & mount locations
 
         val apriltagPose = getEstimatedGlobalPose(FieldPane.lastPose)
-        println("${apriltagPose?.first?.x ?: -100.0} is current x pos")
-        FieldPane.lastPose = apriltagPose?.first ?: Pose2d(0.0, 0.0, Rotation2d(0.0))
+        println("${apriltagPose?.x ?: -100.0} is current x pos")
+        FieldPane.lastPose = apriltagPose ?: Pose2d(0.0, 0.0, Rotation2d(0.0))
 
         val tx = FieldPane.limelightTable.getEntry("tx").getDouble(0.0).round(2)
         val parallax = FieldPane.limelightTable.getEntry("Parallax").getDouble(0.0).round(2)

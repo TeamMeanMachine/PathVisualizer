@@ -18,7 +18,7 @@ import javafx.scene.text.FontSmoothingType
 import javafx.scene.text.Text
 import javafx.scene.text.TextAlignment
 import org.photonvision.PhotonCamera
-import org.photonvision.RobotPoseEstimator
+import org.photonvision.PhotonPoseEstimator
 
 import org.team2471.frc.lib.motion_profiling.Path2D
 import org.team2471.frc.lib.motion_profiling.Path2DPoint
@@ -64,7 +64,7 @@ object FieldPane : StackPane() {
     var mouseVector = Vector2(-1000.0,-1000.0)
     var selectedPathWeaverTrajectory : Trajectory? = null
     var pvCamera : PhotonCamera
-    val robotPoseEstimator:RobotPoseEstimator
+    val robotPoseEstimator:PhotonPoseEstimator
     var lastPose: Pose2d = Pose2d(0.0, 0.0, Rotation2d(0.0))
 
     // view settings
@@ -126,8 +126,8 @@ object FieldPane : StackPane() {
         pvCamera = PhotonCamera(NetworkTableInstance.getDefault(), "camFront")
         val camList = ArrayList<edu.wpi.first.math.Pair<PhotonCamera, Transform3d>>()
         camList.add(edu.wpi.first.math.Pair(pvCamera, robotToCam))
-        val aprilField = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile)
-        robotPoseEstimator = RobotPoseEstimator(aprilField, RobotPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY, camList.toMutableList())
+        val aprilField = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2024Crescendo.m_resourceFile)
+        robotPoseEstimator = PhotonPoseEstimator(aprilField, PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam)
         initPlaybackRobotDraw()
     }
 //    fun recalcFieldDimens() {

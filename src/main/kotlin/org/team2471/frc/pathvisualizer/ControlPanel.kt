@@ -1267,7 +1267,7 @@ object ControlPanel : VBox() {
                 if (driveParams is SwerveParameters) {
                     driveParams.alignRobotToPath = false
                 } else {
-                    driveParams = SwerveParameters(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false)
+                    driveParams = SwerveParameters(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, 0.0)
                 }
             }
         }
