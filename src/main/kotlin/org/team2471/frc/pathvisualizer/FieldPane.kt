@@ -31,9 +31,10 @@ object FieldPane : StackPane() {
     private val image = Image("assets/2024Field.png")
     private var upperLeftOfFieldPixels = Vector2(64.0, 509.0)
     private var lowerRightOfFieldPixels = Vector2(1473.0, 3322.0)
-    var zoomPivot = Vector2(776.0, 1920.0)  // the location in the image where the zoom origin will originate
+//    var zoomPivot = Vector2(776.0, 1920.0)  // the location in the image where the zoom origin will originate
 
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
+    var zoomPivot = Vector2(lowerRightOfFieldPixels.x - upperLeftOfFieldPixels.x, lowerRightOfFieldPixels.y - upperLeftOfFieldPixels.y)
     var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
     var displayActiveRobot = false
     var displayLimeLightRobot = true
