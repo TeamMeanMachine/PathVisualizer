@@ -27,15 +27,15 @@ object FieldPane : StackPane() {
     private val replayGC = replayCanvas.graphicsContext2D
     var connectionStringWidth = 70.0
 
-    // When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and zoomPivot
+    // When updating image change upperLeftOfFieldPixels, lowerRightOfFieldPixels, and origin
     private val image = Image("assets/2024Field.png")
-    private var upperLeftOfFieldPixels = Vector2(64.0, 509.0)
-    private var lowerRightOfFieldPixels = Vector2(1473.0, 3322.0)
-//    var zoomPivot = Vector2(776.0, 1920.0)  // the location in the image where the zoom origin will originate
+    private var upperLeftOfFieldPixels = Vector2(514.0, 77.0)
+    private var lowerRightOfFieldPixels = Vector2(3326.0, 1477.0)
+    var origin = Vector2 (upperLeftOfFieldPixels.x, lowerRightOfFieldPixels.y)
+
 
     var fieldDimensionPixels = lowerRightOfFieldPixels - upperLeftOfFieldPixels
-    var zoomPivot = Vector2(lowerRightOfFieldPixels.x - upperLeftOfFieldPixels.x, lowerRightOfFieldPixels.y - upperLeftOfFieldPixels.y)
-    var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 27.0), PathVisualizer.pref.getDouble("fieldHeight", 52.5))
+    var fieldDimensionFeet = Vector2(PathVisualizer.pref.getDouble("fieldWidth", 54.27), PathVisualizer.pref.getDouble("fieldHeight", 26.94))
     var displayActiveRobot = false
     var displayLimeLightRobot = true
     var displayLastPath = true
@@ -52,7 +52,7 @@ object FieldPane : StackPane() {
     var selectedPathWeaverTrajectory : Trajectory? = null
 
     // view settings
-    var zoom: Double = kotlin.math.round(feetToPixels(1.0))  // initially draw at 1:1 pixel in image = pixel on screen
+    var zoom: Double = feetToPixels(1.0)  // initially draw at 1:1 pixel in image = pixel on screen
 
     var selectedPointType = Path2DPoint.PointType.POINT
         private set
@@ -62,8 +62,9 @@ object FieldPane : StackPane() {
             field = value
             selectedPoint = null
             EasePane.selectedPoint = null
-            selectedPathWeaverTrajectory =
-                selectedPath?.trajectory()
+            if (ControlPanel.pathWeaverFormat) {
+                selectedPathWeaverTrajectory = selectedPath?.trajectory()
+            }
         }
 
     private var editPoint: Path2DPoint? = null
@@ -650,8 +651,8 @@ object FieldPane : StackPane() {
     }
 
     fun getWheelPositions(centerPosition: Vector2, heading: Double) : Array<Vector2> {
-        var tangent = Vector2(0.0, 1.0)
-        tangent = tangent.rotateDegrees(-heading)
+        var tangent = Vector2(1.0, 0.0)
+        tangent = tangent.rotateDegrees(heading)
 
         var perpendicularToPath = tangent.perpendicular()
         val robotLength = ControlPanel.autonomi.robotParameters.robotLength / 2.0

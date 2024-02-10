@@ -20,11 +20,11 @@ inline fun <T : Any, R> whenNotNull(input: T?, callback: (T) -> R): R? {
 
 fun world2Screen(vector2: Vector2): Vector2 {
     val temp = (vector2 * FieldPane.zoom).mirrorYAxis()
-    return temp + FieldPane.zoomPivot + FieldPane.offset
+    return temp + FieldPane.origin + FieldPane.offset
 }
 
 fun screen2World(vector2: Vector2): Vector2 {
-    val temp = (vector2 - FieldPane.offset - FieldPane.zoomPivot).mirrorYAxis()
+    val temp = (vector2 - FieldPane.offset - FieldPane.origin).mirrorYAxis()
     return temp / FieldPane.zoom
 }
 
@@ -33,11 +33,11 @@ fun world2ScreenWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
     temp.y = -temp.y
     if (mirror)
         temp.x = -temp.x
-    return temp + FieldPane.zoomPivot + FieldPane.offset
+    return temp + FieldPane.origin + FieldPane.offset
 }
 
 fun screen2WorldWithMirror(vector2: Vector2, mirror: Boolean): Vector2 {
-    val temp = vector2 - FieldPane.offset - FieldPane.zoomPivot
+    val temp = vector2 - FieldPane.offset - FieldPane.origin
     temp.y = -temp.y
     if (mirror)
         temp.x = -temp.x

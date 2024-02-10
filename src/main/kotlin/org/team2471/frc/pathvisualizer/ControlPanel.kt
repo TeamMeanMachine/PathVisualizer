@@ -258,6 +258,7 @@ object ControlPanel : VBox() {
                         val sortedPaths = paths.toSortedMap()
                         for (kvPath in sortedPaths) {
                             selectedPath = kvPath.value
+                            println("playing " + selectedPath!!.name)
                             animateSelectedPath()
                         }
                         if (selectedPath != null) {
