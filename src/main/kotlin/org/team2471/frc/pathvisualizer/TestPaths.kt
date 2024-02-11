@@ -58,7 +58,7 @@ object EightFootStraight : Path2D() {
         name = "8 Foot Straight"
         robotDirection = Path2D.RobotDirection.FORWARD
         addPoint(0.0, 0.0)
-        addPoint(0.0, 8.0)
+        addPoint(8.0, 0.0)
         addEasePoint(0.0, 0.0)
         addEasePoint(5.0, 1.0)
     }
