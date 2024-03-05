@@ -12,7 +12,7 @@ buildConfig {
     buildConfigField ("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
 }
 
-val wpiLibVersion = "2024.2.1"
+val wpiLibVersion = "2024.3.1"
 repositories {
     mavenCentral()
     maven { setUrl("https://frcmaven.wpi.edu/artifactory/release/")}
